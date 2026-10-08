@@ -134,6 +134,7 @@ qui manages torrent-client state and workflows for a self-hosted installation.
 - **Run plan**: What one run of the Automation rules will do: for each Action, the torrents it reaches and the rule that chose each torrent. The live run carries it out. The dry run records it. The Deletion selection is the delete part of the Run plan. The category and tag previews show the plan of one rule. _Avoid_: Desired state, batches.
 - **Projected freed bytes**: The estimated space recovered by removing the selected files. Shared paths count once. _Avoid_: Actual freed space.
 - **Season pack status**: What `SEASON_PACK_STATUS` reports for one torrent: `pack` for a season pack, `packed` for an episode that a season pack of the same release covers, `unpacked` for an episode with no such pack, empty when the name has no season or more than one season. "Same release" means title, season, cut, other markers, language markers, resolution, source, codec, audio, channels, HDR, and group all match. _Avoid_: Packed status, pack coverage.
+- **Skipped file**: A torrent file at download priority 0 ("Do not download"). qBittorrent keeps it in the file list and never fetches it. A rule sets one with the Skip small files action, and a user can set the same state by hand; the two are one file state, not two. _Avoid_: Excluded file, ignored file, unwanted file, missing file (a file absent from disk, which may or may not be a skipped file).
 
 ## Disc reports
 
