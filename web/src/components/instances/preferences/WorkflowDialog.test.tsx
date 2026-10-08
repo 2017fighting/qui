@@ -6,12 +6,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import type { Automation, FilesystemCapabilities } from "@/types"
 
 const mocks = vi.hoisted(() => {
   const t = (key: string) => key
   return {
     query: { data: undefined },
+    capabilitiesQuery: { data: undefined } as { data?: { supportsFilePriority?: boolean } },
     instancesQuery: { data: [] as unknown[], isLoading: false, error: null },
     translation: { t, i18n: { t, language: "en" } },
     error: vi.fn(),
@@ -26,6 +28,7 @@ vi.mock("@tanstack/react-query", async (importOriginal) => ({
   useQuery: ({ queryKey }: { queryKey: string[] }) => queryKey[0] === "instances" ? mocks.instancesQuery : mocks.query,
 }))
 vi.mock("@/hooks/useInstanceMetadata", () => ({ useInstanceMetadata: () => mocks.query }))
+vi.mock("@/hooks/useInstanceCapabilities", () => ({ useInstanceCapabilities: () => mocks.capabilitiesQuery }))
 vi.mock("@/hooks/useTrackerIcons", () => ({ useTrackerIcons: () => mocks.query }))
 vi.mock("react-i18next", async (importOriginal) => ({
   ...await importOriginal<typeof import("react-i18next")>(),
@@ -171,5 +174,106 @@ describe("WorkflowDialog tracker pattern", () => {
     expect(payload.trackerPattern).toBe(trackerPattern)
     expect(payload).not.toHaveProperty("trackerDomains")
     client.clear()
+  })
+})
+
+describe("WorkflowDialog skip small files", () => {
+  const skipRule: Automation = {
+    ...rule,
+    name: "Skip small files",
+    conditions: { schemaVersion: "1", skipSmallFiles: { enabled: true, maxSizeBytes: 2 * 1024 * 1024 * 1024 } },
+  }
+
+  const renderDialog = (r: Automation) => {
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <TooltipProvider>
+          <WorkflowDialog open onOpenChange={() => {}} instanceId={1} rule={r} />
+        </TooltipProvider>
+      </QueryClientProvider>
+    )
+    return client
+  }
+
+  it("shows a whole number of GiB in GiB and saves bytes", async () => {
+    mocks.instancesQuery.data = []
+    mocks.save.mockResolvedValue(skipRule)
+    const client = renderDialog(skipRule)
+
+    // The FieldHelp trigger sits inside the label, so the number input is the dialog's only spinbutton.
+    const input = screen.getByRole("spinbutton") as HTMLInputElement
+    expect(input.value).toBe("2")
+    // The unit select renders the label in both the trigger and a hidden native option.
+    expect(screen.getAllByText("GiB").length).toBeGreaterThan(0)
+
+    fireEvent.click(screen.getByRole("button", { name: key("save") }))
+    await waitFor(() => expect(mocks.save).toHaveBeenCalled())
+    expect(mocks.save.mock.calls[0][2].conditions.skipSmallFiles).toEqual({
+      enabled: true,
+      maxSizeBytes: 2 * 1024 * 1024 * 1024,
+    })
+    client.clear()
+  })
+
+  it("rejects a missing size for save, enable and dry run", async () => {
+    mocks.instancesQuery.data = []
+    const client = renderDialog({ ...skipRule, conditions: { schemaVersion: "1", skipSmallFiles: { enabled: true, maxSizeBytes: 0 } } })
+
+    // The FieldHelp trigger sits inside the label, so the number input is the dialog's only spinbutton.
+    const input = screen.getByRole("spinbutton") as HTMLInputElement
+    fireEvent.change(input, { target: { value: "" } })
+
+    for (const control of [
+      screen.getByRole("button", { name: key("save") }),
+      screen.getByRole("switch", { name: key("footer.enabled") }),
+      screen.getByRole("button", { name: key("runDryRunNow") }),
+    ]) {
+      mocks.error.mockClear()
+      fireEvent.click(control)
+      expect(mocks.error).toHaveBeenCalledWith(key("toast.setSkipSmallFilesSize"))
+      expect(mocks.save).not.toHaveBeenCalled()
+      expect(mocks.dryRun).not.toHaveBeenCalled()
+    }
+    client.clear()
+  })
+
+  it("pre-fills the default when the action is added", async () => {
+    mocks.instancesQuery.data = []
+    Object.defineProperty(Element.prototype, "scrollIntoView", { configurable: true, value: vi.fn() })
+    const client = renderDialog(rule)
+
+    fireEvent.keyDown(screen.getByText(key("actions.addAction")), { key: "ArrowDown" })
+    fireEvent.click(await screen.findByRole("option", { name: key("actions.skipSmallFiles") }))
+
+    // The FieldHelp trigger sits inside the label, so the number input is the dialog's only spinbutton.
+    const input = screen.getByRole("spinbutton") as HTMLInputElement
+    expect(input.value).toBe("500")
+    expect(screen.getAllByText("MiB").length).toBeGreaterThan(0)
+    client.clear()
+  })
+
+  it("rejects a threshold below one MiB", () => {
+    mocks.instancesQuery.data = []
+    const client = renderDialog({ ...skipRule, conditions: { schemaVersion: "1", skipSmallFiles: { enabled: true, maxSizeBytes: 524288 } } })
+
+    // The FieldHelp trigger sits inside the label, so the number input is the dialog's only spinbutton.
+    const input = screen.getByRole("spinbutton") as HTMLInputElement
+    fireEvent.change(input, { target: { value: "0.5" } })
+    fireEvent.click(screen.getByRole("button", { name: key("save") }))
+
+    expect(mocks.error).toHaveBeenCalledWith(key("toast.setSkipSmallFilesSize"))
+    expect(mocks.save).not.toHaveBeenCalled()
+    client.clear()
+  })
+
+  it("warns when the instance cannot change file priorities", () => {
+    mocks.instancesQuery.data = []
+    mocks.capabilitiesQuery.data = { supportsFilePriority: false }
+    const client = renderDialog(skipRule)
+
+    expect(screen.getByText(key("skipSmallFiles.unsupported"))).toBeTruthy()
+    client.clear()
+    mocks.capabilitiesQuery.data = undefined
   })
 })

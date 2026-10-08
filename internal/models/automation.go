@@ -898,6 +898,7 @@ type ActionConditions struct {
 	Tags             []*TagAction            `json:"tags,omitempty" doc:"Tag actions. Each entry manages its own set of tags."`
 	Category         *CategoryAction         `json:"category,omitempty" doc:"Set the category of matching torrents."`
 	Move             *MoveAction             `json:"move,omitempty" doc:"Move matching torrents to a different save path."`
+	SkipSmallFiles   *SkipSmallFilesAction   `json:"skipSmallFiles,omitempty" doc:"Set every file under a size threshold to 'Do not download'."`
 	ExternalProgram  *ExternalProgramAction  `json:"externalProgram,omitempty" doc:"Run an external program for each matching torrent."`
 	AutoManagement   *AutoManagementAction   `json:"autoManagement,omitempty" doc:"Turn automatic torrent management on or off."`
 	ExportToInstance *ExportToInstanceAction `json:"exportToInstance,omitempty" doc:"Add matching torrents to a different qBittorrent instance."`
@@ -991,6 +992,29 @@ type MoveAction struct {
 	GroupID          string         `json:"groupId,omitempty" doc:"Move each matching torrent together with the other torrents in its group. A built-in group ID or the id of a group in 'conditions.grouping'."`
 	Atomic           string         `json:"atomic,omitempty" doc:"With 'groupId': 'all' moves the group only when every torrent in it matches."`
 	Condition        *RuleCondition `json:"condition,omitempty" doc:"Optional. When set, the action applies only to torrents that also match this condition."`
+}
+
+// MinSkipSmallFilesBytes is the smallest size threshold the Skip small files action
+// accepts. 1 MiB.
+const MinSkipSmallFilesBytes int64 = 1024 * 1024
+
+// SkipSmallFilesAction configures setting every file under a size threshold to
+// "Do not download" (download priority 0), with an optional condition.
+type SkipSmallFilesAction struct {
+	Enabled      bool           `json:"enabled" doc:"Whether the action runs."`
+	MaxSizeBytes int64          `json:"maxSizeBytes" doc:"Files under this size are set to 'Do not download'. In bytes, at least 1048576 when 'enabled' is 'true'."`
+	Condition    *RuleCondition `json:"condition,omitempty" doc:"Optional. When set, the action applies only to torrents that also match this condition."`
+}
+
+// Validate checks that the SkipSmallFilesAction has valid configuration.
+func (a *SkipSmallFilesAction) Validate() error {
+	if a == nil {
+		return nil
+	}
+	if a.Enabled && a.MaxSizeBytes < MinSkipSmallFilesBytes {
+		return errors.New("enabled skip small files action requires maxSizeBytes of at least 1 MiB")
+	}
+	return nil
 }
 
 // GroupingConfig defines how torrents can be grouped for group-aware actions and conditions.
@@ -1119,6 +1143,9 @@ func (ac *ActionConditions) Conditions() iter.Seq[ActionCondition] {
 			return
 		}
 		if ac.Move != nil && !emit("move", ac.Move.Enabled, ac.Move.Condition) {
+			return
+		}
+		if ac.SkipSmallFiles != nil && !emit("skipSmallFiles", ac.SkipSmallFiles.Enabled, ac.SkipSmallFiles.Condition) {
 			return
 		}
 		if ac.ExternalProgram != nil && !emit("externalProgram", ac.ExternalProgram.Enabled, ac.ExternalProgram.Condition) {

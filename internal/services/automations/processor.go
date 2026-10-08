@@ -105,6 +105,10 @@ type torrentDesiredState struct {
 	exportToInstance         *models.ExportToInstanceAction
 	exportToInstanceRuleID   int
 	exportToInstanceRuleName string
+
+	// Skip small files (last rule wins)
+	skipSmallFiles     *models.SkipSmallFilesAction
+	skipSmallFilesRule ruleRef
 }
 
 type ruleRef struct {
@@ -143,13 +147,15 @@ type ruleRunStats struct {
 	ExternalProgramConditionNotMet   int
 	ExportToInstanceApplied          int
 	ExportToInstanceConditionNotMet  int
+	SkipSmallFilesApplied            int
+	SkipSmallFilesConditionNotMet    int
 }
 
 func (s *ruleRunStats) totalApplied() int {
 	if s == nil {
 		return 0
 	}
-	return s.SpeedApplied + s.ShareApplied + s.PauseApplied + s.ResumeApplied + s.RecheckApplied + s.ReannounceApplied + s.AutoManageApplied + s.TagConditionMet + s.CategoryApplied + s.DeleteApplied + s.MoveApplied + s.ExternalProgramApplied + s.ExportToInstanceApplied
+	return s.SpeedApplied + s.ShareApplied + s.PauseApplied + s.ResumeApplied + s.RecheckApplied + s.ReannounceApplied + s.AutoManageApplied + s.TagConditionMet + s.CategoryApplied + s.DeleteApplied + s.MoveApplied + s.ExternalProgramApplied + s.ExportToInstanceApplied + s.SkipSmallFilesApplied
 }
 
 func getOrCreateRuleStats(m map[int]*ruleRunStats, rule *models.Automation) *ruleRunStats {
@@ -512,6 +518,22 @@ func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *
 		}
 	}
 
+	// Skip small files (last rule wins)
+	if conditions.SkipSmallFiles != nil && conditions.SkipSmallFiles.Enabled && conditions.SkipSmallFiles.MaxSizeBytes > 0 {
+		shouldApply := conditions.SkipSmallFiles.Condition == nil ||
+			EvaluateConditionWithContext(conditions.SkipSmallFiles.Condition, torrent, evalCtx, 0)
+
+		if shouldApply {
+			if stats != nil {
+				stats.SkipSmallFilesApplied++
+			}
+			state.skipSmallFiles = conditions.SkipSmallFiles
+			state.skipSmallFilesRule = ruleRef{id: rule.ID, name: rule.Name}
+		} else if stats != nil {
+			stats.SkipSmallFilesConditionNotMet++
+		}
+	}
+
 	// Delete
 	if conditions.Delete != nil && conditions.Delete.Enabled {
 		// Safety: delete must always have an explicit condition.
@@ -827,7 +849,8 @@ func hasActions(state *torrentDesiredState) bool {
 		state.shouldDelete ||
 		state.shouldMove ||
 		state.externalProgramID != nil ||
-		state.exportToInstance != nil
+		state.exportToInstance != nil ||
+		state.skipSmallFiles != nil
 }
 
 // selectTrackerTag picks the best tracker domain to use as a tag.

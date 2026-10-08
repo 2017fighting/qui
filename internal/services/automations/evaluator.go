@@ -66,6 +66,9 @@ type EvalContext struct {
 	HasMissingFilesByHash map[string]bool
 	// HasSkippedFilesByHash maps torrent hash to whether any file has priority 0 (Do not download)
 	HasSkippedFilesByHash map[string]bool
+	// TorrentFilesByHash holds the file list of each torrent when an action reads
+	// file sizes. Torrents without metadata get no entry.
+	TorrentFilesByHash map[string]qbt.TorrentFiles
 	// InstanceHasLocalAccess gates the missing-files field. #2933 lifts it to Read.
 	InstanceHasLocalAccess bool
 	// InstanceHasFileIdentity gates the hardlink fields, apart from
