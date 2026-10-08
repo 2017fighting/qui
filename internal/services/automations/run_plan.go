@@ -33,6 +33,7 @@ type runPlan struct {
 	programs       []pendingProgramExec
 	exports        []pendingExportToInstance
 	deletions      *deletionSelection
+	skipSmallFiles map[string]skipSmallFilesPlan
 }
 
 // targetLookup asks the target instance of an export if it already has the torrent. ADR 0005.
@@ -168,6 +169,7 @@ func (s *Service) buildRunPlan(ctx context.Context, in runPlanInput) runPlan {
 	}
 	plan.category = s.planCategories(ctx, in, categoryTriggers)
 	plan.move = s.planMoves(ctx, in, moveTriggers)
+	plan.skipSmallFiles = skipSmallFilesPlansFor(states, evalCtx, deletions)
 	return plan
 }
 

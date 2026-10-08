@@ -24,6 +24,9 @@ type RuleNeeds struct {
 	TrackerNames          bool
 	TrackerURLs           bool // the URL of each tracker, from MainData
 	TrackerEntries        bool // the per-torrent tracker list with status and message
+	// TorrentFiles asks for each torrent's file list, which actions that read a
+	// file's size or priority need: Skip small files.
+	TorrentFiles bool
 }
 
 // fieldData is the prepared data one condition field reads. A field without a
@@ -165,6 +168,9 @@ func NeedsFor(rules []*models.Automation) RuleNeeds {
 			}
 			if deleteKeepsFilesForOtherInstances(ac.Delete) {
 				needs.CrossMatch.OtherShared = true
+			}
+			if skip := ac.SkipSmallFiles; skip != nil && skip.Enabled {
+				needs.TorrentFiles = true
 			}
 		}
 	}

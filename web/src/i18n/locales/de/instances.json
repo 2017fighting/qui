@@ -556,7 +556,8 @@
         "move": "Verschieben",
         "externalProgram": "Externes Programm",
         "dryRun": "Probelauf",
-        "exportToInstance": "In Instanz exportieren"
+        "exportToInstance": "In Instanz exportieren",
+        "skipSmallFiles": "Kleine Dateien überspringen"
       },
       "shareLimit": {
         "global": "Global",
@@ -609,7 +610,11 @@
         "exportedDryRun_one": "{{count}} Torrent würde exportiert",
         "exportedDryRun_other": "{{count}} Torrents würden exportiert",
         "exportFailed_one": "{{count}} Torrent konnte nicht exportiert werden",
-        "exportFailed_other": "{{count}} Torrents konnten nicht exportiert werden"
+        "exportFailed_other": "{{count}} Torrents konnten nicht exportiert werden",
+        "skippedSmallFiles_one": "{{count}} Torrent: {{files}} Dateien auf \"Nicht herunterladen\" gesetzt",
+        "skippedSmallFiles_other": "{{count}} Torrents: {{files}} Dateien auf \"Nicht herunterladen\" gesetzt",
+        "skippedSmallFilesDryRun_one": "Bei {{count}} Torrent würden {{files}} Dateien auf \"Nicht herunterladen\" gesetzt",
+        "skippedSmallFilesDryRun_other": "Bei {{count}} Torrents würden {{files}} Dateien auf \"Nicht herunterladen\" gesetzt"
       },
       "deleteDialog": {
         "title": "Regel löschen",
@@ -669,7 +674,8 @@
         "deleteActivityFailed": "Aktivität konnte nicht gelöscht werden",
         "hashCopied": "Hash kopiert"
       },
-      "exported": "Exportiert"
+      "exported": "Exportiert",
+      "skipped": "Übersprungen"
     },
     "runWorkflowNow": {
       "action": "Jetzt ausführen",
@@ -965,8 +971,13 @@
         "external_program": "Externes Programm",
         "auto_managed": "Automatisch verwaltet",
         "dry_run_no_match": "Probelauf (keine Übereinstimmung)",
-        "exported_to_instance": "Export zur Instanz"
-      }
+        "exported_to_instance": "Export zur Instanz",
+        "skipped_small_files": "Kleine Dateien überspringen",
+        "skip_small_files_failed": "Kleine Dateien überspringen fehlgeschlagen"
+      },
+      "skippedFiles": "Nicht herunterladen",
+      "skippedFilesMore": "+{{more}} weitere",
+      "skippedAllBelow": "Unangetastet: alle Dateien liegen unter der Größe"
     },
     "reannounceOverview": {
       "title": "Reannounce",
@@ -1184,7 +1195,8 @@
         "category": "Kategorie",
         "move": "Verschieben",
         "externalProgram": "Externes Programm ausführen",
-        "exportToInstance": "In Instanz exportieren"
+        "exportToInstance": "In Instanz exportieren",
+        "skipSmallFiles": "Kleine Dateien überspringen"
       },
       "option": {
         "noChange": "Keine Änderung",
@@ -1270,6 +1282,12 @@
         "errors": {
           "mustBeAbsolute": "Muss ein absoluter Pfad sein, zum Beispiel /data/archive oder D:\\Archive."
         }
+      },
+      "skipSmallFiles": {
+        "maxSize": "Maximale Dateigröße",
+        "description": "Dateien unter dieser Größe werden auf \"Nicht herunterladen\" gesetzt. Sie bleiben in der Dateiliste, bereits geladene Dateien werden nicht gelöscht, und ein Torrent, dessen Dateien alle darunter liegen, bleibt unangetastet.",
+        "missingFilesNote": "Übersprungene Dateien gelten für die Bedingung \"Fehlende Dateien\" als fehlend, und ein exportierter Torrent lädt sie auf der Zielinstanz vollständig herunter.",
+        "unsupported": "Das qBittorrent dieser Instanz unterstützt keine Dateiprioritäten; Web API 2.2.0 oder neuer ist erforderlich."
       },
       "templateHelp": {
         "absolutePath": "Muss ein absoluter Pfad sein. Werte stehen darin, zum Beispiel",
@@ -1436,7 +1454,9 @@
           "moved": "Verschieben",
           "externalProgram": "Externes Programm",
           "noMatches": "Keine Treffer",
-          "exportedToInstance": "In Instanz exportieren"
+          "exportedToInstance": "In Instanz exportieren",
+          "skippedSmallFiles": "Kleine Dateien überspringen",
+          "skipSmallFilesFailed": "Kleine Dateien überspringen fehlgeschlagen"
         },
         "actionFallback": "Unbekannte Aktion ({{action}})",
         "summary": {
@@ -1455,7 +1475,11 @@
           "noMatches": "Keine Torrents entsprachen diesem Probelauf",
           "impacted": "{{count}} Torrent betroffen",
           "impacted_other": "{{count}} Torrents betroffen",
-          "completed": "Probelauf abgeschlossen"
+          "completed": "Probelauf abgeschlossen",
+          "skippedSmallFiles_one": "Bei {{count}} Torrent würden Dateien auf \"Nicht herunterladen\" gesetzt ({{files}} Dateien)",
+          "skippedSmallFilesAllBelow_one": "{{count}} Torrent bleibt unangetastet, alle Dateien liegen unter der Größe",
+          "skippedSmallFiles_other": "Bei {{count}} Torrents würden Dateien auf \"Nicht herunterladen\" gesetzt ({{files}} Dateien)",
+          "skippedSmallFilesAllBelow_other": "{{count}} Torrents bleiben unangetastet, alle Dateien liegen unter der Größe"
         }
       },
       "toast": {
@@ -1499,7 +1523,8 @@
         "groupIdInvalid": "Die Gruppen-ID darf nur alphanumerische Zeichen und Unterstriche enthalten",
         "selectGroupKey": "Wähle mindestens einen Schlüssel",
         "groupExists": "Eine Gruppe mit dieser ID existiert bereits",
-        "customGroupAdded": "Benutzerdefinierte Gruppe hinzugefügt"
+        "customGroupAdded": "Benutzerdefinierte Gruppe hinzugefügt",
+        "setSkipSmallFilesSize": "Gib eine Dateigröße von mindestens 1 MiB für \"Kleine Dateien überspringen\" ein"
       },
       "trackerMatchInclude": "Einschließen",
       "trackerMatchExclude": "Ausschließen"
