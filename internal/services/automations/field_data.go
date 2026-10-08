@@ -23,6 +23,9 @@ type RuleNeeds struct {
 	FreeSpace             bool
 	TrackerNames          bool
 	TrackerEntries        bool // the per-torrent tracker list
+	// TorrentFiles asks for each torrent's file list, which actions that read a
+	// file's size or priority need: Skip small files.
+	TorrentFiles bool
 }
 
 // fieldData is the prepared data one condition field reads. A field without a
@@ -130,6 +133,9 @@ func NeedsFor(rules []*models.Automation) RuleNeeds {
 			}
 			if ruleTemplatesUseTrackerName(ac) {
 				needs.TrackerNames = true
+			}
+			if skip := ac.SkipSmallFiles; skip != nil && skip.Enabled {
+				needs.TorrentFiles = true
 			}
 		}
 	}

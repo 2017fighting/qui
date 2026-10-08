@@ -680,7 +680,8 @@
         "move": "Mover",
         "externalProgram": "Programa externo",
         "dryRun": "Simulação (Dry-run)",
-        "exportToInstance": "Exportar"
+        "exportToInstance": "Exportar",
+        "skipSmallFiles": "Ignorar arquivos pequenos"
       },
       "shareLimit": {
         "global": "Global",
@@ -733,7 +734,11 @@
         "exportedDryRun_one": "{{count}} torrent seria exportado",
         "exportedDryRun_other": "{{count}} torrents seriam exportados",
         "exportFailed_one": "{{count}} falha ao exportar",
-        "exportFailed_other": "{{count}} falhas ao exportar"
+        "exportFailed_other": "{{count}} falhas ao exportar",
+        "skippedSmallFiles_one": "{{count}} torrent: {{files}} arquivos definidos como não baixar",
+        "skippedSmallFiles_other": "{{count}} torrents: {{files}} arquivos definidos como não baixar",
+        "skippedSmallFilesDryRun_one": "{{count}} torrent teria {{files}} arquivos definidos como não baixar",
+        "skippedSmallFilesDryRun_other": "{{count}} torrents teriam {{files}} arquivos definidos como não baixar"
       },
       "deleteDialog": {
         "title": "Excluir Regra",
@@ -792,7 +797,8 @@
         "deleteActivityFailed": "Falha ao excluir histórico",
         "hashCopied": "Hash copiado"
       },
-      "exported": "Exportado"
+      "exported": "Exportado",
+      "skipped": "Ignorados"
     },
     "workflowPreview": {
       "loadingPreview": "Carregando estimativas...",
@@ -1069,8 +1075,13 @@
         "external_program": "Programa rodado",
         "auto_managed": "Gerenciamento Automático",
         "dry_run_no_match": "Simulação (Sem correspondência)",
-        "exported_to_instance": "Exportado"
-      }
+        "exported_to_instance": "Exportado",
+        "skipped_small_files": "Ignorar arquivos pequenos",
+        "skip_small_files_failed": "Falha ao ignorar arquivos pequenos"
+      },
+      "skippedFiles": "Não baixar",
+      "skippedFilesMore": "+{{more}} mais",
+      "skippedAllBelow": "Não alterado: todos os arquivos estão abaixo do tamanho"
     },
     "reannounceOverview": {
       "title": "Reanúncio Automático",
@@ -1288,7 +1299,8 @@
         "category": "Mudar Categorias",
         "move": "Mover",
         "externalProgram": "Acionar Programa Script Externo",
-        "exportToInstance": "Migrar (Exportar a outra instância)"
+        "exportToInstance": "Migrar (Exportar a outra instância)",
+        "skipSmallFiles": "Ignorar arquivos pequenos"
       },
       "option": {
         "noChange": "Nenhuma (Inalterado)",
@@ -1369,6 +1381,12 @@
         "skipIfCrossSeedsDontMatch": "Abortar a mudança caso haja cross-seeds que não condizem com a regra",
         "aboutSkipping": "Sobre pular cross-seeds",
         "skipDescription": "Cancela a mudança se houver outros torrents no mesmo grupo de cross-seed que não atendam às condições da regra. Caso contrário, todos os cross-seeds serão movidos, mesmo os não correspondidos."
+      },
+      "skipSmallFiles": {
+        "maxSize": "Tamanho máximo do arquivo",
+        "description": "Arquivos abaixo deste tamanho são definidos como \"Não baixar\". Eles permanecem na lista de arquivos, arquivos já baixados não são excluídos, e um torrent cujos arquivos estão todos abaixo deste tamanho não é alterado.",
+        "missingFilesNote": "Arquivos ignorados contam como ausentes para a condição \"Arquivos ausentes\", e um torrent exportado os baixa por completo na instância de destino.",
+        "unsupported": "O qBittorrent desta instância não oferece suporte a prioridades de arquivos; é necessário Web API 2.2.0 ou superior."
       },
       "templateHelp": {
         "absolutePath": "Deve ser um caminho absoluto. Os valores vão dentro dele, por exemplo",
@@ -1533,7 +1551,9 @@
           "moved": "Mover",
           "externalProgram": "Programa externo",
           "noMatches": "Nenhuma correspondência",
-          "exportedToInstance": "Exportar"
+          "exportedToInstance": "Exportar",
+          "skippedSmallFiles": "Ignorar arquivos pequenos",
+          "skipSmallFilesFailed": "Falha ao ignorar arquivos pequenos"
         },
         "summary": {
           "tagsChangedBoth": "Tags afetadas ({{added}} Inseridas | {{removed}} Excluídas)",
@@ -1551,7 +1571,11 @@
           "noMatches": "0 resultados afetados.",
           "impacted": "{{count}} sofreu impacto",
           "impacted_other": "{{count}} sofreram impacto",
-          "completed": "Simulação Pronta"
+          "completed": "Simulação Pronta",
+          "skippedSmallFiles_one": "{{count}} torrent teria arquivos definidos como não baixar ({{files}} arquivos)",
+          "skippedSmallFilesAllBelow_one": "{{count}} torrent não alterado, todos os arquivos estão abaixo do tamanho",
+          "skippedSmallFiles_other": "{{count}} torrents teriam arquivos definidos como não baixar ({{files}} arquivos)",
+          "skippedSmallFilesAllBelow_other": "{{count}} torrents não alterados, todos os arquivos estão abaixo do tamanho"
         }
       },
       "toast": {
@@ -1595,7 +1619,8 @@
         "groupIdInvalid": "Apague os espaços e use underlines nesse Id Customizado.",
         "selectGroupKey": "Requer chaves.",
         "groupExists": "O nome já está sendo usado por outro grupamento.",
-        "customGroupAdded": "Grupo personalizado adicionado"
+        "customGroupAdded": "Grupo personalizado adicionado",
+        "setSkipSmallFilesSize": "Informe um tamanho de pelo menos 1 MiB para \"Ignorar arquivos pequenos\""
       },
       "trackerMatchInclude": "Vai Pegar (Incluir)",
       "trackerMatchExclude": "Ignorará Totalmente (Excluir)"

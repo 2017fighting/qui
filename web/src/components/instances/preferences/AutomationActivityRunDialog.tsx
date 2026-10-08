@@ -24,6 +24,16 @@ import { toast } from "sonner"
 
 const PAGE_SIZE = 200
 
+// formatSkippedFilesLine renders the files a Skip small files pass set to
+// "Do not download", with a count for the ones the row does not name.
+function formatSkippedFilesLine(item: AutomationActivityRunItem, t: ReturnType<typeof useTranslation<"instances">>["t"]): string {
+  const names = item.skippedFiles ?? []
+  if (names.length === 0) return ""
+  const more = (item.skippedFileCount ?? names.length) - names.length
+  const suffix = more > 0 ? ` ${t("preferences.activityRunDialog.skippedFilesMore", { more })}` : ""
+  return `${t("preferences.activityRunDialog.skippedFiles")}: ${names.join(", ")}${suffix}`
+}
+
 function isNotFoundError(error: unknown): boolean {
   if (!(error instanceof Error)) return false
   const message = error.message.toLowerCase()
@@ -51,6 +61,8 @@ const ACTION_LABEL_KEYS: Record<AutomationActivity["action"], string> = {
   external_program: "preferences.activityRunDialog.actionLabels.external_program",
   auto_managed: "preferences.activityRunDialog.actionLabels.auto_managed",
   exported_to_instance: "preferences.activityRunDialog.actionLabels.exported_to_instance",
+  skipped_small_files: "preferences.activityRunDialog.actionLabels.skipped_small_files",
+  skip_small_files_failed: "preferences.activityRunDialog.actionLabels.skip_small_files_failed",
   dry_run_no_match: "preferences.activityRunDialog.actionLabels.dry_run_no_match",
 }
 
@@ -181,6 +193,15 @@ export function AutomationActivityRunDialog({
                       <TruncatedText className="block max-w-[320px]">
                         {item.name || item.hash}
                       </TruncatedText>
+                      {item.skippedAllBelow ? (
+                        <span className="block text-xs text-muted-foreground">
+                          {t("preferences.activityRunDialog.skippedAllBelow")}
+                        </span>
+                      ) : item.skippedFiles && item.skippedFiles.length > 0 ? (
+                        <span className="block text-xs text-muted-foreground">
+                          {formatSkippedFilesLine(item, t)}
+                        </span>
+                      ) : null}
                     </td>
                     <td className="p-2">
                       <div className="flex items-center gap-2">

@@ -679,7 +679,8 @@
         "move": "移動",
         "externalProgram": "外部程式",
         "dryRun": "模擬執行",
-        "exportToInstance": "匯出到實例"
+        "exportToInstance": "匯出到實例",
+        "skipSmallFiles": "略過小檔案"
       },
       "shareLimit": {
         "global": "全域",
@@ -715,7 +716,9 @@
         "deleteLabelCondition": "條件",
         "exported_other": "已匯出 {{count}} 個種子",
         "exportedDryRun_other": "將匯出 {{count}} 個種子",
-        "exportFailed_other": "{{count}} 個種子匯出失敗"
+        "exportFailed_other": "{{count}} 個種子匯出失敗",
+        "skippedSmallFiles_other": "{{count}} 個種子：{{files}} 個檔案已設為不下載",
+        "skippedSmallFilesDryRun_other": "{{count}} 個種子會有 {{files}} 個檔案設為不下載"
       },
       "deleteDialog": {
         "title": "刪除規則",
@@ -774,7 +777,8 @@
         "deleteActivityFailed": "刪除活動失敗",
         "hashCopied": "雜湊已複製"
       },
-      "exported": "已匯出"
+      "exported": "已匯出",
+      "skipped": "已略過"
     },
     "workflowPreview": {
       "loadingPreview": "正在載入預覽，這可能需要一些時間...",
@@ -1041,8 +1045,13 @@
         "external_program": "外部程式",
         "auto_managed": "自動管理",
         "dry_run_no_match": "模擬執行（無匹配）",
-        "exported_to_instance": "匯出到實例"
-      }
+        "exported_to_instance": "匯出到實例",
+        "skipped_small_files": "略過小檔案",
+        "skip_small_files_failed": "略過小檔案失敗"
+      },
+      "skippedFiles": "不下載",
+      "skippedFilesMore": "另有 {{more}} 個",
+      "skippedAllBelow": "未更動：所有檔案都小於該大小"
     },
     "reannounceOverview": {
       "title": "重新通報",
@@ -1259,7 +1268,8 @@
         "category": "分類",
         "move": "移動",
         "externalProgram": "執行外部程式",
-        "exportToInstance": "匯出到實例"
+        "exportToInstance": "匯出到實例",
+        "skipSmallFiles": "略過小檔案"
       },
       "option": {
         "noChange": "不更改",
@@ -1340,6 +1350,12 @@
         "skipIfCrossSeedsDontMatch": "如果輔種不匹配規則條件則跳過",
         "aboutSkipping": "關於輔種存在時跳過移動",
         "skipDescription": "如果同一輔種組中有其他種子不匹配規則條件，則跳過移動。否則，所有輔種都將被移動，即使它們不匹配規則條件。"
+      },
+      "skipSmallFiles": {
+        "maxSize": "最大檔案大小",
+        "description": "小於此大小的檔案會設為「不下載」。它們仍留在檔案清單中，已下載的檔案不會被刪除，而所有檔案都小於此大小的種子不會被更動。",
+        "missingFilesNote": "被略過的檔案會被「有缺失檔案」條件視為缺失，匯出的種子在目標執行個體上會完整下載它們。",
+        "unsupported": "該執行個體的 qBittorrent 不支援檔案優先順序；需要 Web API 2.2.0 或更新版本。"
       },
       "templateHelp": {
         "absolutePath": "必須是絕對路徑。值要寫在路徑中，例如",
@@ -1504,7 +1520,9 @@
           "moved": "移動",
           "externalProgram": "外部程式",
           "noMatches": "無匹配",
-          "exportedToInstance": "匯出到實例"
+          "exportedToInstance": "匯出到實例",
+          "skippedSmallFiles": "略過小檔案",
+          "skipSmallFilesFailed": "略過小檔案失敗"
         },
         "summary": {
           "tagsChangedBoth": "{{added}} 將被標記，{{removed}} 將被取消標記",
@@ -1522,7 +1540,9 @@
           "noMatches": "此次模擬執行沒有種子匹配",
           "impacted": "{{count}} 個種子受影響",
           "impacted_other": "{{count}} 個種子受影響",
-          "completed": "模擬執行完成"
+          "completed": "模擬執行完成",
+          "skippedSmallFiles_other": "{{count}} 個種子會有檔案設為不下載（{{files}} 個檔案）",
+          "skippedSmallFilesAllBelow_other": "{{count}} 個種子因所有檔案都小於該大小而未更動"
         }
       },
       "toast": {
@@ -1566,7 +1586,8 @@
         "groupIdInvalid": "分組 ID 只能包含字母、數字和底線",
         "selectGroupKey": "請至少選擇一個鍵",
         "groupExists": "已存在具有此 ID 的分組",
-        "customGroupAdded": "已新增自訂分組"
+        "customGroupAdded": "已新增自訂分組",
+        "setSkipSmallFilesSize": "請為「略過小檔案」填入至少 1 MiB 的檔案大小"
       },
       "trackerMatchInclude": "包含",
       "trackerMatchExclude": "排除"

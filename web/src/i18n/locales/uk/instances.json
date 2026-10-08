@@ -682,7 +682,8 @@
         "move": "Перемістити",
         "externalProgram": "Зовнішня програма",
         "dryRun": "Тестовий запуск",
-        "exportToInstance": "Експорт в екземпляр"
+        "exportToInstance": "Експорт в екземпляр",
+        "skipSmallFiles": "Пропускати малі файли"
       },
       "shareLimit": {
         "global": "Глобальний",
@@ -769,7 +770,15 @@
         "exportedDryRun_few": "{{count}} торенти буде експортовано",
         "exportedDryRun_many": "{{count}} торентів буде експортовано",
         "exportFailed_few": "{{count}} торенти не вдалося експортувати",
-        "exportFailed_many": "{{count}} торентів не вдалося експортувати"
+        "exportFailed_many": "{{count}} торентів не вдалося експортувати",
+        "skippedSmallFiles_one": "{{count}} торент: {{files}} файлів позначено як не завантажувати",
+        "skippedSmallFiles_few": "{{count}} торентів: {{files}} файлів позначено як не завантажувати",
+        "skippedSmallFiles_many": "{{count}} торентів: {{files}} файлів позначено як не завантажувати",
+        "skippedSmallFiles_other": "{{count}} торентів: {{files}} файлів позначено як не завантажувати",
+        "skippedSmallFilesDryRun_one": "У {{count}} торента {{files}} файлів були б позначені як не завантажувати",
+        "skippedSmallFilesDryRun_few": "У {{count}} торентів {{files}} файлів були б позначені як не завантажувати",
+        "skippedSmallFilesDryRun_many": "У {{count}} торентів {{files}} файлів були б позначені як не завантажувати",
+        "skippedSmallFilesDryRun_other": "У {{count}} торентів {{files}} файлів були б позначені як не завантажувати"
       },
       "deleteDialog": {
         "title": "Видалити правило",
@@ -828,7 +837,8 @@
         "deleteActivityFailed": "Не вдалося видалити активність",
         "hashCopied": "Хеш скопійовано"
       },
-      "exported": "Експортовано"
+      "exported": "Експортовано",
+      "skipped": "Пропущено"
     },
     "workflowPreview": {
       "loadingPreview": "Завантаження попереднього перегляду. Це може зайняти деякий час...",
@@ -1125,8 +1135,13 @@
         "external_program": "Зовнішня програма",
         "auto_managed": "Автоматичне керування",
         "dry_run_no_match": "Тестовий запуск (не відповідає)",
-        "exported_to_instance": "Експорт в екземпляр"
-      }
+        "exported_to_instance": "Експорт в екземпляр",
+        "skipped_small_files": "Пропускати малі файли",
+        "skip_small_files_failed": "Не вдалося пропустити малі файли"
+      },
+      "skippedFiles": "Не завантажувати",
+      "skippedFilesMore": "+{{more}} ще",
+      "skippedAllBelow": "Без змін: усі файли менші за розмір"
     },
     "reannounceOverview": {
       "title": "Повторно оголосити",
@@ -1346,7 +1361,8 @@
         "category": "Категорія",
         "move": "Перемістити",
         "externalProgram": "Запустіть зовнішню програму",
-        "exportToInstance": "Експорт в екземпляр"
+        "exportToInstance": "Експорт в екземпляр",
+        "skipSmallFiles": "Пропускати малі файли"
       },
       "option": {
         "noChange": "Без змін",
@@ -1427,6 +1443,12 @@
         "skipIfCrossSeedsDontMatch": "Пропустити, якщо крос-сіди не відповідають умовам правила",
         "aboutSkipping": "Про пропуск переміщення, якщо існують крос-сіди",
         "skipDescription": "Пропускає переміщення, якщо в тій самій крос-сід групі є інші торенти, які не відповідають умовам правила. Інакше усі крос-сіди буде переміщено, навіть якщо вони не відповідають умовам правила."
+      },
+      "skipSmallFiles": {
+        "maxSize": "Максимальний розмір файлу",
+        "description": "Файли, менші за цей розмір, отримують позначку \"Не завантажувати\". Вони залишаються у списку файлів, уже завантажені файли не видаляються, а торент, усі файли якого менші за цей розмір, не змінюється.",
+        "missingFilesNote": "Пропущені файли вважаються відсутніми для умови \"Відсутні файли\", а експортований торент завантажить їх повністю на цільовому екземплярі.",
+        "unsupported": "qBittorrent цього екземпляра не підтримує пріоритети файлів; потрібен Web API 2.2.0 або новіший."
       },
       "templateHelp": {
         "absolutePath": "Має бути абсолютний шлях. Значення вставляються в нього, наприклад",
@@ -1591,7 +1613,9 @@
           "moved": "Перемістити",
           "externalProgram": "Зовнішня програма",
           "noMatches": "Немає збігів",
-          "exportedToInstance": "Експорт в екземпляр"
+          "exportedToInstance": "Експорт в екземпляр",
+          "skippedSmallFiles": "Пропускати малі файли",
+          "skipSmallFilesFailed": "Не вдалося пропустити малі файли"
         },
         "summary": {
           "tagsChangedBoth": "{{added}} буде позначено, {{removed}} буде не позначено",
@@ -1609,7 +1633,15 @@
           "noMatches": "Жоден торент не збігся з цим тестовим запуском",
           "impacted": "Торент {{count}} порушено",
           "impacted_other": "Постраждали торенти {{count}}",
-          "completed": "Тестовий запуск завершено"
+          "completed": "Тестовий запуск завершено",
+          "skippedSmallFiles_one": "У {{count}} торента файли були б позначені як не завантажувати ({{files}} файлів)",
+          "skippedSmallFilesAllBelow_one": "{{count}} торент без змін, усі файли менші за розмір",
+          "skippedSmallFiles_few": "У {{count}} торентів файли були б позначені як не завантажувати ({{files}} файлів)",
+          "skippedSmallFilesAllBelow_few": "{{count}} торентів без змін, усі файли менші за розмір",
+          "skippedSmallFiles_many": "У {{count}} торентів файли були б позначені як не завантажувати ({{files}} файлів)",
+          "skippedSmallFilesAllBelow_many": "{{count}} торентів без змін, усі файли менші за розмір",
+          "skippedSmallFiles_other": "У {{count}} торентів файли були б позначені як не завантажувати ({{files}} файлів)",
+          "skippedSmallFilesAllBelow_other": "{{count}} торентів без змін, усі файли менші за розмір"
         }
       },
       "toast": {
@@ -1653,7 +1685,8 @@
         "groupIdInvalid": "Група ID має містити лише буквено-цифрові символи та підкреслення",
         "selectGroupKey": "Виберіть принаймні один ключ",
         "groupExists": "Група з цим ID вже існує",
-        "customGroupAdded": "Спеціальна група додана"
+        "customGroupAdded": "Спеціальна група додана",
+        "setSkipSmallFilesSize": "Введи розмір щонайменше 1 MiB для \"Пропускати малі файли\""
       },
       "trackerMatchInclude": "Включати",
       "trackerMatchExclude": "Виключити"

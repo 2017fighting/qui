@@ -715,7 +715,8 @@
         "move": "Mou",
         "externalProgram": "Programa extern",
         "dryRun": "Execució de prova",
-        "exportToInstance": "Exporta a una instància"
+        "exportToInstance": "Exporta a una instància",
+        "skipSmallFiles": "Omet els fitxers petits"
       },
       "shareLimit": {
         "global": "Global",
@@ -768,7 +769,11 @@
         "exportedDryRun_one": "{{count}} torrent s'exportaria",
         "exportedDryRun_other": "{{count}} torrents s'exportarien",
         "exportFailed_one": "No s'ha pogut exportar {{count}} torrent",
-        "exportFailed_other": "No s'han pogut exportar {{count}} torrents"
+        "exportFailed_other": "No s'han pogut exportar {{count}} torrents",
+        "skippedSmallFiles_one": "{{count}} torrent: {{files}} fitxers posats a no baixar",
+        "skippedSmallFiles_other": "{{count}} torrents: {{files}} fitxers posats a no baixar",
+        "skippedSmallFilesDryRun_one": "{{count}} torrent tindria {{files}} fitxers posats a no baixar",
+        "skippedSmallFilesDryRun_other": "{{count}} torrents tindrien {{files}} fitxers posats a no baixar"
       },
       "deleteDialog": {
         "title": "Elimina la regla",
@@ -829,7 +834,8 @@
       },
       "exported": "Exportat",
       "tagActions_one": "{{count}} acció d'etiqueta",
-      "tagActions_other": "{{count}} accions d'etiqueta"
+      "tagActions_other": "{{count}} accions d'etiqueta",
+      "skipped": "Omesos"
     },
     "workflowDialog": {
       "editWorkflow": "Edita el workflow",
@@ -941,7 +947,8 @@
         "category": "Categoria",
         "move": "Mou",
         "externalProgram": "Executa un programa extern",
-        "exportToInstance": "Exporta a una instància"
+        "exportToInstance": "Exporta a una instància",
+        "skipSmallFiles": "Omet els fitxers petits"
       },
       "option": {
         "noChange": "Sense canvis",
@@ -1022,6 +1029,12 @@
         "skipIfCrossSeedsDontMatch": "Omet-ho si els cross-seed no compleixen les condicions de la regla",
         "aboutSkipping": "Sobre l'omissió del trasllat quan hi ha cross-seed",
         "skipDescription": "Omet el trasllat si hi ha qualsevol altre torrent del mateix grup de cross-seed que no compleixi les condicions de la regla. Si no, es mouran tots els cross-seed, encara que no coincideixin amb les condicions de la regla."
+      },
+      "skipSmallFiles": {
+        "maxSize": "Mida màxima del fitxer",
+        "description": "Els fitxers per sota d'aquesta mida passen a \"No baixar\". Es queden a la llista de fitxers, els fitxers ja baixats no s'esborren i un torrent amb tots els fitxers per sota d'aquesta mida no es toca.",
+        "missingFilesNote": "Els fitxers omesos compten com a absents per a la condició \"Fitxers absents\", i un torrent exportat els baixa sencers a la instància de destí.",
+        "unsupported": "El qBittorrent d'aquesta instància no admet prioritats de fitxers; cal Web API 2.2.0 o superior."
       },
       "templateHelp": {
         "absolutePath": "Ha de ser un camí absolut. Els valors van dins del camí, per exemple",
@@ -1186,7 +1199,9 @@
           "moved": "Mou",
           "externalProgram": "Programa extern",
           "noMatches": "Cap coincidència",
-          "exportedToInstance": "Exporta a una instància"
+          "exportedToInstance": "Exporta a una instància",
+          "skippedSmallFiles": "Omet els fitxers petits",
+          "skipSmallFilesFailed": "No s'han pogut ometre els fitxers petits"
         },
         "summary": {
           "tagsChangedBoth": "{{added}} s'etiquetarien i {{removed}} es desetiquetarien",
@@ -1204,7 +1219,11 @@
           "noMatches": "Cap torrent no ha coincidit amb aquesta execució de prova",
           "impacted": "{{count}} torrent afectat",
           "impacted_other": "{{count}} torrents afectats",
-          "completed": "S'ha completat l'execució de prova"
+          "completed": "S'ha completat l'execució de prova",
+          "skippedSmallFiles_one": "{{count}} torrent tindria fitxers posats a no baixar ({{files}} fitxers)",
+          "skippedSmallFilesAllBelow_one": "{{count}} torrent no tocat, tots els fitxers són per sota de la mida",
+          "skippedSmallFiles_other": "{{count}} torrents tindrien fitxers posats a no baixar ({{files}} fitxers)",
+          "skippedSmallFilesAllBelow_other": "{{count}} torrents no tocats, tots els fitxers són per sota de la mida"
         }
       },
       "toast": {
@@ -1248,7 +1267,8 @@
         "groupIdInvalid": "L'ID del grup només pot contenir caràcters alfanumèrics i guions baixos",
         "selectGroupKey": "Selecciona com a mínim una clau",
         "groupExists": "Ja hi ha un grup amb aquest ID",
-        "customGroupAdded": "S'ha afegit el grup personalitzat"
+        "customGroupAdded": "S'ha afegit el grup personalitzat",
+        "setSkipSmallFilesSize": "Introdueix una mida d'almenys 1 MiB per a \"Omet els fitxers petits\""
       },
       "trackerMatchInclude": "Inclou",
       "trackerMatchExclude": "Exclou"
@@ -1447,8 +1467,13 @@
         "external_program": "Programa extern",
         "auto_managed": "Gestionat automàticament",
         "dry_run_no_match": "Execució de prova (cap coincidència)",
-        "exported_to_instance": "Exporta a una instància"
-      }
+        "exported_to_instance": "Exporta a una instància",
+        "skipped_small_files": "Omet els fitxers petits",
+        "skip_small_files_failed": "No s'han pogut ometre els fitxers petits"
+      },
+      "skippedFiles": "No baixar",
+      "skippedFilesMore": "+{{more}} més",
+      "skippedAllBelow": "No tocat: tots els fitxers són per sota de la mida"
     },
     "orphanScanOverview": {
       "title": "Exploració d'orfes",

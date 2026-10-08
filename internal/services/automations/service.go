@@ -53,23 +53,25 @@ const freeSpaceDeleteCooldown = 5 * time.Minute
 const logMsgRemoveTorrentWithFiles = "automations: removing torrent with files"
 
 var automationActionLabels = map[string]string{
-	models.ActivityActionDeletedRatio:        "Deleted torrent (ratio rule)",
-	models.ActivityActionDeletedSeeding:      "Deleted torrent (seeding rule)",
-	models.ActivityActionDeletedUnregistered: "Deleted torrent (unregistered)",
-	models.ActivityActionDeletedCondition:    "Deleted torrent (rule)",
-	models.ActivityActionDeleteFailed:        "Delete failed",
-	models.ActivityActionLimitFailed:         "Speed/share limit failed",
-	models.ActivityActionTagsChanged:         "Tags updated",
-	models.ActivityActionCategoryChanged:     "Category updated",
-	models.ActivityActionSpeedLimitsChanged:  "Speed limits updated",
-	models.ActivityActionShareLimitsChanged:  "Share limits updated",
-	models.ActivityActionPaused:              "Paused torrents",
-	models.ActivityActionResumed:             "Resumed torrents",
-	models.ActivityActionRechecked:           "Rechecked torrents",
-	models.ActivityActionReannounced:         "Reannounced torrents",
-	models.ActivityActionMoved:               "Moved torrents",
-	models.ActivityActionExportedToInstance:  "Export to instance",
-	models.ActivityActionDryRunNoMatch:       "Dry-run: no matches",
+	models.ActivityActionDeletedRatio:         "Deleted torrent (ratio rule)",
+	models.ActivityActionDeletedSeeding:       "Deleted torrent (seeding rule)",
+	models.ActivityActionDeletedUnregistered:  "Deleted torrent (unregistered)",
+	models.ActivityActionDeletedCondition:     "Deleted torrent (rule)",
+	models.ActivityActionDeleteFailed:         "Delete failed",
+	models.ActivityActionLimitFailed:          "Speed/share limit failed",
+	models.ActivityActionTagsChanged:          "Tags updated",
+	models.ActivityActionCategoryChanged:      "Category updated",
+	models.ActivityActionSpeedLimitsChanged:   "Speed limits updated",
+	models.ActivityActionShareLimitsChanged:   "Share limits updated",
+	models.ActivityActionPaused:               "Paused torrents",
+	models.ActivityActionResumed:              "Resumed torrents",
+	models.ActivityActionRechecked:            "Rechecked torrents",
+	models.ActivityActionReannounced:          "Reannounced torrents",
+	models.ActivityActionMoved:                "Moved torrents",
+	models.ActivityActionExportedToInstance:   "Export to instance",
+	models.ActivityActionSkippedSmallFiles:    "Files set to do not download",
+	models.ActivityActionSkipSmallFilesFailed: "Skip small files failed",
+	models.ActivityActionDryRunNoMatch:        "Dry-run: no matches",
 }
 
 type automationSummary struct {
@@ -932,12 +934,18 @@ func (s *Service) buildEvalContext(ctx context.Context, instanceID int, instance
 		}
 	}
 
-	if needs.SkippedFiles {
-		skipped, err := s.detectSkippedFiles(ctx, instanceID, torrents)
+	// File lists feed HAS_SKIPPED_FILES and the Skip small files action, so one fetch serves both.
+	if needs.SkippedFiles || needs.TorrentFiles {
+		filesByHash, err := s.loadTorrentFiles(ctx, instanceID, torrents)
 		if err != nil {
-			log.Warn().Err(err).Int("instanceID", instanceID).Msg("automations: skipped files detection failed")
+			log.Warn().Err(err).Int("instanceID", instanceID).Msg("automations: failed to fetch torrent files")
 		} else {
-			evalCtx.HasSkippedFilesByHash = skipped
+			if needs.TorrentFiles {
+				evalCtx.TorrentFilesByHash = filesByHash
+			}
+			if needs.SkippedFiles {
+				evalCtx.HasSkippedFilesByHash = buildSkippedFilesResult(filesByHash)
+			}
 		}
 	}
 
@@ -3637,6 +3645,95 @@ func (s *Service) applyRulesForInstance(ctx context.Context, instanceID int, for
 		}
 	}
 
+	// Set every file under the skip threshold to "Do not download"
+	skipSmallFilesPlans := skipSmallFilesPlansFor(states, evalCtx)
+	if len(skipSmallFilesPlans) > 0 {
+		skipSmallFilesRuleByHash := make(map[string]ruleRef, len(skipSmallFilesPlans))
+		for hash := range skipSmallFilesPlans {
+			if state := states[hash]; state != nil {
+				skipSmallFilesRuleByHash[hash] = state.skipSmallFilesRule
+			}
+		}
+		successHashes := make([]string, 0, len(skipSmallFilesPlans))
+		successFiles := 0
+		var successBytes int64
+		for _, hash := range slices.Sorted(maps.Keys(skipSmallFilesPlans)) {
+			plan := skipSmallFilesPlans[hash]
+			if plan.allBelow {
+				log.Debug().Int("instanceID", instanceID).Str("hash", hash).
+					Msg("automations: every file is under the skip threshold, leaving torrent alone")
+				continue
+			}
+
+			if err := s.syncManager.SetTorrentFilePriority(ctx, instanceID, hash, plan.indices, filePriorityDoNotDownload); err != nil {
+				log.Warn().Err(err).Int("instanceID", instanceID).Str("hash", hash).Int("files", len(plan.indices)).
+					Msg("automations: skip small files failed")
+				detailsJSON, marshalErr := json.Marshal(map[string]any{"count": 1, "files": len(plan.indices)})
+				if marshalErr != nil {
+					log.Warn().Err(marshalErr).Int("instanceID", instanceID).Msg("automations: failed to marshal skip small files details")
+					continue
+				}
+				activity := &models.AutomationActivity{
+					InstanceID: instanceID,
+					Hash:       hash,
+					Action:     models.ActivityActionSkipSmallFilesFailed,
+					Outcome:    models.ActivityOutcomeFailed,
+					Reason:     "skip small files failed: " + err.Error(),
+					Details:    detailsJSON,
+				}
+				summary.recordActivity(activity, 1)
+				summary.recordRuleCounts(
+					models.ActivityActionSkipSmallFilesFailed,
+					models.ActivityOutcomeFailed,
+					buildRuleCountsFromHashes([]string{hash}, skipSmallFilesRuleByHash),
+				)
+				summary.addTorrentSamples(collectTorrentNamesForHashes([]string{hash}, torrentByHash), 3)
+				if s.activityStore != nil {
+					if actErr := s.activityStore.Create(ctx, activity); actErr != nil {
+						log.Warn().Err(actErr).Int("instanceID", instanceID).Msg("automations: failed to record activity")
+					}
+				}
+				continue
+			}
+
+			log.Info().Int("instanceID", instanceID).Str("hash", hash).Int("files", len(plan.indices)).
+				Msg("automations: set files to do not download")
+			successHashes = append(successHashes, hash)
+			successFiles += len(plan.indices)
+			successBytes += plan.bytes
+		}
+
+		// Record aggregated skip small files activity
+		if len(successHashes) > 0 {
+			detailsJSON, _ := json.Marshal(map[string]any{"count": len(successHashes), "files": successFiles, "bytes": successBytes})
+			activity := &models.AutomationActivity{
+				InstanceID: instanceID,
+				Hash:       "",
+				Action:     models.ActivityActionSkippedSmallFiles,
+				Outcome:    models.ActivityOutcomeSuccess,
+				Details:    detailsJSON,
+			}
+			summary.recordActivity(activity, len(successHashes))
+			summary.recordRuleCounts(
+				models.ActivityActionSkippedSmallFiles,
+				models.ActivityOutcomeSuccess,
+				buildRuleCountsFromHashes(successHashes, skipSmallFilesRuleByHash),
+			)
+			summary.addTorrentSamples(collectTorrentNamesForHashes(successHashes, torrentByHash), 3)
+			if s.activityStore != nil {
+				activityID, err := s.activityStore.CreateWithID(ctx, activity)
+				if err != nil {
+					log.Warn().Err(err).Int("instanceID", instanceID).Msg("automations: failed to record skip small files activity")
+				} else if s.activityRuns != nil {
+					items := s.buildSkipSmallFilesRunItems(successHashes, skipSmallFilesPlans, torrentByHash)
+					if len(items) > 0 {
+						s.activityRuns.Put(activityID, instanceID, items)
+					}
+				}
+			}
+		}
+	}
+
 	// Execute external programs (async, fire-and-forget)
 	s.executeExternalProgramsFromAutomation(ctx, instanceID, programExecutions)
 
@@ -5575,6 +5672,34 @@ func (s *Service) recordDryRunActivities(
 				return buildMoveRunItems(plannedHashesByPath, torrentByHash, s.syncManager)
 			})
 		}
+	}
+
+	// Skip small files ("Do not download")
+	skipSmallFilesPlans := skipSmallFilesPlansFor(states, evalCtx)
+	if len(skipSmallFilesPlans) > 0 {
+		plannedHashes := make([]string, 0, len(skipSmallFilesPlans))
+		skippedFiles := 0
+		var skippedBytes int64
+		guardedTorrents := 0
+		for _, hash := range slices.Sorted(maps.Keys(skipSmallFilesPlans)) {
+			plan := skipSmallFilesPlans[hash]
+			if plan.allBelow {
+				guardedTorrents++
+				continue
+			}
+			plannedHashes = append(plannedHashes, hash)
+			skippedFiles += len(plan.indices)
+			skippedBytes += plan.bytes
+		}
+		createActivity(models.ActivityActionSkippedSmallFiles, map[string]any{
+			"count":   len(plannedHashes),
+			"files":   skippedFiles,
+			"bytes":   skippedBytes,
+			"guarded": guardedTorrents,
+		}, func() []ActivityRunTorrent {
+			// A dry run shows every planned torrent, the ones left alone included.
+			return s.buildSkipSmallFilesRunItems(slices.Sorted(maps.Keys(skipSmallFilesPlans)), skipSmallFilesPlans, torrentByHash)
+		})
 	}
 
 	// External programs

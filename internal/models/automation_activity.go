@@ -14,24 +14,26 @@ import (
 
 // Activity action types
 const (
-	ActivityActionDeletedRatio        = "deleted_ratio"
-	ActivityActionDeletedSeeding      = "deleted_seeding"
-	ActivityActionDeletedUnregistered = "deleted_unregistered"
-	ActivityActionDeletedCondition    = "deleted_condition" // Expression-based deletion
-	ActivityActionDeleteFailed        = "delete_failed"
-	ActivityActionLimitFailed         = "limit_failed"
-	ActivityActionTagsChanged         = "tags_changed"         // Batch tag operation
-	ActivityActionCategoryChanged     = "category_changed"     // Batch category operation
-	ActivityActionSpeedLimitsChanged  = "speed_limits_changed" // Batch speed limit operation
-	ActivityActionShareLimitsChanged  = "share_limits_changed" // Batch share limit operation
-	ActivityActionPaused              = "paused"               // Batch pause operation
-	ActivityActionResumed             = "resumed"              // Batch resume operation
-	ActivityActionRechecked           = "rechecked"            // Batch force recheck operation
-	ActivityActionReannounced         = "reannounced"          // Batch force reannounce operation
-	ActivityActionMoved               = "moved"                // Batch move operation
-	ActivityActionAutoManaged         = "auto_managed"         // Batch auto management operation
-	ActivityActionExportedToInstance  = "exported_to_instance" // Export torrent to another instance
-	ActivityActionDryRunNoMatch       = "dry_run_no_match"     // Manual dry-run completed with no matching actions
+	ActivityActionDeletedRatio         = "deleted_ratio"
+	ActivityActionDeletedSeeding       = "deleted_seeding"
+	ActivityActionDeletedUnregistered  = "deleted_unregistered"
+	ActivityActionDeletedCondition     = "deleted_condition" // Expression-based deletion
+	ActivityActionDeleteFailed         = "delete_failed"
+	ActivityActionLimitFailed          = "limit_failed"
+	ActivityActionTagsChanged          = "tags_changed"         // Batch tag operation
+	ActivityActionCategoryChanged      = "category_changed"     // Batch category operation
+	ActivityActionSpeedLimitsChanged   = "speed_limits_changed" // Batch speed limit operation
+	ActivityActionShareLimitsChanged   = "share_limits_changed" // Batch share limit operation
+	ActivityActionPaused               = "paused"               // Batch pause operation
+	ActivityActionResumed              = "resumed"              // Batch resume operation
+	ActivityActionRechecked            = "rechecked"            // Batch force recheck operation
+	ActivityActionReannounced          = "reannounced"          // Batch force reannounce operation
+	ActivityActionMoved                = "moved"                // Batch move operation
+	ActivityActionAutoManaged          = "auto_managed"         // Batch auto management operation
+	ActivityActionExportedToInstance   = "exported_to_instance" // Export torrent to another instance
+	ActivityActionSkippedSmallFiles    = "skipped_small_files"  // Batch "Do not download" for files under a size threshold
+	ActivityActionSkipSmallFilesFailed = "skip_small_files_failed"
+	ActivityActionDryRunNoMatch        = "dry_run_no_match" // Manual dry-run completed with no matching actions
 )
 
 // Activity outcome types

@@ -680,7 +680,8 @@
         "move": "Move",
         "externalProgram": "External program",
         "dryRun": "Dry-run",
-        "exportToInstance": "Export to instance"
+        "exportToInstance": "Export to instance",
+        "skipSmallFiles": "Skip small files"
       },
       "shareLimit": {
         "global": "Global",
@@ -733,7 +734,11 @@
         "exportedDryRun_one": "{{count}} torrent would be exported",
         "exportedDryRun_other": "{{count}} torrents would be exported",
         "exportFailed_one": "{{count}} torrent failed to export",
-        "exportFailed_other": "{{count}} torrents failed to export"
+        "exportFailed_other": "{{count}} torrents failed to export",
+        "skippedSmallFiles_one": "{{count}} torrent: {{files}} files set to do not download",
+        "skippedSmallFiles_other": "{{count}} torrents: {{files}} files set to do not download",
+        "skippedSmallFilesDryRun_one": "{{count}} torrent would have {{files}} files set to do not download",
+        "skippedSmallFilesDryRun_other": "{{count}} torrents would have {{files}} files set to do not download"
       },
       "deleteDialog": {
         "title": "Delete Rule",
@@ -792,7 +797,8 @@
         "deleteActivityFailed": "Failed to delete activity",
         "hashCopied": "Hash copied"
       },
-      "exported": "Exported"
+      "exported": "Exported",
+      "skipped": "Skipped"
     },
     "workflowPreview": {
       "loadingPreview": "Loading preview. This might take a while...",
@@ -1069,8 +1075,13 @@
         "external_program": "External program",
         "auto_managed": "Auto managed",
         "dry_run_no_match": "Dry-run (no match)",
-        "exported_to_instance": "Export to instance"
-      }
+        "exported_to_instance": "Export to instance",
+        "skipped_small_files": "Skip small files",
+        "skip_small_files_failed": "Skip small files failed"
+      },
+      "skippedFiles": "Do not download",
+      "skippedFilesMore": "+{{more}} more",
+      "skippedAllBelow": "Left alone: every file is under the size"
     },
     "reannounceOverview": {
       "title": "Reannounce",
@@ -1288,7 +1299,8 @@
         "category": "Category",
         "move": "Move",
         "externalProgram": "Run external program",
-        "exportToInstance": "Export to instance"
+        "exportToInstance": "Export to instance",
+        "skipSmallFiles": "Skip small files"
       },
       "option": {
         "noChange": "No change",
@@ -1369,6 +1381,12 @@
         "skipIfCrossSeedsDontMatch": "Skip if cross-seeds don't match the rule's conditions",
         "aboutSkipping": "About skipping move if cross-seeds exist",
         "skipDescription": "Skips the move if there are any other torrents in the same cross-seed group that do not match the rule's conditions. Otherwise, all cross-seeds will be moved, even if not matched by the rule's conditions."
+      },
+      "skipSmallFiles": {
+        "maxSize": "Maximum file size",
+        "description": "Files under this size are set to \"Do not download\". They stay in the file list, already downloaded files are not deleted, and a torrent whose every file is under this size is left alone.",
+        "missingFilesNote": "Skipped files count as missing for the \"Has missing files\" condition, and an exported torrent downloads them in full on the target instance.",
+        "unsupported": "This instance's qBittorrent does not support file priorities; Web API 2.2.0 or newer is required."
       },
       "templateHelp": {
         "absolutePath": "Must be an absolute path. Values go inside it, for example",
@@ -1533,7 +1551,9 @@
           "moved": "Move",
           "externalProgram": "External program",
           "noMatches": "No matches",
-          "exportedToInstance": "Export to instance"
+          "exportedToInstance": "Export to instance",
+          "skippedSmallFiles": "Skip small files",
+          "skipSmallFilesFailed": "Skip small files failed"
         },
         "summary": {
           "tagsChangedBoth": "{{added}} would be tagged, {{removed}} would be untagged",
@@ -1551,7 +1571,11 @@
           "noMatches": "No torrents matched this dry-run",
           "impacted": "{{count}} torrent impacted",
           "impacted_other": "{{count}} torrents impacted",
-          "completed": "Dry-run completed"
+          "completed": "Dry-run completed",
+          "skippedSmallFiles_one": "{{count}} torrent would have files set to do not download ({{files}} files)",
+          "skippedSmallFilesAllBelow_one": "{{count}} torrent left alone, every file is under the size",
+          "skippedSmallFiles_other": "{{count}} torrents would have files set to do not download ({{files}} files)",
+          "skippedSmallFilesAllBelow_other": "{{count}} torrents left alone, every file is under the size"
         }
       },
       "toast": {
@@ -1595,7 +1619,8 @@
         "groupIdInvalid": "Group ID must contain only alphanumeric characters and underscores",
         "selectGroupKey": "Select at least one key",
         "groupExists": "A group with this ID already exists",
-        "customGroupAdded": "Custom group added"
+        "customGroupAdded": "Custom group added",
+        "setSkipSmallFilesSize": "Enter a file size of at least 1 MiB for Skip small files"
       },
       "trackerMatchInclude": "Include",
       "trackerMatchExclude": "Exclude"

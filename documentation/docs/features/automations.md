@@ -657,6 +657,32 @@ qui evaluates the move path as a **Go template** for each torrent. Use a fixed p
 - By isolation folder: `/data/{{.IsolationFolderName}}`
 - By tracker: `/data/{{.Tracker}}`
 
+### Skip small files
+
+Set every file under a size threshold to **Do not download** (qBittorrent download priority 0). Use it on torrents whose extras — samples, screenshots, cover images — are smaller than the feature.
+
+| Field | Description |
+| --- | --- |
+| **Maximum file size** | Files under this size are set to "Do not download". Pick the unit, MiB or GiB. 1 MiB minimum, 500 MiB when you add the action |
+| **Condition Override** | Optional condition specific to this action |
+
+**Behavior:**
+
+- Only files under the threshold that are still wanted change. A file that is already set to "Do not download" is left alone, and qui sends no request for it.
+- The files stay in the torrent's file list. qui does not delete them, and a file that is already downloaded keeps its data on disk.
+- A torrent whose **every** file is under the threshold is left untouched, because skipping all of them would leave it with nothing to download.
+- A torrent without metadata has no file list yet, so the action waits for a later run.
+- File priorities need Web API 2.2.0 or newer. On an older qBittorrent the pass records a failure in the activity feed, and the rule's form shows a warning.
+- qui records one activity row per pass, with the number of torrents and files it changed. A dry-run lists the files per torrent and changes nothing.
+
+:::note
+A skipped file counts as missing for the **Has missing files** condition, because qBittorrent does not record who unchecked a file, and qui does not track it either. Use **Has skipped files** to read the intent. The reason is in [ADR 0016](https://github.com/autobrr/qui/blob/develop/docs/adr/0016-a-skipped-file-still-counts-as-missing.md).
+:::
+
+:::note
+An [exported](#export-to-instance) torrent is added to the target instance with every file wanted, so the target downloads the small files in full.
+:::
+
 ### Auto management
 
 Enable or disable qBittorrent's Automatic Torrent Management (AutoTMM) on matching torrents.
@@ -730,6 +756,7 @@ The action assumes the data already exists on the target (moved with rclone, Qui
 - After the add, qui verifies that the torrent appeared and is healthy. If that check fails, qui removes the torrent from the target so the next run can retry the transfer.
 - qui does **not** export cross-seed group members. To export a group, chain the action with Category/Tag actions that use group expansion.
 - qui logs activity with the rule name, torrent details, target instance, and success or failure status.
+- A [Skip small files](#skip-small-files) action in the same rule does not reach the target: the export adds the torrent with every file wanted.
 - Dry-run shows what qui exports in simulation, without a transfer.
 
 :::note

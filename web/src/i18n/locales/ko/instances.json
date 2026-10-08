@@ -679,7 +679,8 @@
         "move": "이동",
         "externalProgram": "외부 프로그램",
         "dryRun": "모의 실행",
-        "exportToInstance": "인스턴스로 내보내기"
+        "exportToInstance": "인스턴스로 내보내기",
+        "skipSmallFiles": "작은 파일 건너뛰기"
       },
       "shareLimit": {
         "global": "전역",
@@ -715,7 +716,9 @@
         "deleteLabelCondition": "조건",
         "exported_other": "토렌트 {{count}}개 내보냄",
         "exportedDryRun_other": "토렌트 {{count}}개 내보낼 예정",
-        "exportFailed_other": "토렌트 {{count}}개 내보내기 실패"
+        "exportFailed_other": "토렌트 {{count}}개 내보내기 실패",
+        "skippedSmallFiles_other": "{{count}}개 토렌트: {{files}}개 파일을 다운로드 안 함으로 설정",
+        "skippedSmallFilesDryRun_other": "{{count}}개 토렌트의 {{files}}개 파일이 다운로드 안 함으로 설정될 예정"
       },
       "deleteDialog": {
         "title": "규칙 삭제",
@@ -774,7 +777,8 @@
         "deleteActivityFailed": "활동을 삭제하지 못했습니다",
         "hashCopied": "해시가 복사되었습니다"
       },
-      "exported": "내보냄"
+      "exported": "내보냄",
+      "skipped": "건너뜀"
     },
     "workflowPreview": {
       "loadingPreview": "미리 보기 불러오는 중. 시간이 걸릴 수 있습니다...",
@@ -1041,8 +1045,13 @@
         "external_program": "외부 프로그램",
         "auto_managed": "자동 관리됨",
         "dry_run_no_match": "모의 실행(일치 없음)",
-        "exported_to_instance": "인스턴스로 내보내기"
-      }
+        "exported_to_instance": "인스턴스로 내보내기",
+        "skipped_small_files": "작은 파일 건너뛰기",
+        "skip_small_files_failed": "작은 파일 건너뛰기 실패"
+      },
+      "skippedFiles": "다운로드 안 함",
+      "skippedFilesMore": "+{{more}}개 더",
+      "skippedAllBelow": "그대로 둠: 모든 파일이 크기보다 작음"
     },
     "reannounceOverview": {
       "title": "재요청",
@@ -1259,7 +1268,8 @@
         "category": "카테고리",
         "move": "이동",
         "externalProgram": "외부 프로그램 실행",
-        "exportToInstance": "인스턴스로 내보내기"
+        "exportToInstance": "인스턴스로 내보내기",
+        "skipSmallFiles": "작은 파일 건너뛰기"
       },
       "option": {
         "noChange": "변경 없음",
@@ -1340,6 +1350,12 @@
         "skipIfCrossSeedsDontMatch": "cross-seed가 규칙의 조건과 일치하지 않으면 건너뛰기",
         "aboutSkipping": "cross-seed가 있을 때 이동 건너뛰기 정보",
         "skipDescription": "동일한 cross-seed 그룹에 규칙의 조건과 일치하지 않는 다른 토렌트가 있으면 이동을 건너뜁니다. 그렇지 않으면 규칙의 조건과 일치하지 않더라도 모든 cross-seed가 이동됩니다."
+      },
+      "skipSmallFiles": {
+        "maxSize": "최대 파일 크기",
+        "description": "이 크기보다 작은 파일은 \"다운로드 안 함\"으로 설정됩니다. 파일 목록에는 그대로 남고, 이미 받은 파일은 삭제되지 않으며, 모든 파일이 이 크기보다 작은 토렌트는 건드리지 않습니다.",
+        "missingFilesNote": "건너뛴 파일은 \"파일 누락\" 조건에서 누락으로 계산되며, 내보낸 토렌트는 대상 인스턴스에서 전체를 다운로드합니다.",
+        "unsupported": "이 인스턴스의 qBittorrent는 파일 우선순위를 지원하지 않습니다. Web API 2.2.0 이상이 필요합니다."
       },
       "templateHelp": {
         "absolutePath": "절대 경로여야 합니다. 값은 경로 안에 넣습니다. 예:",
@@ -1504,7 +1520,9 @@
           "moved": "이동",
           "externalProgram": "외부 프로그램",
           "noMatches": "일치 없음",
-          "exportedToInstance": "인스턴스로 내보내기"
+          "exportedToInstance": "인스턴스로 내보내기",
+          "skippedSmallFiles": "작은 파일 건너뛰기",
+          "skipSmallFilesFailed": "작은 파일 건너뛰기 실패"
         },
         "summary": {
           "tagsChangedBoth": "{{added}}개 태그될 예정, {{removed}}개 태그 해제될 예정",
@@ -1522,7 +1540,9 @@
           "noMatches": "이 모의 실행과 일치하는 토렌트가 없습니다",
           "impacted": "토렌트 {{count}}개 영향받음",
           "impacted_other": "토렌트 {{count}}개 영향받음",
-          "completed": "모의 실행 완료"
+          "completed": "모의 실행 완료",
+          "skippedSmallFiles_other": "{{count}}개 토렌트의 파일이 다운로드 안 함으로 설정될 예정 ({{files}}개 파일)",
+          "skippedSmallFilesAllBelow_other": "{{count}}개 토렌트는 모든 파일이 크기보다 작아 그대로 둠"
         }
       },
       "toast": {
@@ -1566,7 +1586,8 @@
         "groupIdInvalid": "그룹 ID는 영숫자와 밑줄만 포함해야 합니다",
         "selectGroupKey": "키를 하나 이상 선택하세요",
         "groupExists": "이 ID를 가진 그룹이 이미 존재합니다",
-        "customGroupAdded": "사용자 지정 그룹이 추가되었습니다"
+        "customGroupAdded": "사용자 지정 그룹이 추가되었습니다",
+        "setSkipSmallFilesSize": "\"작은 파일 건너뛰기\"에 1 MiB 이상의 파일 크기를 입력하세요"
       },
       "trackerMatchInclude": "포함",
       "trackerMatchExclude": "제외"

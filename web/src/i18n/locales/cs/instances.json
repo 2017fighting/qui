@@ -681,7 +681,8 @@
         "move": "Přesunout",
         "externalProgram": "Externí program",
         "dryRun": "Zkušební běh",
-        "exportToInstance": "Exportovat do instance"
+        "exportToInstance": "Exportovat do instance",
+        "skipSmallFiles": "Přeskočit malé soubory"
       },
       "shareLimit": {
         "global": "Globální",
@@ -751,7 +752,13 @@
         "exportedDryRun_other": "{{count}} torrentů by bylo exportováno",
         "exportFailed_one": "{{count}} torrent se nepodařilo exportovat",
         "exportFailed_few": "{{count}} torrenty se nepodařilo exportovat",
-        "exportFailed_other": "{{count}} torrentů se nepodařilo exportovat"
+        "exportFailed_other": "{{count}} torrentů se nepodařilo exportovat",
+        "skippedSmallFiles_one": "{{count}} torrent: {{files}} souborů nastaveno na nestahovat",
+        "skippedSmallFiles_few": "{{count}} torrentů: {{files}} souborů nastaveno na nestahovat",
+        "skippedSmallFiles_other": "{{count}} torrentů: {{files}} souborů nastaveno na nestahovat",
+        "skippedSmallFilesDryRun_one": "U {{count}} torrentu by se {{files}} souborů nastavilo na nestahovat",
+        "skippedSmallFilesDryRun_few": "U {{count}} torrentů by se {{files}} souborů nastavilo na nestahovat",
+        "skippedSmallFilesDryRun_other": "U {{count}} torrentů by se {{files}} souborů nastavilo na nestahovat"
       },
       "deleteDialog": {
         "title": "Smazat pravidlo",
@@ -810,7 +817,8 @@
         "deleteActivityFailed": "Nepodařilo se smazat aktivitu",
         "hashCopied": "Hash zkopírován"
       },
-      "exported": "Exportováno"
+      "exported": "Exportováno",
+      "skipped": "Přeskočeno"
     },
     "workflowPreview": {
       "loadingPreview": "Načítá se náhled. To může trvat nějakou dobu...",
@@ -1103,8 +1111,13 @@
         "external_program": "Externí program",
         "auto_managed": "Automatická správa",
         "dry_run_no_match": "Zkušební běh (bez shody)",
-        "exported_to_instance": "Exportováno do instance"
-      }
+        "exported_to_instance": "Exportováno do instance",
+        "skipped_small_files": "Přeskočit malé soubory",
+        "skip_small_files_failed": "Přeskočení malých souborů selhalo"
+      },
+      "skippedFiles": "Nestahovat",
+      "skippedFilesMore": "+{{more}} další",
+      "skippedAllBelow": "Beze změny: všechny soubory jsou pod velikostí"
     },
     "reannounceOverview": {
       "title": "Opakované hlášení",
@@ -1323,7 +1336,8 @@
         "category": "Kategorie",
         "move": "Přesunout",
         "externalProgram": "Spustit externí program",
-        "exportToInstance": "Exportovat do instance"
+        "exportToInstance": "Exportovat do instance",
+        "skipSmallFiles": "Přeskočit malé soubory"
       },
       "option": {
         "noChange": "Bez změny",
@@ -1404,6 +1418,12 @@
         "skipIfCrossSeedsDontMatch": "Přeskočit, pokud křížová sdílení neodpovídají podmínkám pravidla",
         "aboutSkipping": "O přeskakování přesunu, když existují křížová sdílení",
         "skipDescription": "Přeskočí přesun, pokud existují jiné torrenty v stejné křížové sdílení skupině, které neodpovídají podmínkám pravidla. Jinak budou všechna křížová sdílení přesunuta, i když neodpovídají podmínkám pravidla."
+      },
+      "skipSmallFiles": {
+        "maxSize": "Maximální velikost souboru",
+        "description": "Soubory pod touto velikostí se nastaví na \"Nestahovat\". Zůstávají v seznamu souborů, už stažené soubory se nemažou a torrent, jehož všechny soubory jsou pod touto velikostí, zůstane beze změny.",
+        "missingFilesNote": "Přeskočené soubory se pro podmínku \"Chybějící soubory\" počítají jako chybějící a exportovaný torrent je na cílové instanci stáhne celé.",
+        "unsupported": "qBittorrent této instance nepodporuje priority souborů; je potřeba Web API 2.2.0 nebo novější."
       },
       "templateHelp": {
         "absolutePath": "Musí jít o absolutní cestu. Hodnoty se vkládají do ní, například",
@@ -1568,7 +1588,9 @@
           "moved": "Přesunuto",
           "externalProgram": "Externí program",
           "noMatches": "Žádné shody",
-          "exportedToInstance": "Exportováno do instance"
+          "exportedToInstance": "Exportováno do instance",
+          "skippedSmallFiles": "Přeskočit malé soubory",
+          "skipSmallFilesFailed": "Přeskočení malých souborů selhalo"
         },
         "summary": {
           "tagsChangedBoth": "{{added}} by byly otagovány, {{removed}} by byly odtagovány",
@@ -1586,7 +1608,13 @@
           "noMatches": "Žádné torrenty neodpovídají této simulaci",
           "impacted": "{{count}} torrent byl ovlivněn",
           "impacted_other": "{{count}} torrenty by byly ovlivněny",
-          "completed": "Simulace dokončena"
+          "completed": "Simulace dokončena",
+          "skippedSmallFiles_one": "U {{count}} torrentu by se soubory nastavily na nestahovat ({{files}} souborů)",
+          "skippedSmallFilesAllBelow_one": "{{count}} torrent beze změny, všechny soubory jsou pod velikostí",
+          "skippedSmallFiles_few": "U {{count}} torrentů by se soubory nastavily na nestahovat ({{files}} souborů)",
+          "skippedSmallFilesAllBelow_few": "{{count}} torrentů beze změny, všechny soubory jsou pod velikostí",
+          "skippedSmallFiles_other": "U {{count}} torrentů by se soubory nastavily na nestahovat ({{files}} souborů)",
+          "skippedSmallFilesAllBelow_other": "{{count}} torrentů beze změny, všechny soubory jsou pod velikostí"
         }
       },
       "toast": {
@@ -1630,7 +1658,8 @@
         "groupIdInvalid": "ID skupiny musí obsahovat pouze alfanumerické znaky a podtržítka",
         "selectGroupKey": "Vyberte alespoň jeden klíč",
         "groupExists": "Skupina s tímto ID již existuje",
-        "customGroupAdded": "Vlastní skupina přidána"
+        "customGroupAdded": "Vlastní skupina přidána",
+        "setSkipSmallFilesSize": "Zadej velikost alespoň 1 MiB pro \"Přeskočit malé soubory\""
       },
       "trackerMatchInclude": "Zahrnout",
       "trackerMatchExclude": "Vyloučit"

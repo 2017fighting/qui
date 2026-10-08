@@ -59,6 +59,7 @@ qui manages torrent-client state and workflows for a self-hosted installation.
 ## Automations
 
 - **Season pack status**: What `SEASON_PACK_STATUS` reports for one torrent: `pack` for a season pack, `packed` for an episode that a season pack of the same release covers, `unpacked` for an episode with no such pack, empty when the name has no season or more than one season. "Same release" means title, season, cut, other markers, language markers, resolution, source, codec, audio, channels, HDR, and group all match. _Avoid_: Packed status, pack coverage.
+- **Skipped file**: A torrent file at download priority 0 ("Do not download"). qBittorrent keeps it in the file list and never fetches it. A rule sets one with the Skip small files action, and a user can set the same state by hand; the two are one file state, not two. _Avoid_: Excluded file, ignored file, unwanted file, missing file (a file absent from disk, which may or may not be a skipped file).
 
 ## Disc reports
 

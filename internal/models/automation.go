@@ -898,6 +898,7 @@ type ActionConditions struct {
 	Tags             []*TagAction            `json:"tags,omitempty"` // Preferred multi-tag actions
 	Category         *CategoryAction         `json:"category,omitempty"`
 	Move             *MoveAction             `json:"move,omitempty"`
+	SkipSmallFiles   *SkipSmallFilesAction   `json:"skipSmallFiles,omitempty"`
 	ExternalProgram  *ExternalProgramAction  `json:"externalProgram,omitempty"`
 	AutoManagement   *AutoManagementAction   `json:"autoManagement,omitempty"`
 	ExportToInstance *ExportToInstanceAction `json:"exportToInstance,omitempty"`
@@ -991,6 +992,29 @@ type MoveAction struct {
 	GroupID          string         `json:"groupId,omitempty"` // Optional grouping ID for move cross-seed protection/atomicity
 	Atomic           string         `json:"atomic,omitempty"`  // Optional atomic policy: "all" (apply only if all group members match)
 	Condition        *RuleCondition `json:"condition,omitempty"`
+}
+
+// MinSkipSmallFilesBytes is the smallest size threshold the Skip small files action
+// accepts. 1 MiB.
+const MinSkipSmallFilesBytes int64 = 1024 * 1024
+
+// SkipSmallFilesAction configures setting every file under a size threshold to
+// "Do not download" (download priority 0), with an optional condition.
+type SkipSmallFilesAction struct {
+	Enabled      bool           `json:"enabled"`
+	MaxSizeBytes int64          `json:"maxSizeBytes"`
+	Condition    *RuleCondition `json:"condition,omitempty"`
+}
+
+// Validate checks that the SkipSmallFilesAction has valid configuration.
+func (a *SkipSmallFilesAction) Validate() error {
+	if a == nil {
+		return nil
+	}
+	if a.Enabled && a.MaxSizeBytes < MinSkipSmallFilesBytes {
+		return errors.New("enabled skip small files action requires maxSizeBytes of at least 1 MiB")
+	}
+	return nil
 }
 
 // GroupingConfig defines how torrents can be grouped for group-aware actions and conditions.
@@ -1125,6 +1149,9 @@ func (ac *ActionConditions) Conditions() iter.Seq[ActionCondition] {
 			return
 		}
 		if ac.Move != nil && !emit("move", ac.Move.Enabled, ac.Move.Condition) {
+			return
+		}
+		if ac.SkipSmallFiles != nil && !emit("skipSmallFiles", ac.SkipSmallFiles.Enabled, ac.SkipSmallFiles.Condition) {
 			return
 		}
 		if ac.ExternalProgram != nil && !emit("externalProgram", ac.ExternalProgram.Enabled, ac.ExternalProgram.Condition) {

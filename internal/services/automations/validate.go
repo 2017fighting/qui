@@ -150,6 +150,10 @@ func ValidateRule(rule *models.Automation, instance *models.Instance) error {
 		return ruleError("External program action requires a valid program selection")
 	}
 
+	if err := conditions.SkipSmallFiles.Validate(); err != nil {
+		return ruleError("Skip small files requires a size of at least 1 MiB")
+	}
+
 	return nil
 }
 
