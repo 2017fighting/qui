@@ -253,6 +253,12 @@ export interface ExportToInstanceAction {
   condition?: RuleCondition
 }
 
+export interface SkipSmallFilesAction {
+  enabled: boolean
+  maxSizeBytes: number
+  condition?: RuleCondition
+}
+
 export interface ActionConditions {
   schemaVersion: string
   grouping?: GroupingConfig
@@ -272,6 +278,7 @@ export interface ActionConditions {
   externalProgram?: ExternalProgramAction
   autoManagement?: AutoManagementAction
   exportToInstance?: ExportToInstanceAction
+  skipSmallFiles?: SkipSmallFilesAction
 }
 
 export type FreeSpaceSource =
@@ -360,7 +367,7 @@ export interface AutomationActivity {
   hash: string
   torrentName?: string
   trackerDomain?: string
-  action: "deleted_ratio" | "deleted_seeding" | "deleted_unregistered" | "deleted_condition" | "delete_failed" | "limit_failed" | "tags_changed" | "category_changed" | "speed_limits_changed" | "share_limits_changed" | "paused" | "resumed" | "rechecked" | "reannounced" | "auto_managed" | "moved" | "external_program" | "exported_to_instance" | "dry_run_no_match"
+  action: "deleted_ratio" | "deleted_seeding" | "deleted_unregistered" | "deleted_condition" | "delete_failed" | "limit_failed" | "tags_changed" | "category_changed" | "speed_limits_changed" | "share_limits_changed" | "paused" | "resumed" | "rechecked" | "reannounced" | "auto_managed" | "moved" | "external_program" | "exported_to_instance" | "skipped_small_files" | "skip_small_files_failed" | "dry_run_no_match"
   ruleId?: number
   ruleName?: string
   outcome: "success" | "failed" | "dry-run"
@@ -386,6 +393,10 @@ export interface AutomationActivity {
     limits?: Record<string, number> // "upload:1024" -> count, or "2.00:1440" -> count
     // Move activity details
     paths?: Record<string, number> // path -> count of torrents
+    // Skip small files activity details
+    files?: number // files set to "Do not download"
+    bytes?: number // total size of those files
+    guarded?: number // torrents left alone because every file was under the threshold
   }
   createdAt: string
 }
@@ -405,6 +416,10 @@ export interface AutomationActivityRunItem {
   downloadLimitKiB?: number
   ratioLimit?: number
   seedingMinutes?: number
+  skippedFiles?: string[] // file names set to "Do not download", capped
+  skippedFileCount?: number // total files set, which can exceed the names
+  skippedBytes?: number // total size of those files
+  skippedAllBelow?: boolean // every file was under the threshold, so the torrent was left alone
 }
 
 export interface AutomationActivityRun {
