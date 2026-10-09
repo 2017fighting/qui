@@ -1,18 +1,20 @@
 name: Sync upstream
 
-# Mirrors autobrr/qui into this fork and publishes the images the fork needs.
+# Mirrors autobrr/qui into this fork: merges upstream/develop into develop and
+# copies upstream's release tags. This fork's release.yml then builds and
+# publishes the images for the merged branch and for every mirrored tag, which
+# is why this workflow does not build anything itself.
 #
-# Every push here uses the workflow's GITHUB_TOKEN, and GitHub does not start
-# workflows for events a GITHUB_TOKEN created. The fork's own release.yml
-# therefore does NOT run for a synced branch or tag; this workflow builds the
-# images itself, and the fork needs no secret from upstream (no goreleaser-pro
-# key, no release signing key, no premium themes token).
+# Pushes use the SYNC_TOKEN secret, a fine-grained personal access token with
+# Contents: read and write and Workflows: read and write. The default
+# GITHUB_TOKEN cannot do them: GitHub refuses to let a GitHub App token create
+# or update a `.github/workflows/*` file, and both upstream's develop commits
+# and every release tag's tree contain those files.
 #
-# Covered: the develop branch merges upstream, every tag upstream releases after
-# the newest tag the fork has gets mirrored, images go to
-# ghcr.io/<owner>/<repo> as <tag>, <major>.<minor> and latest (releases only),
-# plus :develop when the branch moved. Not covered: GitHub Releases and the
-# goreleaser binaries, which need upstream's secrets.
+# Because SYNC_TOKEN is a real token, the events it creates do start other
+# workflows: release.yml builds the images (its goreleaser job stays off until
+# the repository variable PUBLISH_RELEASES is set, see release.yml), and the
+# lint and test runs cover the synced commits.
 
 on:
   schedule:
@@ -24,10 +26,6 @@ on:
         description: "Extra upstream tag to mirror, for example v1.30.0"
         type: string
         default: ""
-      force_build:
-        description: "Build the images even when nothing moved"
-        type: boolean
-        default: false
 
 # One sync at a time. A queued run waits; cancelling one mid-merge would leave
 # the checkout in a state the next run has to reason about.
@@ -36,12 +34,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write
-  packages: write
-
-env:
-  REGISTRY: ghcr.io
-  REGISTRY_IMAGE: ghcr.io/${{ github.repository }}
+  contents: read
 
 jobs:
   sync:
@@ -49,7 +42,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     outputs:
-      targets: ${{ steps.sync.outputs.targets }}
       develop_moved: ${{ steps.sync.outputs.develop_moved }}
       tags_pushed: ${{ steps.sync.outputs.tags_pushed }}
     steps:
@@ -60,77 +52,14 @@ jobs:
           # The merge needs the shared history, and the tag mirroring needs the
           # tag objects upstream created.
           fetch-depth: 0
+          # Persisted for the pushes below, so a git error never prints it.
+          token: ${{ secrets.SYNC_TOKEN }}
 
       - name: Sync from upstream
         id: sync
         env:
           UPSTREAM_REPO: https://github.com/autobrr/qui.git
           BRANCH: develop
-          IMAGE: ${{ env.REGISTRY_IMAGE }}
+          SYNC_TOKEN: ${{ secrets.SYNC_TOKEN }}
           EXTRA_TAG: ${{ inputs.tag }}
-          FORCE_BUILD: ${{ inputs.force_build }}
         run: ./.github/scripts/sync-upstream.sh
-
-  build:
-    name: Build ${{ matrix.version }}
-    needs: sync
-    if: needs.sync.outputs.targets != '[]'
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    strategy:
-      # One failing tag must not stop the others; this run already mirrored them.
-      fail-fast: false
-      matrix:
-        include: ${{ fromJSON(needs.sync.outputs.targets) }}
-    steps:
-      - name: Checkout ${{ matrix.ref }}
-        uses: actions/checkout@v7.0.1
-        with:
-          ref: ${{ matrix.ref }}
-          fetch-depth: 1
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v4.6.0
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4.4.1
-
-      - name: Build and push ${{ matrix.version }}
-        uses: docker/build-push-action@v7.4.0
-        with:
-          context: .
-          # Builds the frontend inside the image, so the workflow needs no web-dist
-          # artifact. Its runner stage matches distrib/docker/ci.Dockerfile.
-          file: ./distrib/docker/Dockerfile
-          platforms: linux/amd64
-          push: true
-          # matrix.tags holds fully qualified references, one per line.
-          tags: ${{ matrix.tags }}
-          labels: |
-            org.opencontainers.image.version=${{ matrix.version }}
-            org.opencontainers.image.revision=${{ matrix.sha }}
-            org.opencontainers.image.created=${{ matrix.date }}
-          build-args: |
-            VERSION=${{ matrix.version }}
-            GIT_COMMIT=${{ matrix.sha }}
-            BUILD_DATE=${{ matrix.date }}
-          # One scope for every tag and branch: the base images and the pnpm/go
-          # layers are shared, and a per-tag scope would let the 10 GB cache
-          # budget churn.
-          cache-from: type=gha,scope=qui-image
-          cache-to: type=gha,mode=max,scope=qui-image
-          provenance: false
-
-      - name: Report tags
-        env:
-          TAGS: ${{ matrix.tags }}
-        run: |
-          while read -r ref; do
-            if [[ -n "$ref" ]]; then
-              echo "- \`${ref}\`" >>"$GITHUB_STEP_SUMMARY"
-            fi
-          done <<<"${TAGS}"

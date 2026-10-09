@@ -94,7 +94,11 @@ jobs:
 
   goreleaserbuild:
     name: Build distribution binaries
-    if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/develop'
+    # This fork runs release.yml without upstream's release secrets, so goreleaser
+    # would fail on every tag. Set the repository variable PUBLISH_RELEASES to
+    # true once GORELEASER_KEY, RELEASE_SIGNING_PRIVATE_KEY and THEMES_REPO_TOKEN
+    # exist here; nothing in this workflow depends on this job.
+    if: ${{ (startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/develop') && vars.PUBLISH_RELEASES == 'true' }}
     # The MSI needs wixl 0.105 or later for Environment. Ubuntu 24.04 ships 0.103.
     runs-on: ubuntu-26.04
     needs: [test, web]

@@ -1,35 +1,40 @@
 #!/usr/bin/env bash
 #
-# Sync this fork with upstream and mirror newly released tags.
+# Sync this fork with upstream and mirror upstream's release tags.
 #
-# Called by .github/workflows/sync-upstream.yml. The branch merge never
-# force-pushes: upstream is merged into the fork, so local commits stay.
+# Called by .github/workflows/sync-upstream.yml, which checks out with the
+# SYNC_TOKEN personal access token. The pushes need that token: GITHUB_TOKEN is
+# refused with "refusing to allow a GitHub App to create or update workflow
+# ... without `workflows` permission" as soon as the pushed range holds a
+# .github/workflows/* file, and upstream's develop and every release tag do.
+#
+# The branch merge never force-pushes: upstream is merged into the fork, so
+# local commits stay.
 #
 # Tag rule: a tag upstream released after the newest tag this fork already has,
 # plus the newest upstream tag when the fork has no tags at all (otherwise the
 # first run would mirror nothing and the current release would never get an
 # image). Older upstream tags are never backfilled; pass EXTRA_TAG to mirror one
-# by hand.
+# by hand. Mirroring a tag triggers this fork's release.yml, which builds and
+# publishes the images for it.
 #
 # Environment:
+#   SYNC_TOKEN     PAT with Contents + Workflows write (required in CI)
 #   UPSTREAM_REPO  upstream clone URL (default https://github.com/autobrr/qui.git)
 #   BRANCH         fork branch to merge upstream into (default develop)
 #   EXTRA_TAG      also mirror this upstream tag, even an older one
 #   SEED_NEWEST    "false" skips the newest-tag seed when the fork has no tags
-#   FORCE_BUILD    "true" builds the images even when nothing moved
 #   DRY_RUN        "true" prints what it would push instead of pushing
 #   GITHUB_OUTPUT  workflow output file; unset prints outputs to stderr instead
 #
-# Outputs: develop_moved, develop_sha, tags_pushed, targets (build matrix JSON)
+# Outputs: develop_moved, develop_sha, tags_pushed
 set -euo pipefail
 
 upstream_repo="${UPSTREAM_REPO:-https://github.com/autobrr/qui.git}"
 branch="${BRANCH:-develop}"
 extra_tag="${EXTRA_TAG:-}"
 seed_newest="${SEED_NEWEST:-true}"
-force_build="${FORCE_BUILD:-false}"
 dry_run="${DRY_RUN:-false}"
-image="${IMAGE:-ghcr.io/${GITHUB_REPOSITORY:-autobrr/qui}}"
 
 log() { printf '%s\n' "$*" >&2; }
 
@@ -38,28 +43,15 @@ emit() { # emit <name> <value>
   log "  $1=$2"
 }
 
+if [[ "${GITHUB_ACTIONS:-}" == "true" && -z "${SYNC_TOKEN:-}" ]]; then
+  log "SYNC_TOKEN is empty, so the pushes would be rejected."
+  log "Add a fine-grained personal access token with Contents: read and write and"
+  log "Workflows: read and write as the repository secret SYNC_TOKEN."
+  exit 1
+fi
+
 # No prompt, no hang: a bad URL or a missing credential must fail the job.
 export GIT_TERMINAL_PROMPT=0
-
-targets_json="["
-first_target=1
-# add_target <ref> <version> <sha> <tag suffixes, comma separated>
-# The tag list is written as fully qualified image references, one per line: the
-# build action reads `ghcr.io/x/y:1.2.3,1.2` as the repositories "1.2" and
-# "latest" rather than as tags of the image.
-add_target() { # add_target <ref> <version> <sha> <tag suffixes, comma separated>
-  local refs=""
-  local separator=""
-  local suffix
-  for suffix in ${4//,/ }; do
-    refs+="${separator}${image}:${suffix}"
-    separator='\n'
-  done
-  [[ "$first_target" -eq 1 ]] || targets_json+=","
-  first_target=0
-  targets_json+="$(printf '{"ref":"%s","version":"%s","sha":"%s","tags":"%s","date":"%s"}' \
-    "$1" "$2" "$3" "$refs" "$(date -u +%Y-%m-%dT%H:%M:%SZ)")"
-}
 
 # 1. Upstream and the fork, with the fork's identity for the merge commit.
 git remote add upstream "$upstream_repo" 2>/dev/null || git remote set-url upstream "$upstream_repo"
@@ -114,10 +106,6 @@ else
 fi
 if [[ -n "$extra_tag" ]]; then candidates+=("$extra_tag"); fi
 
-# The newest upstream tag at this moment, used to decide which image carries
-# latest: a hand-mirrored older tag must not move latest backwards.
-newest_upstream="$(printf '%s\n' "$upstream_tags" | grep -v '^$' | sort -V | tail -1 || true)"
-
 tags_pushed=""
 for tag in $(printf '%s\n' "${candidates[@]:-}" | grep -v '^$' | sort -u -V); do
   if grep -qxF "$tag" <<<"$fork_tags"; then
@@ -131,29 +119,17 @@ for tag in $(printf '%s\n' "${candidates[@]:-}" | grep -v '^$' | sort -u -V); do
     git push origin "refs/tags/${tag}:refs/tags/${tag}"
   fi
   tags_pushed+="${tag} "
-  tag_sha=$(git rev-parse "refs/tags/${tag}^{commit}")
-  tag_tags="$tag"
-  # v1.31.1 also carries v1.31; latest only moves forward, on the newest stable tag.
-  tag_tags+=",v$(cut -d. -f1,2 <<<"${tag#v}")"
-  if [[ "$tag" != *-* && "$tag" == "$newest_upstream" ]]; then tag_tags+=",latest"; fi
-  add_target "refs/tags/${tag}" "$tag" "$tag_sha" "$tag_tags"
 done
 
-if [[ "$develop_moved" == "true" || "$force_build" == "true" ]]; then
-  add_target "refs/heads/${branch}" "$branch" "$after_sha" "$branch"
-fi
-
-targets_json+="]"
 emit "develop_moved" "$develop_moved"
 emit "develop_sha" "$after_sha"
 emit "tags_pushed" "${tags_pushed% }"
-emit "targets" "$targets_json"
 
 if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
   {
     printf '## Sync upstream\n\n'
     printf -- '- `%s` moved: %s (`%s`)\n' "$branch" "$develop_moved" "$after_sha"
     printf -- '- tags mirrored: %s\n' "${tags_pushed:-none}"
-    printf -- '- images to build: %s\n' "$targets_json"
+    printf -- '- a mirrored tag and a moved branch both trigger this fork release.yml, which builds the images\n'
   } >>"$GITHUB_STEP_SUMMARY"
 fi
