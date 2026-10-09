@@ -94,7 +94,14 @@ jobs:
 
   goreleaserbuild:
     name: Build distribution binaries
-    if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/develop'
+    # This fork has no RELEASE_SIGNING_PRIVATE_KEY, and publishing a release needs
+    # the private key behind the updater certificate in internal/update, which
+    # only upstream holds: on a tag this job fails at the step that checks for
+    # that key, which turned every mirrored release tag red. Branch runs keep
+    # their snapshot build, and other refs still skip this job. Set the
+    # repository variable PUBLISH_RELEASES to true to run it on tags again once
+    # the key exists here.
+    if: ${{ (startsWith(github.ref, 'refs/tags/') && vars.PUBLISH_RELEASES == 'true') || github.ref == 'refs/heads/develop' }}
     # The MSI needs wixl 0.105 or later for Environment. Ubuntu 24.04 ships 0.103.
     runs-on: ubuntu-26.04
     needs: [test, web]
