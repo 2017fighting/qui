@@ -1203,6 +1203,7 @@
           "skippedSmallFiles": "Omet els fitxers petits",
           "skipSmallFilesFailed": "No s'han pogut ometre els fitxers petits"
         },
+        "actionFallback": "Acció desconeguda ({{action}})",
         "summary": {
           "tagsChangedBoth": "{{added}} s'etiquetarien i {{removed}} es desetiquetarien",
           "tagsAdded": "{{count}} s'etiquetaria",

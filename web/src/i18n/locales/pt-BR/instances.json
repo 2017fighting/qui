@@ -1555,6 +1555,7 @@
           "skippedSmallFiles": "Ignorar arquivos pequenos",
           "skipSmallFilesFailed": "Falha ao ignorar arquivos pequenos"
         },
+        "actionFallback": "Ação desconhecida ({{action}})",
         "summary": {
           "tagsChangedBoth": "Tags afetadas ({{added}} Inseridas | {{removed}} Excluídas)",
           "tagsAdded": "{{count}} Tag ganha",
