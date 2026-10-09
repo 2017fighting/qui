@@ -1592,6 +1592,7 @@
           "skippedSmallFiles": "Přeskočit malé soubory",
           "skipSmallFilesFailed": "Přeskočení malých souborů selhalo"
         },
+        "actionFallback": "Neznámá akce ({{action}})",
         "summary": {
           "tagsChangedBoth": "{{added}} by byly otagovány, {{removed}} by byly odtagovány",
           "tagsAdded": "{{count}} by byly otagovány",

@@ -1524,6 +1524,7 @@
           "skippedSmallFiles": "작은 파일 건너뛰기",
           "skipSmallFilesFailed": "작은 파일 건너뛰기 실패"
         },
+        "actionFallback": "알 수 없는 작업 ({{action}})",
         "summary": {
           "tagsChangedBoth": "{{added}}개 태그될 예정, {{removed}}개 태그 해제될 예정",
           "tagsAdded": "{{count}}개 태그될 예정",

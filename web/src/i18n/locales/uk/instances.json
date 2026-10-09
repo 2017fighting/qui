@@ -1617,6 +1617,7 @@
           "skippedSmallFiles": "Пропускати малі файли",
           "skipSmallFilesFailed": "Не вдалося пропустити малі файли"
         },
+        "actionFallback": "Невідома дія ({{action}})",
         "summary": {
           "tagsChangedBoth": "{{added}} буде позначено, {{removed}} буде не позначено",
           "tagsAdded": "{{count}} буде позначено тегами",

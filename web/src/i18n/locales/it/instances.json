@@ -1555,6 +1555,7 @@
           "skippedSmallFiles": "Salta i file piccoli",
           "skipSmallFilesFailed": "Salto dei file piccoli non riuscito"
         },
+        "actionFallback": "Azione sconosciuta ({{action}})",
         "summary": {
           "tagsChangedBoth": "{{added}} verrebbero taggati, {{removed}} verrebbero rimossi dai tag",
           "tagsAdded": "{{count}} verrebbe taggato",

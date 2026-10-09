@@ -1524,6 +1524,7 @@
           "skippedSmallFiles": "略過小檔案",
           "skipSmallFilesFailed": "略過小檔案失敗"
         },
+        "actionFallback": "未知操作（{{action}}）",
         "summary": {
           "tagsChangedBoth": "{{added}} 將被標記，{{removed}} 將被取消標記",
           "tagsAdded": "{{count}} 將被標記",

@@ -1555,6 +1555,7 @@
           "skippedSmallFiles": "Kleine Dateien überspringen",
           "skipSmallFilesFailed": "Kleine Dateien überspringen fehlgeschlagen"
         },
+        "actionFallback": "Unbekannte Aktion ({{action}})",
         "summary": {
           "tagsChangedBoth": "{{added}} würden getaggt, {{removed}} würden entfernt",
           "tagsAdded": "{{count}} würde getaggt",
