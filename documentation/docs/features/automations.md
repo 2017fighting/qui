@@ -5,6 +5,8 @@ sidebar_label: Automations
 description: Rule-based automation for torrent management.
 ---
 
+import AutomationsJsonReference from "../_partials/_automations-json-reference.mdx";
+
 # Automations
 
 Automations are rules that apply actions to torrents that match conditions. Use them to manage speed limits, delete old torrents, and organize torrents with tags and categories.
@@ -446,7 +448,7 @@ Supported keys:
 - `rlsSource`, `rlsResolution`, `rlsCodec`, `rlsHDR`, `rlsAudio`, `rlsChannels`, `rlsGroup`
 - `hardlinkSignature`
 
-For content-path-based grouping where `Content Path == Save Path` (ambiguous), you can set:
+For content-path-based grouping where `Content Path == Save Path` (ambiguous), you can set the policy below. The delete, category, and move actions apply it when they expand to the group. The Group Size and Is Grouped conditions ignore it.
 
 - `ambiguousPolicy: "verify_overlap"` (default for cross-seed groups) with `minFileOverlapPercent` (default `90`)
 - `ambiguousPolicy: "skip"`
@@ -850,6 +852,16 @@ Before deletion, qui reads the files again for rules that use hardlink data. If 
 
 To diagnose this issue, enable debug logging and check for the "hardlink index built" log message, which reports an `inaccessible` count.
 
+#### How current the scope is
+
+qui keeps the hardlink data of each instance for up to 10 minutes. Rules, previews, and dry runs on that instance share it.
+
+- When a torrent is added, removed, or moved, qui reads that torrent and the torrents that share its files again at the next rule run.
+- A change only on disk, such as a library file that Sonarr or Radarr deletes after an upgrade, shows when qui reads all torrents again. That happens at the first rule run after the data is 10 minutes old. With the default interval of 15 minutes, every run reads all torrents again. Rules with shorter intervals, previews, and dry runs on the same instance can add up to 10 minutes.
+- A file list from qBittorrent can be up to 1 hour old. After a rename or a file priority change made outside qui, the scope of that torrent can stay unknown for up to 1 hour. The same changes made in qui refresh the file list at once, and the scope changes when qui reads all torrents again.
+
+The check before deletion (see above) reads the files of the torrent again and holds any torrent whose scope changed. For `HARDLINK_SCOPE_CROSS`, it does not read the files of other instances again. A change on another instance shows when qui reads all torrents again.
+
 #### Docker volume requirements
 
 For hardlink scope detection to work in Docker:
@@ -1220,13 +1232,15 @@ qui accepts and ignores the keys `id`, `instanceId`, `createdAt`, and `updatedAt
 
 An export keeps `externalProgram.programId` and `exportToInstance.targetInstanceId`. These IDs belong to the qui that made the export. When an enabled action has an ID that does not exist on your qui, the import fails. When the ID exists but means a different program or instance, the import succeeds. Before you enable an imported rule, select the program or the target instance again. The instance ID is in the URL of the instance page, `/instances/<id>`.
 
-qui also checks each condition. It rejects an unknown field, an unknown operator, and an operator that the field does not allow, for example `GREATER_THAN` on a yes/no field. It rejects a value that the field does not list, for example a misspelled torrent state, and an unknown `exportToInstance.contentLayout`. The line names the operators or values that the field allows:
+qui also checks each condition. It rejects an unknown field, an unknown operator, and an operator that the field does not allow, for example `GREATER_THAN` on a yes/no field. It rejects a value that the field does not list, for example a misspelled torrent state, and an unknown `exportToInstance.contentLayout`. It rejects a `groupId` or `defaultGroupId` that names no built-in group and no group in `conditions.grouping`. The line names the operators or values that the field allows:
 
 ```text
 conditions.pause.condition.operator: PRIVATE does not allow GREATER_THAN; it allows EQUAL, NOT_EQUAL
 ```
 
-If you edit a rule and do not change its conditions, qui does not run these condition checks. You can switch an older rule on or off and rename it, also when one of its conditions fails the check. qui treats the sorting the same way. It checks the score conditions of the sorting only when you change the sorting.
+If you edit a rule and do not change its conditions, qui does not run these condition checks. You can switch an older rule on or off and rename it, also when one of its conditions fails the check. qui treats the sorting the same way. It checks the score conditions of the sorting only when you change the sorting. When you change the groups in `conditions.grouping`, qui also checks the group IDs in the score conditions.
+
+<AutomationsJsonReference />
 
 ## Activity log
 
