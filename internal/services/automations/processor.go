@@ -966,6 +966,11 @@ func updateCrossSeedFreeSpaceCleared(torrent qbt.Torrent, evalCtx *EvalContext, 
 		return
 	}
 
+	// A nested Content Path outside the group skips the delete, so it frees nothing.
+	if cpIndex.NestedPathExclusion(cpIndex.Group(torrent)) != "" {
+		return
+	}
+
 	group := cpIndex.Group(torrent)
 	verifiedHashes, ok := contentgroup.VerifiedMembers(
 		torrent,

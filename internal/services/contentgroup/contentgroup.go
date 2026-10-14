@@ -39,18 +39,32 @@ func normalizePathInner(p string) string {
 
 // Index maps normalized Content Paths to the torrents at that path.
 // Build once with BuildIndex, then look up in O(1).
-type Index map[string][]qbt.Torrent
+type Index map[string]pathBucket
+
+// pathBucket holds the torrents at one Content Path and the nested-path conflict that
+// excludes the group, if another torrent's Content Path nests with it.
+type pathBucket struct {
+	torrents []qbt.Torrent
+	nested   string
+}
 
 // BuildIndex buckets torrents by normalized Content Path. A torrent with an empty
-// Content Path is left out.
+// Content Path is left out. It also records the nested-path conflicts, so
+// NestedPathExclusion stays O(1) per group.
 func BuildIndex(torrents []qbt.Torrent) Index {
-	idx := make(Index, len(torrents)/2)
+	byPath := make(map[string][]qbt.Torrent, len(torrents)/2)
 	for i := range torrents {
 		p := NormalizePath(torrents[i].ContentPath)
 		if p == "" {
 			continue
 		}
-		idx[p] = append(idx[p], torrents[i])
+		byPath[p] = append(byPath[p], torrents[i])
+	}
+
+	nested := nestedPaths(byPath)
+	idx := make(Index, len(byPath))
+	for path, group := range byPath {
+		idx[path] = pathBucket{torrents: group, nested: nested[path]}
 	}
 	return idx
 }
@@ -62,18 +76,18 @@ func (idx Index) Group(target qbt.Torrent) []qbt.Torrent {
 	if p == "" {
 		return nil
 	}
-	return idx[p]
+	return idx[p].torrents
 }
 
 // SharedHashes returns the sorted hashes of torrents in buckets with more than one
 // member, the only buckets where a file-overlap check can find a partner.
 func (idx Index) SharedHashes() []string {
 	var hashes []string
-	for _, group := range idx {
-		if len(group) < 2 {
+	for _, bucket := range idx {
+		if len(bucket.torrents) < 2 {
 			continue
 		}
-		for _, torrent := range group {
+		for _, torrent := range bucket.torrents {
 			hashes = append(hashes, torrent.Hash)
 		}
 	}
