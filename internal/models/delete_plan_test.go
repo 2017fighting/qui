@@ -120,6 +120,83 @@ func TestDeletePlanStore_RoundTripsAFrozenPlan(t *testing.T) {
 	require.False(t, frozen)
 }
 
+func TestDeletePlanStore_UpdateRowSelectionUnticksAndKeepsOrder(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	_, store, instanceID := newDeletePlanFixture(t, testdb.NewMigratedSQLite)
+
+	runID, err := store.CreateRunIfNoActive(ctx, instanceID, 250, "[]", true)
+	require.NoError(t, err)
+	started, err := store.StartRunPlanning(ctx, runID)
+	require.NoError(t, err)
+	require.True(t, started)
+	require.NoError(t, store.InsertRows(ctx, runID, []*models.DeletePlanRow{
+		{
+			ContentPath: "/data/A",
+			SizeBytes:   100,
+			MemberCount: 1,
+			Included:    true,
+			Members:     []models.DeletePlanMember{{Hash: "a", SizeBytes: 100, Progress: 1, State: "uploading"}},
+		},
+		{
+			ContentPath: "/data/B",
+			SizeBytes:   200,
+			MemberCount: 1,
+			Included:    true,
+			Members:     []models.DeletePlanMember{{Hash: "b", SizeBytes: 200, Progress: 1, State: "uploading"}},
+		},
+		{
+			ContentPath:   "/data/Protected",
+			SizeBytes:     900,
+			MemberCount:   1,
+			Excluded:      true,
+			ExcludeReason: "incomplete",
+			Members:       []models.DeletePlanMember{{Hash: "c", SizeBytes: 900, Progress: 0.5, State: "downloading"}},
+		},
+	}))
+	frozen, err := store.UpdateRunPreview(ctx, runID, 300, 0, 50, true)
+	require.NoError(t, err)
+	require.True(t, frozen)
+
+	run, err := store.GetRun(ctx, runID)
+	require.NoError(t, err)
+	require.EqualValues(t, 0, run.ShortfallBytes, "a met target has no shortfall")
+	require.Len(t, run.Groups, 2)
+
+	applied, err := store.UpdateRowSelection(ctx, runID, []int64{run.Groups[1].ID}, 100, 0, 0, false)
+	require.NoError(t, err)
+	require.True(t, applied)
+
+	run, err = store.GetRun(ctx, runID)
+	require.NoError(t, err)
+	require.EqualValues(t, 100, run.PlannedBytes)
+	require.EqualValues(t, 0, run.OvershootBytes)
+	require.EqualValues(t, 150, run.ShortfallBytes)
+	require.False(t, run.TargetReached)
+	require.True(t, run.Groups[0].Included)
+	require.False(t, run.Groups[1].Included)
+	// Only the included flag changes: the unticked row keeps its plan position.
+	require.Equal(t, "/data/A", run.Groups[0].ContentPath)
+	require.Equal(t, "/data/B", run.Groups[1].ContentPath)
+	// An excluded row is not part of the selection and stays excluded.
+	require.Len(t, run.ExcludedGroups, 1)
+	require.False(t, run.ExcludedGroups[0].Included)
+	require.True(t, run.ExcludedGroups[0].Excluded)
+}
+
+func TestDeletePlanStore_UpdateRowSelectionRefusesANonPreviewRun(t *testing.T) {
+	t.Parallel()
+	ctx := t.Context()
+	_, store, instanceID := newDeletePlanFixture(t, testdb.NewMigratedSQLite)
+
+	runID, err := store.CreateRunIfNoActive(ctx, instanceID, 1000, "[]", true)
+	require.NoError(t, err)
+
+	applied, err := store.UpdateRowSelection(ctx, runID, nil, 0, 0, 0, false)
+	require.NoError(t, err)
+	require.False(t, applied, "a pending run does not accept a row selection")
+}
+
 func TestDeletePlanStore_GetRunByInstanceScopesToTheInstance(t *testing.T) {
 	t.Parallel()
 	ctx := t.Context()

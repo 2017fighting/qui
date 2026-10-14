@@ -19,7 +19,7 @@ vi.mock("react-i18next", async (importOriginal) => ({
 }))
 
 // Stable singletons: a fresh object per render would rerun effects forever.
-const { instancesQuery, runsQuery, cancelMutation, createMutation, confirmMutation, runQuery } = vi.hoisted(() => {
+const { instancesQuery, runsQuery, cancelMutation, createMutation, confirmMutation, updateRowsMutation, refillMutation, runQuery } = vi.hoisted(() => {
   const instance = {
     id: 1,
     name: "seedbox-europe-west-archive-01",
@@ -52,6 +52,8 @@ const { instancesQuery, runsQuery, cancelMutation, createMutation, confirmMutati
     cancelMutation: { isPending: false, mutate: vi.fn() },
     createMutation: { isPending: false, mutate: vi.fn() },
     confirmMutation: { isPending: false, mutate: vi.fn() },
+    updateRowsMutation: { isPending: false, mutate: vi.fn() },
+    refillMutation: { isPending: false, mutate: vi.fn() },
     runQuery: { data: undefined as unknown, isLoading: false, isError: false },
   }
 })
@@ -66,6 +68,8 @@ vi.mock("@/hooks/useDeletePlan", () => ({
   useCreateDeletePlan: () => createMutation,
   useCancelDeletePlanRun: () => cancelMutation,
   useConfirmDeletePlanRun: () => confirmMutation,
+  useUpdateDeletePlanRows: () => updateRowsMutation,
+  useRefillDeletePlanRun: () => refillMutation,
 }))
 
 import { DeletePlanOverview } from "@/components/instances/preferences/DeletePlanOverview"

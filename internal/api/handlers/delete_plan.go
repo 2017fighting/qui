@@ -23,6 +23,8 @@ type deletePlanService interface {
 	TriggerPlan(ctx context.Context, instanceID int, req deleteplan.PlanRequest) (int64, error)
 	CancelRun(ctx context.Context, runID int64) error
 	ConfirmRun(ctx context.Context, runID int64) error
+	UpdateRunRows(ctx context.Context, runID int64, unticked []int64) error
+	RefillRun(ctx context.Context, runID int64) error
 }
 
 // DeletePlanHandler serves the instance-scoped delete plan API.
@@ -202,6 +204,116 @@ func (h *DeletePlanHandler) CancelRun(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	RespondJSON(w, http.StatusOK, run)
+}
+
+// DeletePlanRowsPayload is the request body for replacing a run's unticked set.
+type DeletePlanRowsPayload struct {
+	Unticked *[]int64 `json:"unticked"`
+}
+
+// UpdateRows replaces the unticked set of a preview_ready run. An unticked row
+// stays in the run with included false and leaves the totals.
+func (h *DeletePlanHandler) UpdateRows(w http.ResponseWriter, r *http.Request) {
+	instanceID, err := parseInstanceID(w, r)
+	if err != nil {
+		return
+	}
+	runID, ok := parseDeletePlanRunID(w, r)
+	if !ok {
+		return
+	}
+
+	run, err := h.store.GetRunByInstance(r.Context(), instanceID, runID)
+	if err != nil {
+		log.Error().Err(err).Int64("runID", runID).Msg("deleteplan: failed to get run for the row update")
+		RespondError(w, http.StatusInternalServerError, "Failed to get delete plan")
+		return
+	}
+	if run == nil {
+		RespondError(w, http.StatusNotFound, "Run not found")
+		return
+	}
+
+	var payload DeletePlanRowsPayload
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		RespondError(w, http.StatusBadRequest, "Invalid request payload")
+		return
+	}
+	if payload.Unticked == nil {
+		RespondError(w, http.StatusBadRequest, "unticked is required")
+		return
+	}
+
+	if h.service == nil {
+		RespondError(w, http.StatusServiceUnavailable, "Delete plan service not available")
+		return
+	}
+
+	if err := h.service.UpdateRunRows(r.Context(), runID, *payload.Unticked); err != nil {
+		h.respondRowSelectionError(w, runID, err)
+		return
+	}
+
+	h.respondUpdatedRun(w, r, runID)
+}
+
+// RefillRun re-includes the unticked groups in plan order until the target is met.
+func (h *DeletePlanHandler) RefillRun(w http.ResponseWriter, r *http.Request) {
+	instanceID, err := parseInstanceID(w, r)
+	if err != nil {
+		return
+	}
+	runID, ok := parseDeletePlanRunID(w, r)
+	if !ok {
+		return
+	}
+
+	run, err := h.store.GetRunByInstance(r.Context(), instanceID, runID)
+	if err != nil {
+		log.Error().Err(err).Int64("runID", runID).Msg("deleteplan: failed to get run for the refill")
+		RespondError(w, http.StatusInternalServerError, "Failed to get delete plan")
+		return
+	}
+	if run == nil {
+		RespondError(w, http.StatusNotFound, "Run not found")
+		return
+	}
+
+	if h.service == nil {
+		RespondError(w, http.StatusServiceUnavailable, "Delete plan service not available")
+		return
+	}
+
+	if err := h.service.RefillRun(r.Context(), runID); err != nil {
+		h.respondRowSelectionError(w, runID, err)
+		return
+	}
+
+	h.respondUpdatedRun(w, r, runID)
+}
+
+func (h *DeletePlanHandler) respondRowSelectionError(w http.ResponseWriter, runID int64, err error) {
+	switch {
+	case errors.Is(err, deleteplan.ErrPlanRunNotFound):
+		RespondError(w, http.StatusNotFound, "Run not found")
+	case errors.Is(err, deleteplan.ErrPlanRowNotInRun):
+		RespondError(w, http.StatusBadRequest, err.Error())
+	case errors.Is(err, deleteplan.ErrPlanRunInvalidStatus):
+		RespondError(w, http.StatusConflict, err.Error())
+	default:
+		log.Error().Err(err).Int64("runID", runID).Msg("deleteplan: failed to update the run rows")
+		RespondError(w, http.StatusInternalServerError, "Failed to update the delete plan")
+	}
+}
+
+func (h *DeletePlanHandler) respondUpdatedRun(w http.ResponseWriter, r *http.Request, runID int64) {
+	run, err := h.store.GetRun(r.Context(), runID)
+	if err != nil || run == nil {
+		log.Error().Err(err).Int64("runID", runID).Msg("deleteplan: failed to read the updated run")
+		RespondError(w, http.StatusInternalServerError, "Failed to read delete plan")
+		return
+	}
 	RespondJSON(w, http.StatusOK, run)
 }
 

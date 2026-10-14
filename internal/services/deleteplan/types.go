@@ -27,6 +27,9 @@ var ErrPlanRunAlreadyFinished = errors.New("delete plan run already finished")
 // ErrPlanRunInvalidStatus is returned for a status an operation cannot act on.
 var ErrPlanRunInvalidStatus = errors.New("invalid delete plan run status for this operation")
 
+// ErrPlanRowNotInRun is returned when an unticked row ID is not part of the run.
+var ErrPlanRowNotInRun = errors.New("delete plan row is not part of the run")
+
 // ErrInvalidTarget is returned when the target size is not positive.
 var ErrInvalidTarget = errors.New("target size must be greater than zero")
 

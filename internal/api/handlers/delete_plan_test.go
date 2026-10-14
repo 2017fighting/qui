@@ -27,6 +27,8 @@ func newDeletePlanRouter(handler *DeletePlanHandler) *chi.Mux {
 		r.Post("/runs", handler.CreateRun)
 		r.Get("/runs", handler.ListRuns)
 		r.Get("/runs/{runID}", handler.GetRun)
+		r.Patch("/runs/{runID}/rows", handler.UpdateRows)
+		r.Post("/runs/{runID}/refill", handler.RefillRun)
 		r.Post("/runs/{runID}/confirm", handler.ConfirmRun)
 		r.Post("/runs/{runID}/cancel", handler.CancelRun)
 	})
@@ -49,6 +51,10 @@ func (f *fakeDeletePlanService) ConfirmRun(_ context.Context, runID int64) error
 	f.confirmed = runID
 	return f.confirmErr
 }
+
+func (f *fakeDeletePlanService) UpdateRunRows(context.Context, int64, []int64) error { return nil }
+
+func (f *fakeDeletePlanService) RefillRun(context.Context, int64) error { return nil }
 
 func newDeletePlanHandlerFixture(t *testing.T, name string) (*models.InstanceStore, *models.DeletePlanStore, *models.Instance, *DeletePlanHandler, *chi.Mux) {
 	t.Helper()
@@ -269,4 +275,114 @@ func TestDeletePlan_ConfirmRunScopesToTheInstance(t *testing.T) {
 	url := fmt.Sprintf("/api/instances/%d/delete-plan/runs/%d/confirm", other.ID, runID)
 	router.ServeHTTP(resp, httptest.NewRequestWithContext(t.Context(), http.MethodPost, url, nil))
 	require.Equal(t, http.StatusNotFound, resp.Code, resp.Body.String())
+}
+
+// seedUntickableRun freezes a two-row plan that reaches its 250-byte target: rows
+// A (100) and B (200), planned 300, overshoot 50.
+func seedUntickableRun(t *testing.T, store *models.DeletePlanStore, instanceID int) int64 {
+	t.Helper()
+	ctx := t.Context()
+	runID, err := store.CreateRunIfNoActive(ctx, instanceID, 250, "[]", true)
+	require.NoError(t, err)
+	started, err := store.StartRunPlanning(ctx, runID)
+	require.NoError(t, err)
+	require.True(t, started)
+	require.NoError(t, store.InsertRows(ctx, runID, []*models.DeletePlanRow{
+		{
+			ContentPath: "/data/A",
+			SizeBytes:   100,
+			MemberCount: 1,
+			Included:    true,
+			Members:     []models.DeletePlanMember{{Hash: "a", SizeBytes: 100, Progress: 1, State: "uploading"}},
+		},
+		{
+			ContentPath: "/data/B",
+			SizeBytes:   200,
+			MemberCount: 1,
+			Included:    true,
+			Members:     []models.DeletePlanMember{{Hash: "b", SizeBytes: 200, Progress: 1, State: "uploading"}},
+		},
+	}))
+	frozen, err := store.UpdateRunPreview(ctx, runID, 300, 0, 50, true)
+	require.NoError(t, err)
+	require.True(t, frozen)
+	return runID
+}
+
+func TestDeletePlan_UpdateRowsUnticksAndReportsTheShortfall(t *testing.T) {
+	_, store, instance, _, router := newDeletePlanHandlerFixture(t, "delete-plan-untick")
+	runID := seedUntickableRun(t, store, instance.ID)
+
+	before, err := store.GetRun(t.Context(), runID)
+	require.NoError(t, err)
+	require.Len(t, before.Groups, 2)
+	untickedRowID := before.Groups[1].ID
+
+	body := fmt.Sprintf(`{"unticked":[%d]}`, untickedRowID)
+	resp := httptest.NewRecorder()
+	url := fmt.Sprintf("/api/instances/%d/delete-plan/runs/%d/rows", instance.ID, runID)
+	router.ServeHTTP(resp, httptest.NewRequestWithContext(t.Context(), http.MethodPatch, url, strings.NewReader(body)))
+	require.Equal(t, http.StatusOK, resp.Code, resp.Body.String())
+
+	var run models.DeletePlanRun
+	require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &run))
+	require.Len(t, run.Groups, 2, "an unticked row stays in the run")
+	require.True(t, run.Groups[0].Included)
+	require.False(t, run.Groups[1].Included)
+	require.EqualValues(t, 100, run.PlannedBytes)
+	require.EqualValues(t, 0, run.OvershootBytes)
+	require.EqualValues(t, 150, run.ShortfallBytes)
+	require.False(t, run.TargetReached)
+}
+
+func TestDeletePlan_UpdateRowsConflictsWhenNotPreviewReady(t *testing.T) {
+	_, store, instance, _, router := newDeletePlanHandlerFixture(t, "delete-plan-untick-conflict")
+	runID := seedDeletePlanRun(t, store, instance.ID, models.DeletePlanStatusPending)
+
+	resp := httptest.NewRecorder()
+	url := fmt.Sprintf("/api/instances/%d/delete-plan/runs/%d/rows", instance.ID, runID)
+	router.ServeHTTP(resp, httptest.NewRequestWithContext(t.Context(), http.MethodPatch, url, strings.NewReader(`{"unticked":[1]}`)))
+	require.Equal(t, http.StatusConflict, resp.Code, resp.Body.String())
+}
+
+func TestDeletePlan_RefillAddsGroupsInPlanOrder(t *testing.T) {
+	_, store, instance, _, router := newDeletePlanHandlerFixture(t, "delete-plan-refill")
+	runID := seedUntickableRun(t, store, instance.ID)
+
+	run, err := store.GetRun(t.Context(), runID)
+	require.NoError(t, err)
+	require.Len(t, run.Groups, 2)
+	rowIDs := []int64{run.Groups[0].ID, run.Groups[1].ID}
+
+	// Untick both rows, so the plan is 250 bytes short of the target.
+	body := fmt.Sprintf(`{"unticked":[%d,%d]}`, rowIDs[0], rowIDs[1])
+	untickResp := httptest.NewRecorder()
+	untickURL := fmt.Sprintf("/api/instances/%d/delete-plan/runs/%d/rows", instance.ID, runID)
+	router.ServeHTTP(untickResp, httptest.NewRequestWithContext(t.Context(), http.MethodPatch, untickURL, strings.NewReader(body)))
+	require.Equal(t, http.StatusOK, untickResp.Code, untickResp.Body.String())
+
+	resp := httptest.NewRecorder()
+	url := fmt.Sprintf("/api/instances/%d/delete-plan/runs/%d/refill", instance.ID, runID)
+	router.ServeHTTP(resp, httptest.NewRequestWithContext(t.Context(), http.MethodPost, url, nil))
+	require.Equal(t, http.StatusOK, resp.Code, resp.Body.String())
+
+	var refilled models.DeletePlanRun
+	require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &refilled))
+	require.EqualValues(t, 300, refilled.PlannedBytes)
+	require.EqualValues(t, 50, refilled.OvershootBytes)
+	require.EqualValues(t, 0, refilled.ShortfallBytes)
+	require.True(t, refilled.TargetReached)
+	// Plan order is unchanged: A stays before B.
+	require.Equal(t, "/data/A", refilled.Groups[0].ContentPath)
+	require.Equal(t, "/data/B", refilled.Groups[1].ContentPath)
+}
+
+func TestDeletePlan_RefillConflictsWhenNotPreviewReady(t *testing.T) {
+	_, store, instance, _, router := newDeletePlanHandlerFixture(t, "delete-plan-refill-conflict")
+	runID := seedDeletePlanRun(t, store, instance.ID, models.DeletePlanStatusPending)
+
+	resp := httptest.NewRecorder()
+	url := fmt.Sprintf("/api/instances/%d/delete-plan/runs/%d/refill", instance.ID, runID)
+	router.ServeHTTP(resp, httptest.NewRequestWithContext(t.Context(), http.MethodPost, url, nil))
+	require.Equal(t, http.StatusConflict, resp.Code, resp.Body.String())
 }

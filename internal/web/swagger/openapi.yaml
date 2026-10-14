@@ -6299,6 +6299,81 @@ paths:
         '500':
           description: Failed to start the deletion
 
+  /api/instances/{instanceID}/delete-plan/runs/{runID}/rows:
+    patch:
+      tags:
+        - Delete Plan
+      summary: Replace a delete plan run's unticked rows
+      description: >-
+        Replace the run's unticked set. An unticked row stays in the run with
+        included false and leaves plannedBytes and overshootBytes; targetReached
+        becomes false when the included bytes fall below the target, and the run
+        carries shortfallBytes. Only valid while the run is preview_ready.
+      parameters:
+        - $ref: '#/components/parameters/instanceID'
+        - name: runID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Delete plan run ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeletePlanRowsRequest'
+      responses:
+        '200':
+          description: Run with the updated selection
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletePlanRun'
+        '400':
+          description: Invalid payload or a row that is not part of the run
+        '404':
+          description: Run not found
+        '409':
+          description: The run is not preview_ready
+        '500':
+          description: Failed to update the delete plan
+
+  /api/instances/{instanceID}/delete-plan/runs/{runID}/refill:
+    post:
+      tags:
+        - Delete Plan
+      summary: Refill a delete plan run to the target
+      description: >-
+        Re-include the unticked groups in plan order until the included bytes
+        reach the target, without reordering the groups that stay. The returned
+        run reports the new overshoot. Only valid while the run is preview_ready.
+      parameters:
+        - $ref: '#/components/parameters/instanceID'
+        - name: runID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Delete plan run ID
+      responses:
+        '200':
+          description: Run refilled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletePlanRun'
+        '400':
+          description: Invalid run ID
+        '404':
+          description: Run not found
+        '409':
+          description: The run is not preview_ready
+        '500':
+          description: Failed to refill the delete plan
+
   # RSS Feed Management
   /api/instances/{instanceID}/rss/events:
     get:
@@ -9830,6 +9905,12 @@ components:
         overshootBytes:
           type: integer
           format: int64
+        shortfallBytes:
+          type: integer
+          format: int64
+          description: >-
+            targetBytes - plannedBytes when positive, else 0. An untick raises it;
+            a refill lowers it.
         targetReached:
           type: boolean
           description: False when every available group was included and the target is still unmet.
@@ -9891,6 +9972,19 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/DeletePlanRun'
+
+    DeletePlanRowsRequest:
+      type: object
+      required: [unticked]
+      properties:
+        unticked:
+          type: array
+          description: >-
+            Row IDs to take out of the plan. Replaces the run's unticked set, so
+            a row omitted here is included again.
+          items:
+            type: integer
+            format: int64
 
     ArrInstance:
       type: object

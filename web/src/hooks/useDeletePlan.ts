@@ -104,3 +104,26 @@ export function useConfirmDeletePlanRun(instanceId: number) {
     },
   })
 }
+
+export function useUpdateDeletePlanRows(instanceId: number) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ runId, unticked }: { runId: number; unticked: number[] }) =>
+      api.updateDeletePlanRows(instanceId, runId, unticked),
+    onSuccess: (_data, { runId }) => {
+      queryClient.invalidateQueries({ queryKey: ["delete-plan", instanceId, "run", runId] })
+    },
+  })
+}
+
+export function useRefillDeletePlanRun(instanceId: number) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (runId: number) => api.refillDeletePlanRun(instanceId, runId),
+    onSuccess: (_data, runId) => {
+      queryClient.invalidateQueries({ queryKey: ["delete-plan", instanceId, "run", runId] })
+    },
+  })
+}

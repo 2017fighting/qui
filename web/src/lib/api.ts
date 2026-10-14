@@ -2713,6 +2713,24 @@ class ApiClient {
     )
   }
 
+  async updateDeletePlanRows(
+    instanceId: number,
+    runId: number,
+    unticked: number[]
+  ): Promise<DeletePlanRun> {
+    return this.request<DeletePlanRun>(
+      `/instances/${instanceId}/delete-plan/runs/${runId}/rows`,
+      { method: "PATCH", body: JSON.stringify({ unticked }) }
+    )
+  }
+
+  async refillDeletePlanRun(instanceId: number, runId: number): Promise<DeletePlanRun> {
+    return this.request<DeletePlanRun>(
+      `/instances/${instanceId}/delete-plan/runs/${runId}/refill`,
+      { method: "POST" }
+    )
+  }
+
   // ARR Instance endpoints
   async listArrInstances(): Promise<ArrInstance[]> {
     return this.request<ArrInstance[]>("/arr/instances")
