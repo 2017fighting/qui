@@ -958,7 +958,19 @@
           "members_changed": "Seine Mitglieder haben sich seit der Planerstellung geändert"
         }
       },
+      "deletePlanHistory": {
+        "title": "Planverlauf",
+        "description": "Der Plan, den dieser Durchlauf erstellt hat, schreibgeschützt.",
+        "view": "Ansehen",
+        "viewRun": "Durchlauf {{id}} ansehen",
+        "removed": "Entfernt",
+        "noKeys": "Keine Rangfolge-Schlüssel aufgezeichnet",
+        "disabledKey": "{{key}} (aus)",
+        "enabled": "Ja",
+        "disabled": "Nein"
+      },
       "deletePlanOverview": {
+        "history": "Verlauf",
         "title": "Löschplan",
         "tooltip": "Erstellt einen einmaligen Plan, der ganze Inhaltsgruppen entfernt, bis die Zielgröße erreicht ist. Nichts wird entfernt, bis Sie bestätigen.",
         "description": "Holen Sie eine gewählte Menge Speicherplatz von einer Instanz zurück.",

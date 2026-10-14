@@ -952,7 +952,19 @@
           "members_changed": "Ses membres ont changé depuis la création du plan"
         }
       },
+      "deletePlanHistory": {
+        "title": "Historique des plans",
+        "description": "Le plan créé par cette exécution, en lecture seule.",
+        "view": "Voir",
+        "viewRun": "Voir l'exécution {{id}}",
+        "removed": "Supprimé",
+        "noKeys": "Aucune clé de classement enregistrée",
+        "disabledKey": "{{key}} (désactivée)",
+        "enabled": "Oui",
+        "disabled": "Non"
+      },
       "deletePlanOverview": {
+        "history": "Historique",
         "title": "Plan de suppression",
         "tooltip": "Crée un plan ponctuel qui supprime des groupes de contenu entiers jusqu'à atteindre la taille cible. Rien n'est supprimé avant votre confirmation.",
         "description": "Récupérez une quantité d'espace choisie sur une instance.",

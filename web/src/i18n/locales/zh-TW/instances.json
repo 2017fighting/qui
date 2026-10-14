@@ -931,7 +931,19 @@
           "members_changed": "自計畫建立以來其成員已變更"
         }
       },
+      "deletePlanHistory": {
+        "title": "計畫歷史",
+        "description": "此執行建立的計畫，唯讀。",
+        "view": "檢視",
+        "viewRun": "檢視執行 {{id}}",
+        "removed": "已刪除",
+        "noKeys": "未記錄排序鍵",
+        "disabledKey": "{{key}}（已關閉）",
+        "enabled": "是",
+        "disabled": "否"
+      },
       "deletePlanOverview": {
+        "history": "歷史",
         "title": "刪除計畫",
         "tooltip": "產生一次性計畫，逐個刪除完整內容群組，直到達到目標大小。確認之前不會刪除任何內容。",
         "description": "從單一執行個體回收指定大小的空間。",

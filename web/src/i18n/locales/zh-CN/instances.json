@@ -931,7 +931,19 @@
           "members_changed": "自计划创建以来其成员已更改"
         }
       },
+      "deletePlanHistory": {
+        "title": "计划历史",
+        "description": "此运行创建的计划，只读。",
+        "view": "查看",
+        "viewRun": "查看运行 {{id}}",
+        "removed": "已删除",
+        "noKeys": "未记录排序键",
+        "disabledKey": "{{key}}（已关闭）",
+        "enabled": "是",
+        "disabled": "否"
+      },
       "deletePlanOverview": {
+        "history": "历史",
         "title": "删除计划",
         "tooltip": "生成一次性计划，逐个删除完整内容组，直到达到目标大小。确认之前不会删除任何内容。",
         "description": "从单个实例回收指定大小的空间。",
