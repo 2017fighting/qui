@@ -927,7 +927,8 @@
           "partial_overlap": "与其他种子仅共享部分文件",
           "unreadable_files": "无法读取其文件列表",
           "nested_path": "其内容路径与其他种子嵌套",
-          "unknown": "被删除保护排除"
+          "unknown": "被删除保护排除",
+          "members_changed": "自计划创建以来其成员已更改"
         }
       },
       "deletePlanOverview": {
@@ -940,6 +941,10 @@
         "activePlan": "计划进行中",
         "noPlanYet": "尚未创建计划。",
         "progress": "已删除 {{removed}}，共 {{planned}}",
+        "deleting": "正在删除计划...",
+        "completedResult": "已删除 {{removed}}。",
+        "failedResult": "计划失败。",
+        "canceledResult": "在删除开始前已取消。",
         "toast": {
           "planStartFailed": "创建删除计划失败",
           "planCanceled": "删除计划已取消",
@@ -985,7 +990,9 @@
         "title": "确认删除计划",
         "description": "开始前请检查计划将删除的内容。",
         "otherInstances": "仅检查此实例，不检查其他实例。",
-        "confirm": "确认并删除"
+        "confirm": "确认并删除",
+        "deadTotal": "死种组：{{dead}}",
+        "startFailed": "无法开始删除"
       },
     "orphanScanSettings": {
       "settingsTitle": "设置",

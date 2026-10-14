@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
+import { DeletePlanRunProgress } from "@/components/instances/preferences/DeletePlanRunProgress"
 import { deletePlanExcludeReasonKey, deletePlanStatusLabelKey } from "@/components/instances/preferences/deletePlanLabels"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -18,7 +19,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PathCell } from "@/components/ui/path-cell"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useCancelDeletePlanRun, useCreateDeletePlan, useDeletePlanRun } from "@/hooks/useDeletePlan"
+import { useCancelDeletePlanRun, useConfirmDeletePlanRun, useCreateDeletePlan, useDeletePlanRun } from "@/hooks/useDeletePlan"
 import { APIError } from "@/lib/api"
 import { type CsvColumn, downloadBlob, toCsv } from "@/lib/csv-export"
 import { getStateLabel } from "@/lib/torrent-state-utils"
@@ -217,6 +218,7 @@ export function DeletePlanWizardDialog({
 
   const createMutation = useCreateDeletePlan(instanceId)
   const cancelMutation = useCancelDeletePlanRun(instanceId)
+  const confirmMutation = useConfirmDeletePlanRun(instanceId)
   const runQuery = useDeletePlanRun(instanceId, runId, { enabled: open && step !== "target" })
   const run = runQuery.data
 
@@ -259,6 +261,17 @@ export function DeletePlanWizardDialog({
       },
       onError: (error) => {
         toast.error(t("preferences.deletePlanOverview.toast.cancelFailed"), {
+          description: error instanceof Error ? error.message : undefined,
+        })
+      },
+    })
+  }
+
+  const handleConfirm = () => {
+    if (!run) return
+    confirmMutation.mutate(run.id, {
+      onError: (error) => {
+        toast.error(t("preferences.deletePlanConfirm.startFailed"), {
           description: error instanceof Error ? error.message : undefined,
         })
       },
@@ -409,17 +422,26 @@ export function DeletePlanWizardDialog({
         {step === "confirm" && run && (
           <div className="space-y-4 py-2">
             <TotalsGrid run={run} />
-            <div className="rounded-md border border-yellow-500/20 bg-yellow-500/10 p-3 text-sm text-yellow-600 dark:text-yellow-400">
-              <p className="font-medium">{t("preferences.deletePlanConfirm.title")}</p>
-              <p>{t("preferences.deletePlanConfirm.description")}</p>
-              <p className="mt-1">{t("preferences.deletePlanConfirm.otherInstances")}</p>
-            </div>
+            {run.deadBytes > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {t("preferences.deletePlanConfirm.deadTotal", { dead: formatBytes(run.deadBytes) })}
+              </p>
+            )}
+            {run.status === "preview_ready" ? (
+              <div className="rounded-md border border-yellow-500/20 bg-yellow-500/10 p-3 text-sm text-yellow-600 dark:text-yellow-400">
+                <p className="font-medium">{t("preferences.deletePlanConfirm.title")}</p>
+                <p>{t("preferences.deletePlanConfirm.description")}</p>
+                <p className="mt-1">{t("preferences.deletePlanConfirm.otherInstances")}</p>
+              </div>
+            ) : (
+              <DeletePlanRunProgress run={run} />
+            )}
           </div>
         )}
 
         <DialogFooter className="mt-4 sm:justify-between">
           <div className="flex gap-2">
-            {step !== "target" && (
+            {step !== "target" && !(step === "confirm" && run && run.status !== "preview_ready") && (
               <Button
                 type="button"
                 variant="outline"
@@ -478,8 +500,14 @@ export function DeletePlanWizardDialog({
               </>
             )}
 
-            {step === "confirm" && (
-              <Button type="button" variant="destructive" disabled>
+            {step === "confirm" && run?.status === "preview_ready" && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={handleConfirm}
+                disabled={confirmMutation.isPending}
+              >
+                {confirmMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {t("preferences.deletePlanConfirm.confirm")}
               </Button>
             )}

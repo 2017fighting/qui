@@ -2706,6 +2706,13 @@ class ApiClient {
     )
   }
 
+  async confirmDeletePlanRun(instanceId: number, runId: number): Promise<DeletePlanRun> {
+    return this.request<DeletePlanRun>(
+      `/instances/${instanceId}/delete-plan/runs/${runId}/confirm`,
+      { method: "POST" }
+    )
+  }
+
   // ARR Instance endpoints
   async listArrInstances(): Promise<ArrInstance[]> {
     return this.request<ArrInstance[]>("/arr/instances")

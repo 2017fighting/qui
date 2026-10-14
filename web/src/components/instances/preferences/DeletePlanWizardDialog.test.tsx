@@ -23,16 +23,18 @@ vi.mock("react-i18next", async (importOriginal) => ({
 }))
 
 // Stable singletons: a fresh object per render would rerun effects forever.
-const { createMutation, runQuery, cancelMutation } = vi.hoisted(() => ({
+const { createMutation, runQuery, cancelMutation, confirmMutation } = vi.hoisted(() => ({
   createMutation: { isPending: false, mutate: vi.fn() },
   runQuery: { data: undefined as unknown, isLoading: false, isError: false },
   cancelMutation: { isPending: false, mutate: vi.fn() },
+  confirmMutation: { isPending: false, mutate: vi.fn() },
 }))
 
 vi.mock("@/hooks/useDeletePlan", () => ({
   useCreateDeletePlan: () => createMutation,
   useDeletePlanRun: () => runQuery,
   useCancelDeletePlanRun: () => cancelMutation,
+  useConfirmDeletePlanRun: () => confirmMutation,
 }))
 
 import { DeletePlanWizardDialog } from "@/components/instances/preferences/DeletePlanWizardDialog"
@@ -52,6 +54,7 @@ const previewRun: DeletePlanRun = {
   targetReached: true,
   removedBytes: 0,
   errorMessage: "",
+  warningMessage: "",
   createdAt: "2026-10-14T03:00:00Z",
   updatedAt: "2026-10-14T03:00:04Z",
   completedAt: null,
@@ -78,6 +81,9 @@ const previewRun: DeletePlanRun = {
           savePath: "/data",
         },
       ],
+      rowStatus: "pending",
+      rowReason: "",
+      rowError: "",
     },
   ],
   excludedGroups: [
@@ -93,6 +99,9 @@ const previewRun: DeletePlanRun = {
       excludeReason: "partial_overlap",
       decidingKey: "",
       members: [],
+      rowStatus: "pending",
+      rowReason: "",
+      rowError: "",
     },
   ],
 }
@@ -100,6 +109,7 @@ const previewRun: DeletePlanRun = {
 beforeEach(() => {
   runQuery.data = previewRun
   createMutation.mutate.mockReset()
+  confirmMutation.mutate.mockReset()
   // Radix dialog and select measure through ResizeObserver, which jsdom lacks.
   vi.stubGlobal("ResizeObserver", class {
     observe() {}
@@ -200,13 +210,48 @@ describe("DeletePlanWizardDialog", () => {
     expect(document.body.textContent).toContain("preferences.deletePlanWizard.conflict")
   })
 
-  it("keeps the confirm action disabled and states that other instances are not checked", () => {
+  it("confirms the plan and states that other instances are not checked", () => {
     const { getByRole } = renderWizard({ initialRunId: 7 })
 
     fireEvent.click(getByRole("button", { name: "preferences.deletePlanWizard.reviewAndConfirm" }))
 
-    const confirm = getByRole("button", { name: "preferences.deletePlanConfirm.confirm" })
-    expect(confirm.hasAttribute("disabled")).toBe(true)
     expect(document.body.textContent).toContain("preferences.deletePlanConfirm.otherInstances")
+    const confirm = getByRole("button", { name: "preferences.deletePlanConfirm.confirm" })
+    expect(confirm.hasAttribute("disabled")).toBe(false)
+
+    fireEvent.click(confirm)
+    expect(confirmMutation.mutate).toHaveBeenCalledWith(7, expect.any(Object))
+  })
+
+  it("names the dead total on the confirm step when the plan removes dead groups", () => {
+    runQuery.data = { ...previewRun, deadBytes: 2_000_000_000 }
+    const { getByRole } = renderWizard({ initialRunId: 7 })
+
+    fireEvent.click(getByRole("button", { name: "preferences.deletePlanWizard.reviewAndConfirm" }))
+
+    expect(document.body.textContent).toContain("preferences.deletePlanConfirm.deadTotal(")
+  })
+
+  it("shows the run progress on the confirm step once the deletion starts", () => {
+    const { getByRole, queryByRole, rerender } = renderWizard({ initialRunId: 7 })
+    fireEvent.click(getByRole("button", { name: "preferences.deletePlanWizard.reviewAndConfirm" }))
+
+    runQuery.data = { ...previewRun, status: "deleting", plannedBytes: 1000, removedBytes: 250 }
+    rerender(
+      <TooltipProvider>
+        <DeletePlanWizardDialog
+          open
+          onOpenChange={() => {}}
+          instanceId={3}
+          instanceName="seedbox"
+          initialRunId={7}
+        />
+      </TooltipProvider>
+    )
+
+    expect(document.body.textContent).toContain("preferences.deletePlanOverview.deleting")
+    expect(document.body.textContent).toContain("preferences.deletePlanOverview.progress(")
+    // The confirm action is gone once the deletion is running.
+    expect(queryByRole("button", { name: "preferences.deletePlanConfirm.confirm" })).toBeNull()
   })
 })

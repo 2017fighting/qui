@@ -954,7 +954,8 @@
           "partial_overlap": "Compartilha apenas parte dos arquivos com outro torrent",
           "unreadable_files": "A lista de arquivos não pode ser lida",
           "nested_path": "O caminho de conteúdo está aninhado com o de outro torrent",
-          "unknown": "Excluído por uma proteção de exclusão"
+          "unknown": "Excluído por uma proteção de exclusão",
+          "members_changed": "Seus membros mudaram desde que o plano foi criado"
         }
       },
       "deletePlanOverview": {
@@ -967,6 +968,10 @@
         "activePlan": "Plano em andamento",
         "noPlanYet": "Nenhum plano criado ainda.",
         "progress": "{{removed}} de {{planned}} removidos",
+        "deleting": "Excluindo o plano...",
+        "completedResult": "{{removed}} removidos.",
+        "failedResult": "O plano falhou.",
+        "canceledResult": "Cancelado antes do início da exclusão.",
         "toast": {
           "planStartFailed": "Falha ao criar o plano de exclusão",
           "planCanceled": "Plano de exclusão cancelado",
@@ -1012,7 +1017,9 @@
         "title": "Confirmar o plano de exclusão",
         "description": "Revise o que o plano remove antes de iniciar.",
         "otherInstances": "Somente esta instância é verificada. As outras instâncias não são verificadas.",
-        "confirm": "Confirmar e excluir"
+        "confirm": "Confirmar e excluir",
+        "deadTotal": "Grupos mortos: {{dead}}",
+        "startFailed": "Falha ao iniciar a exclusão"
       },
     "orphanScanSettings": {
       "settingsTitle": "Configurações",

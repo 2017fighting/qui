@@ -4,6 +4,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -16,14 +17,22 @@ import (
 	"github.com/autobrr/qui/internal/services/deleteplan"
 )
 
+// deletePlanService is the subset of *deleteplan.Service the handler calls. It is
+// an interface so the handler tests can drive confirm without a sync manager.
+type deletePlanService interface {
+	TriggerPlan(ctx context.Context, instanceID int, req deleteplan.PlanRequest) (int64, error)
+	CancelRun(ctx context.Context, runID int64) error
+	ConfirmRun(ctx context.Context, runID int64) error
+}
+
 // DeletePlanHandler serves the instance-scoped delete plan API.
 type DeletePlanHandler struct {
 	store   *models.DeletePlanStore
-	service *deleteplan.Service
+	service deletePlanService
 }
 
 // NewDeletePlanHandler creates a new DeletePlanHandler.
-func NewDeletePlanHandler(store *models.DeletePlanStore, service *deleteplan.Service) *DeletePlanHandler {
+func NewDeletePlanHandler(store *models.DeletePlanStore, service deletePlanService) *DeletePlanHandler {
 	return &DeletePlanHandler{store: store, service: service}
 }
 
@@ -194,6 +203,56 @@ func (h *DeletePlanHandler) CancelRun(w http.ResponseWriter, r *http.Request) {
 	}
 
 	RespondJSON(w, http.StatusOK, run)
+}
+
+// ConfirmRun starts the background deletion of a preview_ready run.
+func (h *DeletePlanHandler) ConfirmRun(w http.ResponseWriter, r *http.Request) {
+	instanceID, err := parseInstanceID(w, r)
+	if err != nil {
+		return
+	}
+	runID, ok := parseDeletePlanRunID(w, r)
+	if !ok {
+		return
+	}
+
+	run, err := h.store.GetRunByInstance(r.Context(), instanceID, runID)
+	if err != nil {
+		log.Error().Err(err).Int64("runID", runID).Msg("deleteplan: failed to get run for confirmation")
+		RespondError(w, http.StatusInternalServerError, "Failed to get delete plan")
+		return
+	}
+	if run == nil {
+		RespondError(w, http.StatusNotFound, "Run not found")
+		return
+	}
+
+	if h.service == nil {
+		RespondError(w, http.StatusServiceUnavailable, "Delete plan service not available")
+		return
+	}
+
+	if err := h.service.ConfirmRun(r.Context(), runID); err != nil {
+		switch {
+		case errors.Is(err, deleteplan.ErrPlanRunNotFound):
+			RespondError(w, http.StatusNotFound, "Run not found")
+		case errors.Is(err, deleteplan.ErrPlanRunInvalidStatus):
+			RespondError(w, http.StatusConflict, err.Error())
+		default:
+			log.Error().Err(err).Int64("runID", runID).Msg("deleteplan: failed to confirm run")
+			RespondError(w, http.StatusInternalServerError, "Failed to start the deletion")
+		}
+		return
+	}
+
+	run, err = h.store.GetRun(r.Context(), runID)
+	if err != nil || run == nil {
+		log.Error().Err(err).Int64("runID", runID).Msg("deleteplan: failed to read the confirmed run")
+		RespondError(w, http.StatusInternalServerError, "Failed to read delete plan")
+		return
+	}
+
+	RespondJSON(w, http.StatusAccepted, run)
 }
 
 func parseDeletePlanRunID(w http.ResponseWriter, r *http.Request) (int64, bool) {

@@ -23,6 +23,9 @@ const (
 	ReasonPartialOverlap  = "partial_overlap"
 	ReasonUnreadableFiles = "unreadable_files"
 	ReasonNestedPath      = "nested_path"
+	// ReasonMembersChanged is the row-level reason for a group whose verified
+	// member set differs from the frozen plan (ADR 0018).
+	ReasonMembersChanged = "members_changed"
 )
 
 // ProtectionRules are the hard protections a plan applies before a group may be

@@ -19,7 +19,7 @@ vi.mock("react-i18next", async (importOriginal) => ({
 }))
 
 // Stable singletons: a fresh object per render would rerun effects forever.
-const { instancesQuery, runsQuery, cancelMutation, createMutation, runQuery } = vi.hoisted(() => {
+const { instancesQuery, runsQuery, cancelMutation, createMutation, confirmMutation, runQuery } = vi.hoisted(() => {
   const instance = {
     id: 1,
     name: "seedbox-europe-west-archive-01",
@@ -41,6 +41,7 @@ const { instancesQuery, runsQuery, cancelMutation, createMutation, runQuery } = 
     targetReached: true,
     removedBytes: 0,
     errorMessage: "",
+    warningMessage: "",
     createdAt: "2026-10-14T03:00:00Z",
     updatedAt: "2026-10-14T03:00:04Z",
     completedAt: null,
@@ -50,6 +51,7 @@ const { instancesQuery, runsQuery, cancelMutation, createMutation, runQuery } = 
     runsQuery: { data: [run as unknown as DeletePlanRunSummary], isLoading: false },
     cancelMutation: { isPending: false, mutate: vi.fn() },
     createMutation: { isPending: false, mutate: vi.fn() },
+    confirmMutation: { isPending: false, mutate: vi.fn() },
     runQuery: { data: undefined as unknown, isLoading: false, isError: false },
   }
 })
@@ -63,6 +65,7 @@ vi.mock("@/hooks/useDeletePlan", () => ({
   useDeletePlanRun: () => runQuery,
   useCreateDeletePlan: () => createMutation,
   useCancelDeletePlanRun: () => cancelMutation,
+  useConfirmDeletePlanRun: () => confirmMutation,
 }))
 
 import { DeletePlanOverview } from "@/components/instances/preferences/DeletePlanOverview"
@@ -93,6 +96,7 @@ beforeEach(() => {
       targetReached: true,
       removedBytes: 0,
       errorMessage: "",
+      warningMessage: "",
       createdAt: "2026-10-14T03:00:00Z",
       updatedAt: "2026-10-14T03:00:04Z",
       completedAt: null,
@@ -154,6 +158,43 @@ describe("DeletePlanOverview card", () => {
 
     expect(getByRole("button", { name: "preferences.deletePlanOverview.newPlan" }).hasAttribute("disabled")).toBe(false)
     expect(document.body.textContent).toContain("preferences.deletePlan.statusLabels.completed")
+  })
+
+  it("shows the removal result when the latest run completed", () => {
+    runsQuery.data = [{ ...runsQuery.data![0], status: "completed", removedBytes: 5_000_000_000 }]
+    renderCard()
+
+    expect(document.body.textContent).toContain("preferences.deletePlanOverview.completedResult(")
+  })
+
+  it("shows the warning when a completed run lost chunks", () => {
+    runsQuery.data = [{ ...runsQuery.data![0], status: "completed", warningMessage: "one chunk failed" }]
+    renderCard()
+
+    expect(document.body.textContent).toContain("one chunk failed")
+  })
+
+  it("shows the progress while the latest run deletes", () => {
+    runsQuery.data = [{ ...runsQuery.data![0], status: "deleting", plannedBytes: 1000, removedBytes: 250 }]
+    renderCard()
+
+    expect(document.body.textContent).toContain("preferences.deletePlanOverview.deleting")
+    expect(document.body.textContent).toContain("preferences.deletePlanOverview.progress(")
+  })
+
+  it("shows the error when the latest run failed", () => {
+    runsQuery.data = [{ ...runsQuery.data![0], status: "failed", errorMessage: "read torrents: boom" }]
+    renderCard()
+
+    expect(document.body.textContent).toContain("preferences.deletePlanOverview.failedResult")
+    expect(document.body.textContent).toContain("read torrents: boom")
+  })
+
+  it("shows the canceled result", () => {
+    runsQuery.data = [{ ...runsQuery.data![0], status: "canceled" }]
+    renderCard()
+
+    expect(document.body.textContent).toContain("preferences.deletePlanOverview.canceledResult")
   })
 
   it("shows the empty state when no instance is configured", () => {

@@ -1602,7 +1602,8 @@
           "partial_overlap": "Comparteix només part dels seus fitxers amb un altre torrent",
           "unreadable_files": "La seva llista de fitxers no es pot llegir",
           "nested_path": "El seu camí de contingut s'imbrica amb el d'un altre torrent",
-          "unknown": "Exclòs per una protecció de supressió"
+          "unknown": "Exclòs per una protecció de supressió",
+          "members_changed": "Els seus membres han canviat des que es va crear el pla"
         }
       },
       "deletePlanOverview": {
@@ -1615,6 +1616,10 @@
         "activePlan": "Pla en curs",
         "noPlanYet": "Encara no s'ha creat cap pla.",
         "progress": "{{removed}} de {{planned}} suprimits",
+        "deleting": "Eliminant el pla...",
+        "completedResult": "S'han eliminat {{removed}}.",
+        "failedResult": "El pla ha fallat.",
+        "canceledResult": "Cancel·lat abans d'iniciar l'eliminació.",
         "toast": {
           "planStartFailed": "No s'ha pogut crear el pla de supressió",
           "planCanceled": "Pla de supressió cancel·lat",
@@ -1660,7 +1665,9 @@
         "title": "Confirma el pla de supressió",
         "description": "Revisa què elimina el pla abans que comenci.",
         "otherInstances": "Només es comprova aquesta instància. Les altres instàncies no es comproven.",
-        "confirm": "Confirma i suprimeix"
+        "confirm": "Confirma i suprimeix",
+        "deadTotal": "Grups morts: {{dead}}",
+        "startFailed": "No s'ha pogut iniciar l'eliminació"
       },
     "orphanScanSettings": {
       "settingsTitle": "Configuració",
