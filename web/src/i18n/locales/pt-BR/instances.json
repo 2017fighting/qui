@@ -986,7 +986,17 @@
         "waitingTitle": "Aguardando dados de sincronização recentes",
         "waitingDescription": "O plano começa quando a lista de torrents da instância tem no máximo dois minutos.",
         "planning": "Criando o plano...",
-        "loadFailed": "Falha ao carregar o plano."
+        "loadFailed": "Falha ao carregar o plano.",
+        "keysTitle": "Chaves de classificação",
+        "keysDescription": "Os grupos saem nesta ordem. Desative uma chave para que ela deixe de decidir a ordem.",
+        "enableKey": "Ativar chave",
+        "moveKeyUp": "Mover chave para cima",
+        "moveKeyDown": "Mover chave para baixo",
+        "directionAsc": "Ascendente",
+        "directionDesc": "Descendente",
+        "notSortableField": "Não é uma chave de classificação",
+        "removeDeadGroups": "Remover grupos mortos primeiro",
+        "removeDeadGroupsDescription": "Grupos sem membro semeando saem independentemente da meta. Seus bytes não contam para a meta."
       },
       "deletePlanPreview": {
         "target": "Alvo",
@@ -1006,7 +1016,11 @@
         "loading": "Carregando o plano...",
         "exportCSV": "Exportar CSV",
         "exported": "Plano exportado como CSV",
-        "exportFailed": "Falha ao exportar o plano"
+        "exportFailed": "Falha ao exportar o plano",
+        "ranking": "Classificação",
+        "decidingKey": "Chave decisiva",
+        "deadGroups": "Grupos mortos: {{count}}",
+        "deadTotal": "Total morto: {{total}}"
       },
       "deletePlanConfirm": {
         "title": "Confirmar o plano de exclusão",

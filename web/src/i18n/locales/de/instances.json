@@ -986,7 +986,17 @@
         "waitingTitle": "Warte auf frische Synchronisierungsdaten",
         "waitingDescription": "Der Plan startet, sobald die Torrent-Liste der Instanz höchstens zwei Minuten alt ist.",
         "planning": "Plan wird erstellt...",
-        "loadFailed": "Plan konnte nicht geladen werden."
+        "loadFailed": "Plan konnte nicht geladen werden.",
+        "keysTitle": "Rangfolge-Schlüssel",
+        "keysDescription": "Gruppen verlassen den Plan in dieser Reihenfolge. Schalten Sie einen Schlüssel aus, damit er die Reihenfolge nicht mehr bestimmt.",
+        "enableKey": "Schlüssel aktivieren",
+        "moveKeyUp": "Schlüssel nach oben",
+        "moveKeyDown": "Schlüssel nach unten",
+        "directionAsc": "Aufst.",
+        "directionDesc": "Abst.",
+        "notSortableField": "Kein Rangfolge-Schlüssel",
+        "removeDeadGroups": "Tote Gruppen zuerst entfernen",
+        "removeDeadGroupsDescription": "Gruppen ohne seedenden Member werden unabhängig vom Ziel entfernt. Ihre Bytes zählen nicht zum Ziel."
       },
       "deletePlanPreview": {
         "target": "Ziel",
@@ -1006,7 +1016,11 @@
         "loading": "Plan wird geladen...",
         "exportCSV": "CSV exportieren",
         "exported": "Plan als CSV exportiert",
-        "exportFailed": "Plan konnte nicht exportiert werden"
+        "exportFailed": "Plan konnte nicht exportiert werden",
+        "ranking": "Rangfolge",
+        "decidingKey": "Ausschlaggebender Schlüssel",
+        "deadGroups": "Tote Gruppen: {{count}}",
+        "deadTotal": "Tote Gesamtmenge: {{total}}"
       },
       "deletePlanConfirm": {
         "title": "Löschplan bestätigen",

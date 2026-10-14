@@ -959,7 +959,17 @@
         "waitingTitle": "正在等待最新的同步数据",
         "waitingDescription": "当实例的种子列表不超过两分钟时，计划就会开始。",
         "planning": "正在生成计划...",
-        "loadFailed": "加载计划失败。"
+        "loadFailed": "加载计划失败。",
+        "keysTitle": "排序键",
+        "keysDescription": "分组按此顺序离开。关闭某个键后它不再决定顺序。",
+        "enableKey": "启用排序键",
+        "moveKeyUp": "上移排序键",
+        "moveKeyDown": "下移排序键",
+        "directionAsc": "升序",
+        "directionDesc": "降序",
+        "notSortableField": "不是排序键",
+        "removeDeadGroups": "先移除失效分组",
+        "removeDeadGroupsDescription": "没有做种成员的分组无论目标如何都会被移除，其字节不计入目标。"
       },
       "deletePlanPreview": {
         "target": "目标",
@@ -979,7 +989,11 @@
         "loading": "正在加载计划...",
         "exportCSV": "导出 CSV",
         "exported": "计划已导出为 CSV",
-        "exportFailed": "导出计划失败"
+        "exportFailed": "导出计划失败",
+        "ranking": "排序",
+        "decidingKey": "决定键",
+        "deadGroups": "失效分组：{{count}}",
+        "deadTotal": "失效总量：{{total}}"
       },
       "deletePlanConfirm": {
         "title": "确认删除计划",
