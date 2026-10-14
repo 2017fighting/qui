@@ -140,3 +140,146 @@ func TestService_RejectsAnInvalidTarget(t *testing.T) {
 	_, err := svc.TriggerPlan(t.Context(), instanceID, PlanRequest{TargetBytes: 0, RemoveDeadGroups: true})
 	require.ErrorIs(t, err, ErrInvalidTarget)
 }
+
+// seedPreviewPlan freezes a two-row plan that reaches its target: A (100) and B
+// (200) against a 250-byte target, planned 300, overshoot 50.
+func seedPreviewPlan(t *testing.T, store *models.DeletePlanStore, instanceID int, targetBytes int64) int64 {
+	t.Helper()
+	ctx := t.Context()
+	runID, err := store.CreateRunIfNoActive(ctx, instanceID, targetBytes, "[]", true)
+	require.NoError(t, err)
+	started, err := store.StartRunPlanning(ctx, runID)
+	require.NoError(t, err)
+	require.True(t, started)
+	require.NoError(t, store.InsertRows(ctx, runID, []*models.DeletePlanRow{
+		{
+			ContentPath: "/data/A",
+			SizeBytes:   100,
+			MemberCount: 1,
+			Included:    true,
+			Members:     []models.DeletePlanMember{{Hash: "a", SizeBytes: 100, Progress: 1, State: "uploading"}},
+		},
+		{
+			ContentPath: "/data/B",
+			SizeBytes:   200,
+			MemberCount: 1,
+			Included:    true,
+			Members:     []models.DeletePlanMember{{Hash: "b", SizeBytes: 200, Progress: 1, State: "uploading"}},
+		},
+	}))
+	frozen, err := store.UpdateRunPreview(ctx, runID, 300, 0, 50, true)
+	require.NoError(t, err)
+	require.True(t, frozen)
+	return runID
+}
+
+func TestService_UpdateRunRowsUnticksAndReportsTheShortfall(t *testing.T) {
+	t.Parallel()
+	svc, store, _, instanceID := newServiceFixture(t, newFakeClient(time.Now()))
+	runID := seedPreviewPlan(t, store, instanceID, 250)
+
+	run, err := store.GetRun(t.Context(), runID)
+	require.NoError(t, err)
+	require.Len(t, run.Groups, 2)
+
+	require.NoError(t, svc.UpdateRunRows(t.Context(), runID, []int64{run.Groups[1].ID}))
+
+	updated, err := store.GetRun(t.Context(), runID)
+	require.NoError(t, err)
+	require.True(t, updated.Groups[0].Included)
+	require.False(t, updated.Groups[1].Included, "an unticked row stays in the run with included false")
+	require.EqualValues(t, 100, updated.PlannedBytes)
+	require.EqualValues(t, 0, updated.OvershootBytes)
+	require.EqualValues(t, 150, updated.ShortfallBytes)
+	require.False(t, updated.TargetReached)
+}
+
+func TestService_RefillReincludesInPlanOrder(t *testing.T) {
+	t.Parallel()
+	svc, store, _, instanceID := newServiceFixture(t, newFakeClient(time.Now()))
+	runID := seedPreviewPlan(t, store, instanceID, 250)
+
+	run, err := store.GetRun(t.Context(), runID)
+	require.NoError(t, err)
+	require.NoError(t, svc.UpdateRunRows(t.Context(), runID, []int64{run.Groups[0].ID, run.Groups[1].ID}))
+
+	require.NoError(t, svc.RefillRun(t.Context(), runID))
+
+	updated, err := store.GetRun(t.Context(), runID)
+	require.NoError(t, err)
+	require.True(t, updated.Groups[0].Included)
+	require.True(t, updated.Groups[1].Included)
+	require.EqualValues(t, 300, updated.PlannedBytes)
+	require.EqualValues(t, 50, updated.OvershootBytes)
+	require.EqualValues(t, 0, updated.ShortfallBytes)
+	require.True(t, updated.TargetReached)
+	// Refill flips flags only: the groups that stay keep their order.
+	require.Equal(t, "/data/A", updated.Groups[0].ContentPath)
+	require.Equal(t, "/data/B", updated.Groups[1].ContentPath)
+}
+
+func TestService_UpdateRunRowsRejectsAForeignRow(t *testing.T) {
+	t.Parallel()
+	svc, store, _, instanceID := newServiceFixture(t, newFakeClient(time.Now()))
+	runID := seedPreviewPlan(t, store, instanceID, 250)
+
+	require.ErrorIs(t, svc.UpdateRunRows(t.Context(), runID, []int64{999999}), ErrPlanRowNotInRun)
+}
+
+func TestService_UpdateRunRowsRejectsANonPreviewRun(t *testing.T) {
+	t.Parallel()
+	svc, store, _, instanceID := newServiceFixture(t, newFakeClient(time.Now()))
+	runID, err := store.CreateRunIfNoActive(t.Context(), instanceID, 1000, "[]", true)
+	require.NoError(t, err)
+
+	require.ErrorIs(t, svc.UpdateRunRows(t.Context(), runID, nil), ErrPlanRunInvalidStatus)
+	require.ErrorIs(t, svc.RefillRun(t.Context(), runID), ErrPlanRunInvalidStatus)
+}
+
+func TestSelectionTotals(t *testing.T) {
+	t.Parallel()
+	rows := []*models.DeletePlanRow{
+		{ID: 1, SizeBytes: 100},
+		{ID: 2, SizeBytes: 200},
+		{ID: 3, SizeBytes: 400, Dead: true},
+	}
+
+	planned, dead, overshoot, reached := selectionTotals(rows, 250, map[int64]struct{}{})
+	require.EqualValues(t, 300, planned)
+	require.EqualValues(t, 400, dead, "dead bytes never count toward the target")
+	require.EqualValues(t, 50, overshoot)
+	require.True(t, reached)
+
+	planned, dead, overshoot, reached = selectionTotals(rows, 250, map[int64]struct{}{1: {}})
+	require.EqualValues(t, 200, planned)
+	require.EqualValues(t, 400, dead)
+	require.EqualValues(t, 0, overshoot)
+	require.False(t, reached)
+
+	planned, dead, overshoot, reached = selectionTotals(rows, 250, map[int64]struct{}{3: {}})
+	require.EqualValues(t, 300, planned)
+	require.EqualValues(t, 0, dead)
+	require.EqualValues(t, 50, overshoot)
+	require.True(t, reached)
+}
+
+func TestRefillSelection(t *testing.T) {
+	t.Parallel()
+	rows := []*models.DeletePlanRow{
+		{ID: 1, SizeBytes: 100},
+		{ID: 2, SizeBytes: 200},
+		{ID: 3, SizeBytes: 400},
+	}
+
+	// Every row is unticked, so refill re-includes them in order until the target
+	// is met at row 2 and leaves the rest unticked.
+	remaining := refillSelection(rows, 250, map[int64]struct{}{1: {}, 2: {}, 3: {}})
+	require.Equal(t, map[int64]struct{}{3: {}}, remaining)
+
+	// Nothing unticked: refill changes nothing.
+	require.Empty(t, refillSelection(rows, 250, map[int64]struct{}{}))
+
+	// The already-included rows count before the loop, so a plan at the target is
+	// left as it is.
+	require.Equal(t, map[int64]struct{}{1: {}}, refillSelection(rows, 250, map[int64]struct{}{1: {}}))
+}

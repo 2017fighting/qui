@@ -747,6 +747,8 @@ func (s *Server) Handler() (*chi.Mux, error) {
 						r.Get("/runs", deletePlanHandler.ListRuns)
 						r.Route("/runs/{runID}", func(r chi.Router) {
 							r.Get("/", deletePlanHandler.GetRun)
+							r.Patch("/rows", deletePlanHandler.UpdateRows)
+							r.Post("/refill", deletePlanHandler.RefillRun)
 							r.Post("/confirm", deletePlanHandler.ConfirmRun)
 							r.Post("/cancel", deletePlanHandler.CancelRun)
 						})

@@ -28,13 +28,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { useCancelDeletePlanRun, useConfirmDeletePlanRun, useCreateDeletePlan, useDeletePlanRun } from "@/hooks/useDeletePlan"
+import { useCancelDeletePlanRun, useConfirmDeletePlanRun, useCreateDeletePlan, useDeletePlanRun, useRefillDeletePlanRun, useUpdateDeletePlanRows } from "@/hooks/useDeletePlan"
 import { APIError } from "@/lib/api"
 import { type CsvColumn, downloadBlob, toCsv } from "@/lib/csv-export"
 import { BYTES_PER_UNIT, unitLabel, type ByteUnit } from "@/lib/unit-format"
 import { formatBytes } from "@/lib/utils"
 import type { ConditionField, DeletePlanRow, DeletePlanRunStatus, KeyRule } from "@/types"
-import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Download, Loader2, X } from "lucide-react"
+import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Download, Loader2, RefreshCw, X } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
@@ -78,6 +78,8 @@ export function DeletePlanWizardDialog({
   const createMutation = useCreateDeletePlan(instanceId)
   const cancelMutation = useCancelDeletePlanRun(instanceId)
   const confirmMutation = useConfirmDeletePlanRun(instanceId)
+  const updateRowsMutation = useUpdateDeletePlanRows(instanceId)
+  const refillMutation = useRefillDeletePlanRun(instanceId)
   const runQuery = useDeletePlanRun(instanceId, runId, { enabled: open })
   const run = runQuery.data
 
@@ -88,6 +90,9 @@ export function DeletePlanWizardDialog({
 
   const rankedGroups = run ? run.groups.filter((group) => !group.dead) : []
   const deadGroups = run ? run.groups.filter((group) => group.dead) : []
+  const untickedGroups = run ? run.groups.filter((group) => !group.included) : []
+  const canRefill = untickedGroups.length > 0
+  const includedRankedCount = rankedGroups.filter((group) => group.included).length
 
   const targetBytes = Math.round(Number(targetValue) * BYTES_PER_UNIT[targetUnit])
 
@@ -166,6 +171,35 @@ export function DeletePlanWizardDialog({
     confirmMutation.mutate(run.id, {
       onError: (error) => {
         toast.error(t("preferences.deletePlanConfirm.startFailed"), {
+          description: error instanceof Error ? error.message : undefined,
+        })
+      },
+    })
+  }
+
+  const handleToggleGroup = (row: DeletePlanRow) => {
+    if (!run) return
+    const currentUnticked = run.groups.filter((group) => !group.included).map((group) => group.id)
+    const unticked = row.included
+      ? [...currentUnticked, row.id]
+      : currentUnticked.filter((id) => id !== row.id)
+    updateRowsMutation.mutate({ runId: run.id, unticked }, {
+      onError: (error) => {
+        toast.error(t("preferences.deletePlanPreview.untickFailed"), {
+          description: error instanceof Error ? error.message : undefined,
+        })
+      },
+    })
+  }
+
+  const handleRefill = () => {
+    if (!run) return
+    refillMutation.mutate(run.id, {
+      onSuccess: (updated) => {
+        toast.success(t("preferences.deletePlanPreview.refilled", { overshoot: formatBytes(updated.overshootBytes) }))
+      },
+      onError: (error) => {
+        toast.error(t("preferences.deletePlanPreview.refillFailed"), {
           description: error instanceof Error ? error.message : undefined,
         })
       },
@@ -359,16 +393,21 @@ export function DeletePlanWizardDialog({
 
             {run && run.status === "preview_ready" && (
               <>
-                <DeletePlanTotals run={run} />
+                <DeletePlanTotals run={run} canRefill={canRefill} />
                 <DeletePlanChainSummary keys={run.keys} />
                 <p className="text-xs text-muted-foreground">
-                  {t("preferences.deletePlanPreview.includedGroups", { count: rankedGroups.length })}
+                  {t("preferences.deletePlanPreview.includedGroups", { count: includedRankedCount })}
                   {" · "}
                   {t("preferences.deletePlanPreview.excludedGroups", { count: run.excludedGroups.length })}
                 </p>
                 <div className="rounded-lg border overflow-hidden">
                   <div className="overflow-auto max-h-[40vh]">
-                    <DeletePlanGroupsTable groups={rankedGroups} />
+                    <DeletePlanGroupsTable
+                      groups={rankedGroups}
+                      selectable
+                      disabled={updateRowsMutation.isPending || refillMutation.isPending}
+                      onToggle={handleToggleGroup}
+                    />
                   </div>
                 </div>
                 {deadGroups.length > 0 && (
@@ -467,6 +506,21 @@ export function DeletePlanWizardDialog({
 
             {step === "preview" && (
               <>
+                {run?.status === "preview_ready" && canRefill && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleRefill}
+                    disabled={refillMutation.isPending}
+                  >
+                    {refillMutation.isPending ? (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                    )}
+                    {t("preferences.deletePlanPreview.refill")}
+                  </Button>
+                )}
                 {run?.status === "preview_ready" && (
                   <Button
                     type="button"

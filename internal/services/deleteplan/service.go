@@ -246,6 +246,137 @@ func (s *Service) ConfirmRun(ctx context.Context, runID int64) error {
 	return nil
 }
 
+// UpdateRunRows replaces a preview_ready run's unticked set and recomputes the
+// totals from the rows. An unticked row stays in the run with included false.
+func (s *Service) UpdateRunRows(ctx context.Context, runID int64, unticked []int64) error {
+	run, err := s.store.GetRun(ctx, runID)
+	if err != nil {
+		return err
+	}
+	if run == nil {
+		return ErrPlanRunNotFound
+	}
+	if run.Status != models.DeletePlanStatusPreviewReady {
+		return fmt.Errorf("%w: %s", ErrPlanRunInvalidStatus, run.Status)
+	}
+
+	selected := make(map[int64]struct{}, len(unticked))
+	for _, rowID := range unticked {
+		if !hasRow(run.Groups, rowID) {
+			return fmt.Errorf("%w: %d", ErrPlanRowNotInRun, rowID)
+		}
+		selected[rowID] = struct{}{}
+	}
+
+	planned, dead, overshoot, reached := selectionTotals(run.Groups, run.TargetBytes, selected)
+	return s.applyRowSelection(ctx, run, unticked, planned, dead, overshoot, reached)
+}
+
+// RefillRun re-includes the unticked groups in plan order until the included
+// bytes reach the target, without reordering the groups that stay.
+func (s *Service) RefillRun(ctx context.Context, runID int64) error {
+	run, err := s.store.GetRun(ctx, runID)
+	if err != nil {
+		return err
+	}
+	if run == nil {
+		return ErrPlanRunNotFound
+	}
+	if run.Status != models.DeletePlanStatusPreviewReady {
+		return fmt.Errorf("%w: %s", ErrPlanRunInvalidStatus, run.Status)
+	}
+
+	remaining := refillSelection(run.Groups, run.TargetBytes, untickedRowIDs(run.Groups))
+	unticked := make([]int64, 0, len(remaining))
+	for _, row := range run.Groups {
+		if _, ok := remaining[row.ID]; ok {
+			unticked = append(unticked, row.ID)
+		}
+	}
+
+	planned, dead, overshoot, reached := selectionTotals(run.Groups, run.TargetBytes, remaining)
+	return s.applyRowSelection(ctx, run, unticked, planned, dead, overshoot, reached)
+}
+
+func (s *Service) applyRowSelection(ctx context.Context, run *models.DeletePlanRun, unticked []int64, planned, dead, overshoot int64, reached bool) error {
+	applied, err := s.store.UpdateRowSelection(ctx, run.ID, unticked, planned, dead, overshoot, reached)
+	if err != nil {
+		return err
+	}
+	if !applied {
+		// A confirm or cancel moved the run between the read and the update.
+		return fmt.Errorf("%w: %s", ErrPlanRunInvalidStatus, models.DeletePlanStatusPreviewReady)
+	}
+	s.emitRun(run.InstanceID, run.ID)
+	return nil
+}
+
+// selectionTotals recomputes a plan's totals from its rows and the unticked set.
+// Dead bytes never count toward the target.
+func selectionTotals(rows []*models.DeletePlanRow, targetBytes int64, unticked map[int64]struct{}) (planned, dead, overshoot int64, targetReached bool) {
+	for _, row := range rows {
+		if _, isUnticked := unticked[row.ID]; isUnticked {
+			continue
+		}
+		if row.Dead {
+			dead += row.SizeBytes
+			continue
+		}
+		planned += row.SizeBytes
+	}
+	return planned, dead, max(planned-targetBytes, 0), planned >= targetBytes
+}
+
+// refillSelection returns the unticked set after re-including groups in plan
+// order until the included bytes reach the target. It only flips included flags,
+// so the groups that stay keep their order.
+func refillSelection(rows []*models.DeletePlanRow, targetBytes int64, unticked map[int64]struct{}) map[int64]struct{} {
+	var planned int64
+	for _, row := range rows {
+		if _, isUnticked := unticked[row.ID]; isUnticked || row.Dead {
+			continue
+		}
+		planned += row.SizeBytes
+	}
+
+	remaining := make(map[int64]struct{}, len(unticked))
+	for rowID := range unticked {
+		remaining[rowID] = struct{}{}
+	}
+	for _, row := range rows {
+		if planned >= targetBytes {
+			break
+		}
+		if _, isUnticked := remaining[row.ID]; !isUnticked {
+			continue
+		}
+		delete(remaining, row.ID)
+		if !row.Dead {
+			planned += row.SizeBytes
+		}
+	}
+	return remaining
+}
+
+func untickedRowIDs(rows []*models.DeletePlanRow) map[int64]struct{} {
+	unticked := make(map[int64]struct{})
+	for _, row := range rows {
+		if !row.Included {
+			unticked[row.ID] = struct{}{}
+		}
+	}
+	return unticked
+}
+
+func hasRow(rows []*models.DeletePlanRow, rowID int64) bool {
+	for _, row := range rows {
+		if row.ID == rowID {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *Service) executePlan(ctx context.Context, instanceID int, runID int64) {
 	run, err := s.store.GetRun(ctx, runID)
 	if err != nil {

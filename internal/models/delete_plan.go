@@ -49,9 +49,12 @@ type DeletePlanRun struct {
 	PlannedBytes     int64     `json:"plannedBytes"`
 	DeadBytes        int64     `json:"deadBytes"`
 	OvershootBytes   int64     `json:"overshootBytes"`
-	TargetReached    bool      `json:"targetReached"`
-	RemovedBytes     int64     `json:"removedBytes"`
-	ErrorMessage     string    `json:"errorMessage"`
+	// ShortfallBytes is targetBytes - plannedBytes when positive, else 0. It is
+	// derived on read, so an untick and a refill keep it consistent with the rows.
+	ShortfallBytes int64  `json:"shortfallBytes"`
+	TargetReached  bool   `json:"targetReached"`
+	RemovedBytes   int64  `json:"removedBytes"`
+	ErrorMessage   string `json:"errorMessage"`
 	// WarningMessage carries the failure summary of a completed run that lost some
 	// chunks. ErrorMessage stays empty on a completed run.
 	WarningMessage string     `json:"warningMessage"`
@@ -229,6 +232,64 @@ func (s *DeletePlanStore) loadRows(ctx context.Context, run *DeletePlanRun) erro
 		return fmt.Errorf("iterate delete plan rows: %w", err)
 	}
 	return nil
+}
+
+// UpdateRowSelection replaces a preview_ready run's unticked set and its totals in
+// one transaction: every non-excluded row is included again, then the unticked
+// rows are taken out. It reports whether the run was still preview_ready, so a
+// racing confirm or cancel leaves the rows untouched.
+func (s *DeletePlanStore) UpdateRowSelection(ctx context.Context, runID int64, unticked []int64, plannedBytes, deadBytes, overshootBytes int64, targetReached bool) (bool, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return false, fmt.Errorf("begin delete plan row selection: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	result, err := tx.ExecContext(ctx, `
+		UPDATE delete_plan_runs
+		SET planned_bytes = ?, dead_bytes = ?, overshoot_bytes = ?, target_reached = ?, updated_at = CURRENT_TIMESTAMP
+		WHERE id = ? AND status = 'preview_ready'
+	`, plannedBytes, deadBytes, overshootBytes, boolToInt(targetReached), runID)
+	if err != nil {
+		return false, err
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+	if affected == 0 {
+		return false, nil
+	}
+
+	if _, err := tx.ExecContext(ctx, `
+		UPDATE delete_plan_rows SET included = 1 WHERE run_id = ? AND excluded = 0
+	`, runID); err != nil {
+		return false, err
+	}
+
+	if len(unticked) > 0 {
+		var placeholders strings.Builder
+		args := make([]any, 0, len(unticked)+1)
+		args = append(args, runID)
+		for i, rowID := range unticked {
+			if i > 0 {
+				placeholders.WriteString(", ")
+			}
+			placeholders.WriteString("?")
+			args = append(args, rowID)
+		}
+		if _, err := tx.ExecContext(ctx, `
+			UPDATE delete_plan_rows SET included = 0
+			WHERE run_id = ? AND excluded = 0 AND id IN (`+placeholders.String()+`)
+		`, args...); err != nil {
+			return false, err
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		return false, fmt.Errorf("commit delete plan row selection: %w", err)
+	}
+	return true, nil
 }
 
 // StartRunPlanning moves a run from pending to planning, and reports whether it did.
@@ -462,6 +523,7 @@ func scanDeletePlanRunScanner(scan func(dest ...any) error) (*DeletePlanRun, err
 	}
 	run.RemoveDeadGroups = SQLiteIntToBool(removeDeadGroups)
 	run.TargetReached = SQLiteIntToBool(targetReached)
+	run.ShortfallBytes = max(run.TargetBytes-run.PlannedBytes, 0)
 	if errorMessage.Valid {
 		run.ErrorMessage = errorMessage.String
 	}

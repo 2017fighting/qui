@@ -5,6 +5,7 @@
 
 import { deletePlanExcludeReasonKey } from "@/components/instances/preferences/deletePlanLabels"
 import { getFieldLabel } from "@/components/query-builder/constants"
+import { Checkbox } from "@/components/ui/checkbox"
 import { PathCell } from "@/components/ui/path-cell"
 import { getStateLabel } from "@/lib/torrent-state-utils"
 import { formatBytes } from "@/lib/utils"
@@ -49,7 +50,7 @@ export function DeletePlanTotalsGrid({ run }: { run: DeletePlanRun }) {
   )
 }
 
-export function DeletePlanTotals({ run }: { run: DeletePlanRun }) {
+export function DeletePlanTotals({ run, canRefill = false }: { run: DeletePlanRun; canRefill?: boolean }) {
   const { t } = useTranslation("instances")
 
   return (
@@ -59,7 +60,11 @@ export function DeletePlanTotals({ run }: { run: DeletePlanRun }) {
       {!run.targetReached && (
         <div role="alert" className="flex items-start gap-2 rounded-md border border-yellow-500/20 bg-yellow-500/10 p-3 text-sm text-yellow-600 dark:text-yellow-400">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-          <p>{t("preferences.deletePlanPreview.targetNotReached")}</p>
+          <p>
+            {canRefill
+              ? t("preferences.deletePlanPreview.belowTarget", { shortfall: formatBytes(run.shortfallBytes) })
+              : t("preferences.deletePlanPreview.targetNotReached")}
+          </p>
         </div>
       )}
     </div>
@@ -120,11 +125,21 @@ export function DeletePlanConfiguration({ keys, removeDeadGroups }: { keys: KeyR
   )
 }
 
-export function DeletePlanGroupsTable({ groups }: { groups: DeletePlanRow[] }) {
+interface DeletePlanGroupsTableProps {
+  groups: DeletePlanRow[]
+  // Ranked rows carry an untick checkbox in the wizard; the history view and the
+  // dead section stay read-only.
+  selectable?: boolean
+  disabled?: boolean
+  onToggle?: (row: DeletePlanRow) => void
+}
+
+export function DeletePlanGroupsTable({ groups, selectable, disabled, onToggle }: DeletePlanGroupsTableProps) {
   const { t } = useTranslation("instances")
   const { t: tTorrents } = useTranslation("torrents")
   const { t: tAutomations } = useTranslation("automations")
   const [expanded, setExpanded] = useState<Set<number>>(new Set())
+  const columnCount = selectable ? 6 : 5
 
   const toggle = (id: number) => {
     setExpanded((prev) => {
@@ -147,6 +162,7 @@ export function DeletePlanGroupsTable({ groups }: { groups: DeletePlanRow[] }) {
       <thead className="sticky top-0">
         <tr className="border-b">
           <th className="w-8 p-2 bg-muted" />
+          {selectable && <th className="w-8 p-2 bg-muted" />}
           <th className="text-left p-2 font-medium bg-muted">{t("preferences.deletePlanPreview.contentPath")}</th>
           <th className="text-right p-2 font-medium bg-muted">{t("preferences.deletePlanPreview.size")}</th>
           <th className="text-right p-2 font-medium bg-muted">{t("preferences.deletePlanPreview.membersColumn")}</th>
@@ -158,7 +174,7 @@ export function DeletePlanGroupsTable({ groups }: { groups: DeletePlanRow[] }) {
           const isExpanded = expanded.has(group.id)
           return (
             <Fragment key={group.id}>
-              <tr className="border-b last:border-0 hover:bg-muted/30">
+              <tr className={`border-b last:border-0 hover:bg-muted/30 ${group.included ? "" : "opacity-60"}`}>
                 <td className="p-2">
                   <button
                     type="button"
@@ -170,6 +186,16 @@ export function DeletePlanGroupsTable({ groups }: { groups: DeletePlanRow[] }) {
                     <ChevronRight className={`h-3.5 w-3.5 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
                   </button>
                 </td>
+                {selectable && (
+                  <td className="p-2">
+                    <Checkbox
+                      checked={group.included}
+                      disabled={disabled}
+                      onCheckedChange={() => onToggle?.(group)}
+                      aria-label={t("preferences.deletePlanPreview.untickGroup")}
+                    />
+                  </td>
+                )}
                 <td className="p-2 max-w-0 w-full">
                   <PathCell path={group.contentPath} />
                 </td>
@@ -181,7 +207,7 @@ export function DeletePlanGroupsTable({ groups }: { groups: DeletePlanRow[] }) {
               </tr>
               {isExpanded && (
                 <tr className="border-b last:border-0">
-                  <td colSpan={5} className="bg-muted/20 p-0">
+                  <td colSpan={columnCount} className="bg-muted/20 p-0">
                     <table className="w-full text-xs">
                       <thead>
                         <tr>

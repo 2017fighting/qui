@@ -47,6 +47,7 @@ const completedRun: DeletePlanRun = {
   plannedBytes: 11_045_000_000_000,
   deadBytes: 0,
   overshootBytes: 49_837_722_304,
+  shortfallBytes: 0,
   targetReached: true,
   removedBytes: 5_000_000_000,
   errorMessage: "",

@@ -68,6 +68,8 @@ export interface DeletePlanRunSummary {
   plannedBytes: number
   deadBytes: number
   overshootBytes: number
+  // targetBytes - plannedBytes when positive, else 0. An untick raises it.
+  shortfallBytes: number
   targetReached: boolean
   removedBytes: number
   errorMessage: string

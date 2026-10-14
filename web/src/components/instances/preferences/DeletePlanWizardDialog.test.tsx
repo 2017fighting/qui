@@ -24,11 +24,14 @@ vi.mock("react-i18next", async (importOriginal) => ({
 }))
 
 // Stable singletons: a fresh object per render would rerun effects forever.
-const { createMutation, runQuery, cancelMutation, confirmMutation } = vi.hoisted(() => ({
+const { createMutation, runQuery, cancelMutation, confirmMutation, updateRowsMutation, refillMutation, toastMock } = vi.hoisted(() => ({
   createMutation: { isPending: false, mutate: vi.fn() },
   runQuery: { data: undefined as unknown, isLoading: false, isError: false },
   cancelMutation: { isPending: false, mutate: vi.fn() },
   confirmMutation: { isPending: false, mutate: vi.fn() },
+  updateRowsMutation: { isPending: false, mutate: vi.fn() },
+  refillMutation: { isPending: false, mutate: vi.fn() },
+  toastMock: { success: vi.fn(), error: vi.fn(), info: vi.fn() },
 }))
 
 vi.mock("@/hooks/useDeletePlan", () => ({
@@ -36,7 +39,11 @@ vi.mock("@/hooks/useDeletePlan", () => ({
   useDeletePlanRun: () => runQuery,
   useCancelDeletePlanRun: () => cancelMutation,
   useConfirmDeletePlanRun: () => confirmMutation,
+  useUpdateDeletePlanRows: () => updateRowsMutation,
+  useRefillDeletePlanRun: () => refillMutation,
 }))
+
+vi.mock("sonner", () => ({ toast: toastMock }))
 
 import { DeletePlanWizardDialog } from "@/components/instances/preferences/DeletePlanWizardDialog"
 import { DEFAULT_DELETE_PLAN_KEYS, moveKey } from "@/components/instances/preferences/deletePlanKeys"
@@ -53,6 +60,7 @@ const previewRun: DeletePlanRun = {
   plannedBytes: 11_045_000_000_000,
   deadBytes: 0,
   overshootBytes: 49_837_722_304,
+  shortfallBytes: 0,
   targetReached: true,
   removedBytes: 0,
   errorMessage: "",
@@ -113,6 +121,10 @@ beforeEach(() => {
   createMutation.mutate.mockReset()
   confirmMutation.mutate.mockReset()
   cancelMutation.mutate.mockReset()
+  updateRowsMutation.mutate.mockReset()
+  refillMutation.mutate.mockReset()
+  toastMock.success.mockReset()
+  toastMock.error.mockReset()
   // Radix dialog and select measure through ResizeObserver, which jsdom lacks.
   vi.stubGlobal("ResizeObserver", class {
     observe() {}
@@ -348,6 +360,61 @@ describe("DeletePlanWizardDialog", () => {
 
     expect(document.body.textContent).toContain(
       "preferences.deletePlanPreview.ranking: queryBuilder.fields.NUM_COMPLETE preferences.deletePlanWizard.directionDesc · queryBuilder.fields.GROUP_SIZE preferences.deletePlanWizard.directionAsc"
+    )
+  })
+
+  it("unticks a ranked group and keeps the row visible as unticked", () => {
+    const { getAllByRole } = renderWizard({ initialRunId: 7 })
+
+    const checkbox = getAllByRole("checkbox", { name: "preferences.deletePlanPreview.untickGroup" })[0]
+    expect(checkbox.getAttribute("data-state")).toBe("checked")
+    fireEvent.click(checkbox)
+
+    expect(updateRowsMutation.mutate).toHaveBeenCalledWith(
+      { runId: 7, unticked: [91] },
+      expect.any(Object)
+    )
+
+    // The unticked row is still listed, only dimmed.
+    expect(document.body.textContent).toContain("/data/PackDir")
+  })
+
+  it("shows how far the plan is below the target after an untick", () => {
+    runQuery.data = {
+      ...previewRun,
+      targetReached: false,
+      plannedBytes: 6_045_000_000_000,
+      overshootBytes: 0,
+      shortfallBytes: 5_000_000_000,
+      groups: [{ ...previewRun.groups[0], included: false }],
+    }
+    renderWizard({ initialRunId: 7 })
+
+    expect(document.body.textContent).toContain(
+      `preferences.deletePlanPreview.belowTarget(${formatBytes(5_000_000_000)})`
+    )
+    // The refill action is offered while a group is unticked.
+    expect(document.body.textContent).toContain("preferences.deletePlanPreview.refill")
+  })
+
+  it("refills the plan and reports the new overshoot", () => {
+    runQuery.data = {
+      ...previewRun,
+      targetReached: false,
+      plannedBytes: 6_045_000_000_000,
+      overshootBytes: 0,
+      shortfallBytes: 5_000_000_000,
+      groups: [{ ...previewRun.groups[0], included: false }],
+    }
+    const { getByRole } = renderWizard({ initialRunId: 7 })
+
+    fireEvent.click(getByRole("button", { name: "preferences.deletePlanPreview.refill" }))
+    expect(refillMutation.mutate).toHaveBeenCalledWith(7, expect.any(Object))
+
+    const options = refillMutation.mutate.mock.calls[0][1] as { onSuccess: (run: DeletePlanRun) => void }
+    options.onSuccess({ ...previewRun, overshootBytes: 123_456_789 })
+    expect(toastMock.success).toHaveBeenCalledWith(
+      `preferences.deletePlanPreview.refilled(${formatBytes(123_456_789)})`
     )
   })
 })
