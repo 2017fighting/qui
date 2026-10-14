@@ -1235,12 +1235,19 @@
         "types": {
           "default": "最早優先（預設）",
           "simple": "簡單排序",
-          "score": "自訂得分"
+          "score": "自訂得分",
+          "keys": "排序鍵"
         },
         "sortBy": "排序方式",
         "asc": "升序",
         "desc": "降序",
         "scoreRules": "得分規則",
+        "keys": "排序鍵",
+        "addKey": "新增排序鍵",
+        "enableKey": "啟用排序鍵",
+        "moveKeyUp": "上移排序鍵",
+        "moveKeyDown": "下移排序鍵",
+        "removeKey": "移除排序鍵",
         "lowToHigh": "從低到高",
         "highToLow": "從高到低",
         "fieldMultiplier": "欄位乘數",
@@ -1249,7 +1256,8 @@
         "addFieldMultiplier": "新增欄位乘數",
         "addBonus": "新增獎勵分",
         "notSupportedForSimpleSort": "不支援簡單排序",
-        "notSupportedForScoreMultiplier": "不支援得分乘數"
+        "notSupportedForScoreMultiplier": "不支援得分乘數",
+        "notSupportedForKey": "不支援排序鍵"
       },
       "conditionsLabel": "條件（可選）",
       "actions": {
@@ -1574,6 +1582,7 @@
         "enableLocalAccessOrDefault": "請在實例設定中啟用本機檔案系統存取，或使用預設（qBittorrent）",
         "enterPathOrDefault": "請輸入路徑或將可用空間來源切換回預設（qBittorrent）",
         "addScoreRule": "得分排序至少需要一條得分規則",
+        "addRankingKey": "請為排序鍵排序新增至少一個排序鍵",
         "fieldMultiplierInvalid": "欄位乘數必須是有效數字",
         "conditionalScoreInvalid": "條件得分必須是有效數字",
         "setSpeedLimit": "請至少設定一個速度限制",

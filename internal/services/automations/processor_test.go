@@ -1849,6 +1849,98 @@ func TestSortTorrents_Score(t *testing.T) {
 	}
 }
 
+func TestSortTorrents_Keys(t *testing.T) {
+	torrents := []qbt.Torrent{
+		{Hash: "a", Name: "Delta", Size: 100, NumComplete: 5, Private: false},
+		{Hash: "b", Name: "Alpha", Size: 50, NumComplete: 10, Private: false},
+		{Hash: "c", Name: "Charlie", Size: 200, NumComplete: 10, Private: true},
+		{Hash: "d", Name: "Bravo", Size: 50, NumComplete: 5, Private: true},
+	}
+
+	tests := []struct {
+		name     string
+		keys     []models.KeyRule
+		expected []string
+	}{
+		{
+			name: "ranks by each enabled key in order",
+			keys: []models.KeyRule{
+				{Field: models.FieldSize, Enabled: true, Direction: models.SortDirectionASC},
+				{Field: models.FieldNumComplete, Enabled: true, Direction: models.SortDirectionDESC},
+				{Field: models.FieldPrivate, Enabled: true, Direction: models.SortDirectionASC},
+			},
+			expected: []string{"b", "d", "a", "c"},
+		},
+		{
+			name: "a disabled key never changes the order",
+			keys: []models.KeyRule{
+				{Field: models.FieldNumComplete, Enabled: true, Direction: models.SortDirectionDESC},
+				{Field: models.FieldSize, Enabled: false, Direction: models.SortDirectionASC},
+			},
+			expected: []string{"b", "c", "a", "d"},
+		},
+		{
+			name: "a string key ranks by name",
+			keys: []models.KeyRule{
+				{Field: models.FieldName, Enabled: true, Direction: models.SortDirectionASC},
+			},
+			expected: []string{"b", "d", "c", "a"},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			config := models.SortingConfig{
+				SchemaVersion: "1",
+				Type:          models.SortingTypeKeys,
+				Direction:     models.SortDirectionASC,
+				Keys:          tc.keys,
+			}
+			sorted := make([]qbt.Torrent, len(torrents))
+			copy(sorted, torrents)
+
+			require.NoError(t, SortTorrents(sorted, &config, nil))
+
+			for i, expectedHash := range tc.expected {
+				require.Equal(t, expectedHash, sorted[i].Hash)
+			}
+		})
+	}
+}
+
+func TestSortTorrents_KeysRejectsInvalidChain(t *testing.T) {
+	torrents := []qbt.Torrent{{Hash: "a"}}
+
+	t.Run("no keys", func(t *testing.T) {
+		config := models.SortingConfig{
+			SchemaVersion: "1",
+			Type:          models.SortingTypeKeys,
+			Direction:     models.SortDirectionASC,
+		}
+		require.ErrorContains(t, SortTorrents(torrents, &config, nil), "keys sort requires at least one key")
+	})
+
+	t.Run("unsupported field", func(t *testing.T) {
+		config := models.SortingConfig{
+			SchemaVersion: "1",
+			Type:          models.SortingTypeKeys,
+			Direction:     models.SortDirectionASC,
+			Keys:          []models.KeyRule{{Field: models.FieldUploadedOverSize, Enabled: true, Direction: models.SortDirectionASC}},
+		}
+		require.ErrorContains(t, SortTorrents(torrents, &config, nil), "unsupported sort field: UPLOADED_OVER_SIZE")
+	})
+
+	t.Run("invalid direction", func(t *testing.T) {
+		config := models.SortingConfig{
+			SchemaVersion: "1",
+			Type:          models.SortingTypeKeys,
+			Direction:     models.SortDirectionASC,
+			Keys:          []models.KeyRule{{Field: models.FieldSize, Enabled: true, Direction: "SIDEWAYS"}},
+		}
+		require.ErrorContains(t, SortTorrents(torrents, &config, nil), "invalid direction: SIDEWAYS")
+	})
+}
+
 func TestSortTorrents_RejectsUploadedOverSizeSorting(t *testing.T) {
 	torrents := []qbt.Torrent{{Hash: "a", Uploaded: 100, TotalSize: 50}}
 

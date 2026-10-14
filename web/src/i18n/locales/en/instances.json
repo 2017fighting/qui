@@ -1266,12 +1266,19 @@
         "types": {
           "default": "Oldest First (Default)",
           "simple": "Simple Sort",
-          "score": "Custom Score"
+          "score": "Custom Score",
+          "keys": "Ranking Keys"
         },
         "sortBy": "Sort by",
         "asc": "Asc",
         "desc": "Desc",
         "scoreRules": "Score Rules",
+        "keys": "Ranking Keys",
+        "addKey": "Add Key",
+        "enableKey": "Enable key",
+        "moveKeyUp": "Move key up",
+        "moveKeyDown": "Move key down",
+        "removeKey": "Remove key",
         "lowToHigh": "Low to High",
         "highToLow": "High to Low",
         "fieldMultiplier": "Field Multiplier",
@@ -1280,7 +1287,8 @@
         "addFieldMultiplier": "Add Field Multiplier",
         "addBonus": "Add Bonus",
         "notSupportedForSimpleSort": "Not supported for simple sorting",
-        "notSupportedForScoreMultiplier": "Not supported for score multipliers"
+        "notSupportedForScoreMultiplier": "Not supported for score multipliers",
+        "notSupportedForKey": "Not supported for ranking keys"
       },
       "conditionsLabel": "Conditions (optional)",
       "actions": {
@@ -1607,6 +1615,7 @@
         "enableLocalAccessOrDefault": "Enable Local Filesystem Access in instance settings, or use Default (qBittorrent)",
         "enterPathOrDefault": "Enter a path or switch Free space source back to Default (qBittorrent)",
         "addScoreRule": "Add at least one score rule for Score sorting",
+        "addRankingKey": "Add at least one ranking key for Keys sorting",
         "fieldMultiplierInvalid": "Field multiplier must be a valid number",
         "conditionalScoreInvalid": "Conditional score must be a valid number",
         "setSpeedLimit": "Set at least one speed limit",

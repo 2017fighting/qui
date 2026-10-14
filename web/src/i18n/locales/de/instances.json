@@ -1266,12 +1266,19 @@
         "types": {
           "default": "Älteste zuerst (Standard)",
           "simple": "Einfache Sortierung",
-          "score": "Benutzerdefinierter Score"
+          "score": "Benutzerdefinierter Score",
+          "keys": "Rangfolge-Schlüssel"
         },
         "sortBy": "Sortieren nach",
         "asc": "Aufst.",
         "desc": "Abst.",
         "scoreRules": "Score-Regeln",
+        "keys": "Rangfolge-Schlüssel",
+        "addKey": "Schlüssel hinzufügen",
+        "enableKey": "Schlüssel aktivieren",
+        "moveKeyUp": "Schlüssel nach oben",
+        "moveKeyDown": "Schlüssel nach unten",
+        "removeKey": "Schlüssel entfernen",
         "lowToHigh": "Aufsteigend",
         "highToLow": "Absteigend",
         "fieldMultiplier": "Feld-Multiplikator",
@@ -1280,7 +1287,8 @@
         "addFieldMultiplier": "Feld-Multiplikator hinzufügen",
         "addBonus": "Bonus hinzufügen",
         "notSupportedForSimpleSort": "Nicht unterstützt für einfache Sortierung",
-        "notSupportedForScoreMultiplier": "Nicht unterstützt für Score-Multiplikatoren"
+        "notSupportedForScoreMultiplier": "Nicht unterstützt für Score-Multiplikatoren",
+        "notSupportedForKey": "Nicht unterstützt für Rangfolge-Schlüssel"
       },
       "conditionsLabel": "Bedingungen (optional)",
       "actions": {
@@ -1607,6 +1615,7 @@
         "enableLocalAccessOrDefault": "Aktiviere den lokalen Dateisystemzugriff in den Instanzeinstellungen oder verwende Standard (qBittorrent)",
         "enterPathOrDefault": "Gib einen Pfad ein oder stelle die Quelle für freien Speicher zurück auf Standard (qBittorrent)",
         "addScoreRule": "Füge mindestens eine Score-Regel für die Score-Sortierung hinzu",
+        "addRankingKey": "Füge mindestens einen Rangfolge-Schlüssel für die Sortierung nach Schlüsseln hinzu",
         "fieldMultiplierInvalid": "Der Feld-Multiplikator muss eine gültige Zahl sein",
         "conditionalScoreInvalid": "Der bedingte Score muss eine gültige Zahl sein",
         "setSpeedLimit": "Lege mindestens eine Geschwindigkeitsbegrenzung fest",

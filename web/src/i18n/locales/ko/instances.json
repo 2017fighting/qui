@@ -1235,12 +1235,19 @@
         "types": {
           "default": "오래된 것 우선(기본값)",
           "simple": "단순 정렬",
-          "score": "사용자 지정 점수"
+          "score": "사용자 지정 점수",
+          "keys": "순위 키"
         },
         "sortBy": "정렬 기준",
         "asc": "오름차순",
         "desc": "내림차순",
         "scoreRules": "점수 규칙",
+        "keys": "순위 키",
+        "addKey": "키 추가",
+        "enableKey": "키 사용",
+        "moveKeyUp": "키 위로 이동",
+        "moveKeyDown": "키 아래로 이동",
+        "removeKey": "키 제거",
         "lowToHigh": "낮은 것부터 높은 것까지",
         "highToLow": "높은 것부터 낮은 것까지",
         "fieldMultiplier": "필드 곱셈기",
@@ -1249,7 +1256,8 @@
         "addFieldMultiplier": "필드 곱셈기 추가",
         "addBonus": "보너스 추가",
         "notSupportedForSimpleSort": "단순 정렬에서 지원되지 않음",
-        "notSupportedForScoreMultiplier": "점수 곱셈기에서 지원되지 않음"
+        "notSupportedForScoreMultiplier": "점수 곱셈기에서 지원되지 않음",
+        "notSupportedForKey": "순위 키에서 지원되지 않음"
       },
       "conditionsLabel": "조건(선택 사항)",
       "actions": {
@@ -1574,6 +1582,7 @@
         "enableLocalAccessOrDefault": "인스턴스 설정에서 로컬 파일시스템 접근을 활성화하거나 기본값(qBittorrent)을 사용하세요",
         "enterPathOrDefault": "경로를 입력하거나 여유 공간 소스를 기본값(qBittorrent)으로 다시 전환하세요",
         "addScoreRule": "점수 정렬을 위해 점수 규칙을 하나 이상 추가하세요",
+        "addRankingKey": "키 정렬을 위해 순위 키를 하나 이상 추가하세요",
         "fieldMultiplierInvalid": "필드 곱셈기는 유효한 숫자여야 합니다",
         "conditionalScoreInvalid": "조건부 점수는 유효한 숫자여야 합니다",
         "setSpeedLimit": "속도 제한을 하나 이상 설정하세요",

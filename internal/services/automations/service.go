@@ -4915,21 +4915,27 @@ func sortingConfigUsesField(config *models.SortingConfig, field ConditionField) 
 		return false
 	}
 
-	if config.Type == models.SortingTypeSimple {
+	switch config.Type {
+	case models.SortingTypeSimple:
 		return config.Field == field
-	}
-
-	if config.Type != models.SortingTypeScore {
+	case models.SortingTypeScore:
+		for i := range config.ScoreRules {
+			if scoreRuleUsesField(config.ScoreRules[i], field) {
+				return true
+			}
+		}
+		return false
+	case models.SortingTypeKeys:
+		// A disabled key never moves the order, so it needs no prepared data.
+		for _, key := range config.Keys {
+			if key.Enabled && key.Field == field {
+				return true
+			}
+		}
+		return false
+	default:
 		return false
 	}
-
-	for i := range config.ScoreRules {
-		if scoreRuleUsesField(config.ScoreRules[i], field) {
-			return true
-		}
-	}
-
-	return false
 }
 
 func scoreRuleUsesField(rule models.ScoreRule, field ConditionField) bool {
@@ -6564,6 +6570,8 @@ func sortingConfigEqual(a, b *models.SortingConfig) bool {
 			return false
 		}
 		return scoreRulesEqual(a.ScoreRules, b.ScoreRules)
+	case models.SortingTypeKeys:
+		return slices.Equal(a.Keys, b.Keys)
 	default:
 		return false
 	}

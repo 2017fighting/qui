@@ -1303,12 +1303,19 @@
         "types": {
           "default": "Nejstarší (Výchozí)",
           "simple": "Jednoduché řazení",
-          "score": "Vlastní skóre"
+          "score": "Vlastní skóre",
+          "keys": "Řadicí klíče"
         },
         "sortBy": "Řadit podle",
         "asc": "Vzestupně",
         "desc": "Sestupně",
         "scoreRules": "Skóre pravidla",
+        "keys": "Řadicí klíče",
+        "addKey": "Přidat klíč",
+        "enableKey": "Povolit klíč",
+        "moveKeyUp": "Posunout klíč nahoru",
+        "moveKeyDown": "Posunout klíč dolů",
+        "removeKey": "Odebrat klíč",
         "lowToHigh": "Vzestupně",
         "highToLow": "Sestupně",
         "fieldMultiplier": "Pole násobitele",
@@ -1317,7 +1324,8 @@
         "addFieldMultiplier": "Přidat pole násobitele",
         "addBonus": "Přidat bonus",
         "notSupportedForSimpleSort": "Nepodporováno pro jednoduché řazení",
-        "notSupportedForScoreMultiplier": "Nepodporováno pro násobitele skóre"
+        "notSupportedForScoreMultiplier": "Nepodporováno pro násobitele skóre",
+        "notSupportedForKey": "Nepodporováno pro řadicí klíče"
       },
       "conditionsLabel": "Podmínky (volitelné)",
       "actions": {
@@ -1646,6 +1654,7 @@
         "enableLocalAccessOrDefault": "Povolit místní přístup k souborovému systému v nastavení instance, nebo použít výchozí (qBittorrent)",
         "enterPathOrDefault": "Zadejte cestu nebo přepněte zdroj volného místa zpět na výchozí (qBittorrent)",
         "addScoreRule": "Přidat alespoň jedno pravidlo skóre pro řazení skóre",
+        "addRankingKey": "Přidejte alespoň jeden řadicí klíč pro řazení podle klíčů",
         "fieldMultiplierInvalid": "Multiplikátor pole musí být platné číslo",
         "conditionalScoreInvalid": "Podmíněné skóre musí být platné číslo",
         "setSpeedLimit": "Nastavit alespoň jedno omezení rychlosti",
