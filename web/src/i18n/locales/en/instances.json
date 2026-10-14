@@ -958,7 +958,19 @@
         "members_changed": "Its members changed since the plan was built"
       }
     },
+    "deletePlanHistory": {
+      "title": "Plan history",
+      "description": "The plan this run built, read-only.",
+      "view": "View",
+      "viewRun": "View run {{id}}",
+      "removed": "Removed",
+      "noKeys": "No ranking keys recorded",
+      "disabledKey": "{{key}} (off)",
+      "enabled": "Yes",
+      "disabled": "No"
+    },
     "deletePlanOverview": {
+      "history": "History",
       "title": "Delete Plan",
       "tooltip": "Builds a one-shot plan that removes whole content groups until it reaches the target size. Nothing is removed until you confirm.",
       "description": "Reclaim a chosen amount of space from one instance.",

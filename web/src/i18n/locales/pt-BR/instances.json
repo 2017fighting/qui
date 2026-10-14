@@ -958,7 +958,19 @@
           "members_changed": "Seus membros mudaram desde que o plano foi criado"
         }
       },
+      "deletePlanHistory": {
+        "title": "Histórico de planos",
+        "description": "O plano que esta execução criou, somente leitura.",
+        "view": "Ver",
+        "viewRun": "Ver execução {{id}}",
+        "removed": "Removido",
+        "noKeys": "Nenhuma chave de classificação registrada",
+        "disabledKey": "{{key}} (desativada)",
+        "enabled": "Sim",
+        "disabled": "Não"
+      },
       "deletePlanOverview": {
+        "history": "Histórico",
         "title": "Plano de exclusão",
         "tooltip": "Cria um plano único que remove grupos de conteúdo inteiros até atingir o tamanho alvo. Nada é removido antes da confirmação.",
         "description": "Recupere uma quantidade de espaço escolhida de uma instância.",

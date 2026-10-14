@@ -4,13 +4,18 @@
  */
 
 import { DeletePlanRunProgress } from "@/components/instances/preferences/DeletePlanRunProgress"
+import {
+  DeletePlanChainSummary,
+  DeletePlanExcludedTable,
+  DeletePlanGroupsTable,
+  DeletePlanTotals,
+  DeletePlanTotalsGrid
+} from "@/components/instances/preferences/DeletePlanRunDetails"
 import { deletePlanExcludeReasonKey, deletePlanStatusLabelKey } from "@/components/instances/preferences/deletePlanLabels"
 import { DEFAULT_DELETE_PLAN_KEYS, NON_SORTABLE_KEY_FIELDS, moveKey } from "@/components/instances/preferences/deletePlanKeys"
 import { FieldCombobox } from "@/components/query-builder/FieldCombobox"
-import { getFieldLabel } from "@/components/query-builder/constants"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -21,18 +26,16 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { PathCell } from "@/components/ui/path-cell"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { useCancelDeletePlanRun, useConfirmDeletePlanRun, useCreateDeletePlan, useDeletePlanRun, useRefillDeletePlanRun, useUpdateDeletePlanRows } from "@/hooks/useDeletePlan"
 import { APIError } from "@/lib/api"
 import { type CsvColumn, downloadBlob, toCsv } from "@/lib/csv-export"
-import { getStateLabel } from "@/lib/torrent-state-utils"
 import { BYTES_PER_UNIT, unitLabel, type ByteUnit } from "@/lib/unit-format"
 import { formatBytes } from "@/lib/utils"
-import type { ConditionField, DeletePlanRow, DeletePlanRun, DeletePlanRunStatus, KeyRule } from "@/types"
-import { AlertTriangle, ArrowDown, ArrowUp, ChevronDown, ChevronRight, ChevronUp, Download, Loader2, RefreshCw, X } from "lucide-react"
-import { Fragment, useMemo, useState } from "react"
+import type { ConditionField, DeletePlanRow, DeletePlanRunStatus, KeyRule } from "@/types"
+import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Download, Loader2, RefreshCw, X } from "lucide-react"
+import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
@@ -54,214 +57,6 @@ const DEFAULT_TARGET_VALUE = "10"
 // Rebuilding over the run this wizard opened cancels it first, but only a run
 // that has not started deleting can be canceled and recreated.
 const REBUILDABLE_STATUSES: DeletePlanRunStatus[] = ["pending", "planning", "preview_ready"]
-
-function TotalsGrid({ run }: { run: DeletePlanRun }) {
-  const { t } = useTranslation("instances")
-
-  return (
-    <div className="grid grid-cols-3 gap-3">
-      <div className="rounded-lg border p-3">
-        <p className="text-xs text-muted-foreground">{t("preferences.deletePlanPreview.target")}</p>
-        <p className="font-mono text-sm">{formatBytes(run.targetBytes)}</p>
-      </div>
-      <div className="rounded-lg border p-3">
-        <p className="text-xs text-muted-foreground">{t("preferences.deletePlanPreview.planned")}</p>
-        <p className="font-mono text-sm">{formatBytes(run.plannedBytes)}</p>
-      </div>
-      <div className="rounded-lg border p-3">
-        <p className="text-xs text-muted-foreground">{t("preferences.deletePlanPreview.overshoot")}</p>
-        <p className="font-mono text-sm">{formatBytes(run.overshootBytes)}</p>
-      </div>
-    </div>
-  )
-}
-
-function Totals({ run, canRefill }: { run: DeletePlanRun; canRefill: boolean }) {
-  const { t } = useTranslation("instances")
-
-  return (
-    <div className="space-y-3">
-      <TotalsGrid run={run} />
-
-      {!run.targetReached && (
-        <div role="alert" className="flex items-start gap-2 rounded-md border border-yellow-500/20 bg-yellow-500/10 p-3 text-sm text-yellow-600 dark:text-yellow-400">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-          <p>
-            {canRefill
-              ? t("preferences.deletePlanPreview.belowTarget", { shortfall: formatBytes(run.shortfallBytes) })
-              : t("preferences.deletePlanPreview.targetNotReached")}
-          </p>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function ChainSummary({ keys }: { keys: KeyRule[] }) {
-  const { t } = useTranslation("instances")
-  const { t: tAutomations } = useTranslation("automations")
-  const enabled = keys.filter((key) => key.enabled)
-
-  if (enabled.length === 0) {
-    return null
-  }
-
-  return (
-    <p className="text-xs text-muted-foreground">
-      {t("preferences.deletePlanPreview.ranking")}:{" "}
-      {enabled
-        .map((key) => {
-          const direction = key.direction === "ASC"
-            ? t("preferences.deletePlanWizard.directionAsc")
-            : t("preferences.deletePlanWizard.directionDesc")
-          return `${getFieldLabel(key.field, tAutomations)} ${direction}`
-        })
-        .join(" · ")}
-    </p>
-  )
-}
-
-interface GroupsTableProps {
-  groups: DeletePlanRow[]
-  // Ranked rows carry an untick checkbox; the dead section does not.
-  selectable?: boolean
-  disabled?: boolean
-  onToggle?: (row: DeletePlanRow) => void
-}
-
-function GroupsTable({ groups, selectable, disabled, onToggle }: GroupsTableProps) {
-  const { t } = useTranslation("instances")
-  const { t: tTorrents } = useTranslation("torrents")
-  const { t: tAutomations } = useTranslation("automations")
-  const [expanded, setExpanded] = useState<Set<number>>(new Set())
-  const columnCount = selectable ? 6 : 5
-
-  const toggle = (id: number) => {
-    setExpanded((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
-      }
-      return next
-    })
-  }
-
-  if (groups.length === 0) {
-    return <p className="p-6 text-center text-sm text-muted-foreground">{t("preferences.deletePlanPreview.noGroups")}</p>
-  }
-
-  return (
-    <table className="w-full min-w-[560px] text-sm">
-      <thead className="sticky top-0">
-        <tr className="border-b">
-          <th className="w-8 p-2 bg-muted" />
-          {selectable && <th className="w-8 p-2 bg-muted" />}
-          <th className="text-left p-2 font-medium bg-muted">{t("preferences.deletePlanPreview.contentPath")}</th>
-          <th className="text-right p-2 font-medium bg-muted">{t("preferences.deletePlanPreview.size")}</th>
-          <th className="text-right p-2 font-medium bg-muted">{t("preferences.deletePlanPreview.membersColumn")}</th>
-          <th className="text-left p-2 font-medium bg-muted">{t("preferences.deletePlanPreview.decidingKey")}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {groups.map((group) => {
-          const isExpanded = expanded.has(group.id)
-          return (
-            <Fragment key={group.id}>
-              <tr className={`border-b last:border-0 hover:bg-muted/30 ${group.included ? "" : "opacity-60"}`}>
-                <td className="p-2">
-                  <button
-                    type="button"
-                    aria-expanded={isExpanded}
-                    aria-label={t("preferences.deletePlanPreview.membersColumn")}
-                    onClick={() => toggle(group.id)}
-                    className="flex h-5 w-5 items-center justify-center rounded hover:bg-muted"
-                  >
-                    <ChevronRight className={`h-3.5 w-3.5 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
-                  </button>
-                </td>
-                {selectable && (
-                  <td className="p-2">
-                    <Checkbox
-                      checked={group.included}
-                      disabled={disabled}
-                      onCheckedChange={() => onToggle?.(group)}
-                      aria-label={t("preferences.deletePlanPreview.untickGroup")}
-                    />
-                  </td>
-                )}
-                <td className="p-2 max-w-0 w-full">
-                  <PathCell path={group.contentPath} />
-                </td>
-                <td className="p-2 text-right font-mono whitespace-nowrap">{formatBytes(group.sizeBytes)}</td>
-                <td className="p-2 text-right text-muted-foreground whitespace-nowrap">{group.memberCount}</td>
-                <td className="p-2 text-muted-foreground whitespace-nowrap">
-                  {group.decidingKey ? getFieldLabel(group.decidingKey, tAutomations) : ""}
-                </td>
-              </tr>
-              {isExpanded && (
-                <tr className="border-b last:border-0">
-                  <td colSpan={columnCount} className="bg-muted/20 p-0">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr>
-                          <th className="text-left p-2 font-medium text-muted-foreground">{t("preferences.deletePlanPreview.memberName")}</th>
-                          <th className="text-right p-2 font-medium text-muted-foreground">{t("preferences.deletePlanPreview.size")}</th>
-                          <th className="text-left p-2 font-medium text-muted-foreground">{t("preferences.deletePlanPreview.memberState")}</th>
-                          <th className="text-right p-2 font-medium text-muted-foreground">{t("preferences.deletePlanPreview.memberProgress")}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {group.members.map((member) => (
-                          <tr key={member.hash}>
-                            <td className="p-2 break-all">{member.name}</td>
-                            <td className="p-2 text-right font-mono whitespace-nowrap">{formatBytes(member.sizeBytes)}</td>
-                            <td className="p-2">{getStateLabel(member.state, tTorrents)}</td>
-                            <td className="p-2 text-right font-mono whitespace-nowrap">{`${Math.round(member.progress * 100)}%`}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </td>
-                </tr>
-              )}
-            </Fragment>
-          )
-        })}
-      </tbody>
-    </table>
-  )
-}
-
-function ExcludedTable({ groups }: { groups: DeletePlanRow[] }) {
-  const { t } = useTranslation("instances")
-
-  return (
-    <table className="w-full min-w-[560px] text-sm">
-      <thead className="sticky top-0">
-        <tr className="border-b">
-          <th className="text-left p-2 font-medium bg-muted">{t("preferences.deletePlanPreview.contentPath")}</th>
-          <th className="text-right p-2 font-medium bg-muted">{t("preferences.deletePlanPreview.size")}</th>
-          <th className="text-left p-2 font-medium bg-muted">{t("preferences.deletePlanPreview.reason")}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {groups.map((group) => (
-          <tr key={group.id} className="border-b last:border-0">
-            <td className="p-2 max-w-0 w-full">
-              <PathCell path={group.contentPath} />
-            </td>
-            <td className="p-2 text-right font-mono whitespace-nowrap">{formatBytes(group.sizeBytes)}</td>
-            <td className="p-2 text-muted-foreground">
-              {t([deletePlanExcludeReasonKey(group.excludeReason), "preferences.deletePlan.excludeReasons.unknown"])}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  )
-}
 
 export function DeletePlanWizardDialog({
   open,
@@ -598,8 +393,8 @@ export function DeletePlanWizardDialog({
 
             {run && run.status === "preview_ready" && (
               <>
-                <Totals run={run} canRefill={canRefill} />
-                <ChainSummary keys={run.keys} />
+                <DeletePlanTotals run={run} canRefill={canRefill} />
+                <DeletePlanChainSummary keys={run.keys} />
                 <p className="text-xs text-muted-foreground">
                   {t("preferences.deletePlanPreview.includedGroups", { count: includedRankedCount })}
                   {" · "}
@@ -607,7 +402,7 @@ export function DeletePlanWizardDialog({
                 </p>
                 <div className="rounded-lg border overflow-hidden">
                   <div className="overflow-auto max-h-[40vh]">
-                    <GroupsTable
+                    <DeletePlanGroupsTable
                       groups={rankedGroups}
                       selectable
                       disabled={updateRowsMutation.isPending || refillMutation.isPending}
@@ -624,7 +419,7 @@ export function DeletePlanWizardDialog({
                     </p>
                     <div className="rounded-lg border overflow-hidden">
                       <div className="overflow-auto max-h-[30vh]">
-                        <GroupsTable groups={deadGroups} />
+                        <DeletePlanGroupsTable groups={deadGroups} />
                       </div>
                     </div>
                   </div>
@@ -632,7 +427,7 @@ export function DeletePlanWizardDialog({
                 {run.excludedGroups.length > 0 && (
                   <div className="rounded-lg border overflow-hidden">
                     <div className="overflow-auto max-h-[30vh]">
-                      <ExcludedTable groups={run.excludedGroups} />
+                      <DeletePlanExcludedTable groups={run.excludedGroups} />
                     </div>
                   </div>
                 )}
@@ -652,7 +447,7 @@ export function DeletePlanWizardDialog({
 
         {step === "confirm" && run && (
           <div className="space-y-4 py-2">
-            <TotalsGrid run={run} />
+            <DeletePlanTotalsGrid run={run} />
             {run.deadBytes > 0 && (
               <p className="text-xs text-muted-foreground">
                 {t("preferences.deletePlanConfirm.deadTotal", { dead: formatBytes(run.deadBytes) })}

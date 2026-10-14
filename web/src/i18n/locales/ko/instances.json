@@ -931,7 +931,19 @@
           "members_changed": "계획 생성 후 구성원이 변경되었습니다"
         }
       },
+      "deletePlanHistory": {
+        "title": "계획 기록",
+        "description": "이 실행이 만든 계획이며 읽기 전용입니다.",
+        "view": "보기",
+        "viewRun": "실행 {{id}} 보기",
+        "removed": "제거됨",
+        "noKeys": "기록된 정렬 키가 없습니다",
+        "disabledKey": "{{key}} (꺼짐)",
+        "enabled": "예",
+        "disabled": "아니요"
+      },
       "deletePlanOverview": {
+        "history": "기록",
         "title": "삭제 계획",
         "tooltip": "목표 크기에 도달할 때까지 전체 콘텐츠 그룹을 제거하는 일회성 계획을 만듭니다. 확인하기 전에는 아무것도 제거되지 않습니다.",
         "description": "한 인스턴스에서 원하는 크기의 공간을 회수합니다.",

@@ -958,7 +958,19 @@
           "members_changed": "I suoi membri sono cambiati dopo la creazione del piano"
         }
       },
+      "deletePlanHistory": {
+        "title": "Cronologia dei piani",
+        "description": "Il piano creato da questa esecuzione, in sola lettura.",
+        "view": "Vedi",
+        "viewRun": "Vedi esecuzione {{id}}",
+        "removed": "Rimosso",
+        "noKeys": "Nessuna chiave di ordinamento registrata",
+        "disabledKey": "{{key}} (disattivata)",
+        "enabled": "Sì",
+        "disabled": "No"
+      },
       "deletePlanOverview": {
+        "history": "Cronologia",
         "title": "Piano di eliminazione",
         "tooltip": "Crea un piano una tantum che rimuove interi gruppi di contenuto finché non raggiunge la dimensione target. Nulla viene rimosso finché non confermi.",
         "description": "Recupera una quantità di spazio scelta da una sola istanza.",

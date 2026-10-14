@@ -6,6 +6,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { cleanup, fireEvent, render } from "@testing-library/react"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { formatBytes } from "@/lib/utils"
 import type { DeletePlanRunSummary, Instance } from "@/types"
 
 vi.mock("react-i18next", async (importOriginal) => ({
@@ -206,5 +207,47 @@ describe("DeletePlanOverview card", () => {
     renderCard()
 
     expect(document.body.textContent).toContain("preferences.deletePlanOverview.noInstancesDescription")
+  })
+})
+
+describe("DeletePlanOverview history", () => {
+  it("lists finished runs with their status, target, planned reclaim, and removed bytes", () => {
+    runsQuery.data = [{
+      ...runsQuery.data![0],
+      id: 9,
+      status: "completed",
+      targetBytes: 10_995_116_277_760,
+      plannedBytes: 11_045_000_000_000,
+      removedBytes: 5_000_000_000,
+    }]
+    renderCard()
+
+    const text = document.body.textContent
+    expect(text).toContain("preferences.deletePlanOverview.history")
+    expect(text).toContain("preferences.deletePlan.statusLabels.completed")
+    expect(text).toContain("preferences.deletePlanPreview.target")
+    expect(text).toContain("preferences.deletePlanPreview.planned")
+    expect(text).toContain("preferences.deletePlanHistory.removed")
+    expect(text).toContain(formatBytes(5_000_000_000))
+  })
+
+  it("does not list the active run as history", () => {
+    runsQuery.data = [{ ...runsQuery.data![0], status: "preview_ready" }]
+    renderCard()
+
+    expect(document.body.textContent).not.toContain("preferences.deletePlanOverview.history")
+  })
+
+  it("opens a finished run read-only from the history list", () => {
+    const completed = { ...runsQuery.data![0], id: 9, status: "completed" as const }
+    runsQuery.data = [completed]
+    runQuery.data = { ...completed, groups: [], excludedGroups: [] }
+    const { getByRole, queryByRole } = renderCard()
+
+    fireEvent.click(getByRole("button", { name: "preferences.deletePlanHistory.viewRun(9)" }))
+
+    expect(document.body.textContent).toContain("preferences.deletePlanHistory.title")
+    expect(queryByRole("button", { name: "preferences.deletePlanConfirm.confirm" })).toBeNull()
+    expect(queryByRole("button", { name: "preferences.deletePlan.cancel" })).toBeNull()
   })
 })
