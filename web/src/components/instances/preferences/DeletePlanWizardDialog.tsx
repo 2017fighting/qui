@@ -90,7 +90,7 @@ export function DeletePlanWizardDialog({
 
   const rankedGroups = run ? run.groups.filter((group) => !group.dead) : []
   const deadGroups = run ? run.groups.filter((group) => group.dead) : []
-  const untickedGroups = run ? run.groups.filter((group) => !group.included) : []
+  const untickedGroups = run ? run.groups.filter((group) => group.unticked) : []
   const canRefill = untickedGroups.length > 0
   const includedRankedCount = rankedGroups.filter((group) => group.included).length
 
@@ -179,7 +179,7 @@ export function DeletePlanWizardDialog({
 
   const handleToggleGroup = (row: DeletePlanRow) => {
     if (!run) return
-    const currentUnticked = run.groups.filter((group) => !group.included).map((group) => group.id)
+    const currentUnticked = run.groups.filter((group) => group.unticked).map((group) => group.id)
     const unticked = row.included
       ? [...currentUnticked, row.id]
       : currentUnticked.filter((id) => id !== row.id)
@@ -212,7 +212,7 @@ export function DeletePlanWizardDialog({
     { header: "Size (bytes)", accessor: (row) => row.sizeBytes },
     { header: "Members", accessor: (row) => row.memberCount },
     { header: "Status", accessor: (row) => (row.excluded ? "excluded" : "planned") },
-    { header: "Reason", accessor: (row) => (row.excludeReason ? t(deletePlanExcludeReasonKey(row.excludeReason)) : "") },
+    { header: "Reason", accessor: (row) => (row.excludeReason ? t([deletePlanExcludeReasonKey(row.excludeReason), "preferences.deletePlan.excludeReasons.unknown"]) : "") },
   ]
 
   const handleExport = () => {
@@ -436,7 +436,7 @@ export function DeletePlanWizardDialog({
 
             {run && run.status !== "preview_ready" && !isWaiting && !isPlanning && (
               <div className="space-y-2">
-                <Badge variant="outline">{t(deletePlanStatusLabelKey(run.status))}</Badge>
+                <Badge variant="outline">{t([deletePlanStatusLabelKey(run.status), "preferences.deletePlan.statusLabels.unknown"])}</Badge>
                 {run.errorMessage && (
                   <p className="whitespace-pre-wrap break-all text-sm text-destructive">{run.errorMessage}</p>
                 )}

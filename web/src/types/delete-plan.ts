@@ -48,6 +48,9 @@ export interface DeletePlanRow {
   memberCount: number
   dead: boolean
   included: boolean
+  // True when the user vetoed this row: a refill never re-includes it. False for
+  // a candidate the plan has not reached yet.
+  unticked: boolean
   excluded: boolean
   excludeReason: DeletePlanExcludeReason | ""
   decidingKey: string

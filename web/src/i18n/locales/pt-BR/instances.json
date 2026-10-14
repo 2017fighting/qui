@@ -946,7 +946,8 @@
           "deleting": "Excluindo",
           "completed": "Concluído",
           "failed": "Falhou",
-          "canceled": "Cancelado"
+          "canceled": "Cancelado",
+          "unknown": "Desconhecido"
         },
         "excludeReasons": {
           "incomplete": "Um membro ainda está baixando",

@@ -1000,7 +1000,8 @@
           "deleting": "Видалення",
           "completed": "Завершено",
           "failed": "Не вдалося",
-          "canceled": "Скасовано"
+          "canceled": "Скасовано",
+          "unknown": "Невідомо"
         },
         "excludeReasons": {
           "incomplete": "Деякий учасник ще завантажується",

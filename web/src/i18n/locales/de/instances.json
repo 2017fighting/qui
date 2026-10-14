@@ -946,7 +946,8 @@
           "deleting": "Löschen",
           "completed": "Abgeschlossen",
           "failed": "Fehlgeschlagen",
-          "canceled": "Abgebrochen"
+          "canceled": "Abgebrochen",
+          "unknown": "Unbekannt"
         },
         "excludeReasons": {
           "incomplete": "Ein Mitglied lädt noch herunter",

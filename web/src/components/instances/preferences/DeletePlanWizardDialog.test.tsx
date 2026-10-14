@@ -77,6 +77,7 @@ const previewRun: DeletePlanRun = {
       memberCount: 2,
       dead: false,
       included: true,
+      unticked: false,
       excluded: false,
       excludeReason: "",
       decidingKey: "GROUP_SIZE",
@@ -105,6 +106,7 @@ const previewRun: DeletePlanRun = {
       memberCount: 1,
       dead: false,
       included: false,
+      unticked: false,
       excluded: true,
       excludeReason: "partial_overlap",
       decidingKey: "",
@@ -379,6 +381,24 @@ describe("DeletePlanWizardDialog", () => {
     expect(document.body.textContent).toContain("/data/PackDir")
   })
 
+  it("shows a candidate beyond the target as not included and offers no refill", () => {
+    const candidate = {
+      ...previewRun.groups[0],
+      id: 95,
+      contentPath: "/data/Candidate",
+      included: false,
+      unticked: false,
+    }
+    runQuery.data = { ...previewRun, groups: [previewRun.groups[0], candidate] }
+    const { getAllByRole, queryByRole } = renderWizard({ initialRunId: 7 })
+
+    const checkboxes = getAllByRole("checkbox", { name: "preferences.deletePlanPreview.untickGroup" })
+    expect(checkboxes[1].getAttribute("data-state")).toBe("unchecked")
+    expect(document.body.textContent).toContain("/data/Candidate")
+    // Nothing is vetoed, so there is nothing to refill.
+    expect(queryByRole("button", { name: "preferences.deletePlanPreview.refill" })).toBeNull()
+  })
+
   it("shows how far the plan is below the target after an untick", () => {
     runQuery.data = {
       ...previewRun,
@@ -386,7 +406,7 @@ describe("DeletePlanWizardDialog", () => {
       plannedBytes: 6_045_000_000_000,
       overshootBytes: 0,
       shortfallBytes: 5_000_000_000,
-      groups: [{ ...previewRun.groups[0], included: false }],
+      groups: [{ ...previewRun.groups[0], included: false, unticked: true }],
     }
     renderWizard({ initialRunId: 7 })
 
@@ -404,7 +424,7 @@ describe("DeletePlanWizardDialog", () => {
       plannedBytes: 6_045_000_000_000,
       overshootBytes: 0,
       shortfallBytes: 5_000_000_000,
-      groups: [{ ...previewRun.groups[0], included: false }],
+      groups: [{ ...previewRun.groups[0], included: false, unticked: true }],
     }
     const { getByRole } = renderWizard({ initialRunId: 7 })
 

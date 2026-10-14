@@ -946,7 +946,8 @@
         "deleting": "Deleting",
         "completed": "Completed",
         "failed": "Failed",
-        "canceled": "Canceled"
+        "canceled": "Canceled",
+        "unknown": "Unknown"
       },
       "excludeReasons": {
         "incomplete": "A member is still downloading",

@@ -10,12 +10,12 @@ import { deletePlanStatusLabelKey } from "@/components/instances/preferences/del
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { FieldHelp } from "@/components/ui/field-help"
 import { useCancelDeletePlanRun, useDeletePlanRuns } from "@/hooks/useDeletePlan"
 import { useInstances } from "@/hooks/useInstances"
 import { formatBytes } from "@/lib/utils"
 import type { DeletePlanRunStatus, Instance } from "@/types"
-import { Eye, Info, Loader2, Play, X } from "lucide-react"
+import { Eye, Loader2, Play, X } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
@@ -69,7 +69,7 @@ function InstanceDeletePlanRow({
           <span className="font-medium wrap-anywhere">{instance.name}</span>
           {latestRun && (
             <Badge variant="outline" className="text-xs">
-              {t(deletePlanStatusLabelKey(latestRun.status))}
+              {t([deletePlanStatusLabelKey(latestRun.status), "preferences.deletePlan.statusLabels.unknown"])}
             </Badge>
           )}
         </div>
@@ -132,7 +132,7 @@ function InstanceDeletePlanRow({
               <div key={run.id} className="flex flex-wrap items-center justify-between gap-2 p-2">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                   <Badge variant="outline" className="text-xs">
-                    {t(deletePlanStatusLabelKey(run.status))}
+                    {t([deletePlanStatusLabelKey(run.status), "preferences.deletePlan.statusLabels.unknown"])}
                   </Badge>
                   <span>{t("preferences.deletePlanPreview.target")} {formatBytes(run.targetBytes)}</span>
                   <span>{t("preferences.deletePlanPreview.planned")} {formatBytes(run.plannedBytes)}</span>
@@ -198,14 +198,7 @@ export function DeletePlanOverview() {
       <CardHeader className="space-y-2">
         <div className="flex items-center gap-2">
           <CardTitle className="text-lg font-semibold">{t("preferences.deletePlanOverview.title")}</CardTitle>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Info className="h-4 w-4 cursor-help text-muted-foreground" />
-            </TooltipTrigger>
-            <TooltipContent className="max-w-[300px]">
-              <p>{t("preferences.deletePlanOverview.tooltip")}</p>
-            </TooltipContent>
-          </Tooltip>
+          <FieldHelp>{t("preferences.deletePlanOverview.tooltip")}</FieldHelp>
         </div>
         <CardDescription>{t("preferences.deletePlanOverview.description")}</CardDescription>
       </CardHeader>

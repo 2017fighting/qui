@@ -61,21 +61,24 @@ type DeletePlanRun struct {
 	CreatedAt      time.Time  `json:"createdAt"`
 	UpdatedAt      time.Time  `json:"updatedAt"`
 	CompletedAt    *time.Time `json:"completedAt"`
-	// Groups holds the included groups in plan order; ExcludedGroups holds the
-	// groups dropped by a protection. Both are filled by GetRun.
+	// Groups holds the non-excluded groups in plan order, included and candidates
+	// alike; ExcludedGroups holds the groups dropped by a protection. Both are
+	// filled by GetRun.
 	Groups         []*DeletePlanRow `json:"groups"`
 	ExcludedGroups []*DeletePlanRow `json:"excludedGroups"`
 }
 
 // DeletePlanRow is one frozen content group in a delete plan.
 type DeletePlanRow struct {
-	ID            int64              `json:"id"`
-	RunID         int64              `json:"runId"`
-	ContentPath   string             `json:"contentPath"`
-	SizeBytes     int64              `json:"sizeBytes"`
-	MemberCount   int                `json:"memberCount"`
-	Dead          bool               `json:"dead"`
-	Included      bool               `json:"included"`
+	ID          int64  `json:"id"`
+	RunID       int64  `json:"runId"`
+	ContentPath string `json:"contentPath"`
+	SizeBytes   int64  `json:"sizeBytes"`
+	MemberCount int    `json:"memberCount"`
+	Dead        bool   `json:"dead"`
+	Included    bool   `json:"included"`
+	// Unticked marks a group the user vetoed. A refill never re-includes it.
+	Unticked      bool               `json:"unticked"`
 	Excluded      bool               `json:"excluded"`
 	ExcludeReason string             `json:"excludeReason"`
 	DecidingKey   string             `json:"decidingKey"`
@@ -205,7 +208,7 @@ func (s *DeletePlanStore) ListRuns(ctx context.Context, instanceID, limit int) (
 func (s *DeletePlanStore) loadRows(ctx context.Context, run *DeletePlanRun) error {
 	rows, err := s.db.QueryContext(ctx, `
 		SELECT id, run_id, content_path, size_bytes, member_count, dead, included,
-		       excluded, exclude_reason, deciding_key, members, row_status, row_reason, row_error
+		       unticked, excluded, exclude_reason, deciding_key, members, row_status, row_reason, row_error
 		FROM delete_plan_rows
 		WHERE run_id = ?
 		ORDER BY id
@@ -234,11 +237,12 @@ func (s *DeletePlanStore) loadRows(ctx context.Context, run *DeletePlanRun) erro
 	return nil
 }
 
-// UpdateRowSelection replaces a preview_ready run's unticked set and its totals in
-// one transaction: every non-excluded row is included again, then the unticked
-// rows are taken out. It reports whether the run was still preview_ready, so a
-// racing confirm or cancel leaves the rows untouched.
-func (s *DeletePlanStore) UpdateRowSelection(ctx context.Context, runID int64, unticked []int64, plannedBytes, deadBytes, overshootBytes int64, targetReached bool) (bool, error) {
+// UpdateRowSelection replaces a preview_ready run's unticked set and its selected
+// rows in one transaction: every non-excluded row is cleared, then the unticked
+// rows are vetoed and the included rows are selected. A candidate is neither, so
+// it stays out of the plan until a refill selects it. It reports whether the run
+// was still preview_ready, so a racing confirm or cancel leaves the rows untouched.
+func (s *DeletePlanStore) UpdateRowSelection(ctx context.Context, runID int64, unticked, included []int64, plannedBytes, deadBytes, overshootBytes int64, targetReached bool) (bool, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return false, fmt.Errorf("begin delete plan row selection: %w", err)
@@ -262,34 +266,46 @@ func (s *DeletePlanStore) UpdateRowSelection(ctx context.Context, runID int64, u
 	}
 
 	if _, err := tx.ExecContext(ctx, `
-		UPDATE delete_plan_rows SET included = 1 WHERE run_id = ? AND excluded = 0
+		UPDATE delete_plan_rows SET included = 0, unticked = 0 WHERE run_id = ? AND excluded = 0
 	`, runID); err != nil {
 		return false, err
 	}
 
-	if len(unticked) > 0 {
-		var placeholders strings.Builder
-		args := make([]any, 0, len(unticked)+1)
-		args = append(args, runID)
-		for i, rowID := range unticked {
-			if i > 0 {
-				placeholders.WriteString(", ")
-			}
-			placeholders.WriteString("?")
-			args = append(args, rowID)
-		}
-		if _, err := tx.ExecContext(ctx, `
-			UPDATE delete_plan_rows SET included = 0
-			WHERE run_id = ? AND excluded = 0 AND id IN (`+placeholders.String()+`)
-		`, args...); err != nil {
-			return false, err
-		}
+	if err := setRowFlag(ctx, tx, runID, "unticked", unticked); err != nil {
+		return false, err
+	}
+	if err := setRowFlag(ctx, tx, runID, "included", included); err != nil {
+		return false, err
 	}
 
 	if err := tx.Commit(); err != nil {
 		return false, fmt.Errorf("commit delete plan row selection: %w", err)
 	}
 	return true, nil
+}
+
+// setRowFlag sets one boolean row flag on the given non-excluded rows.
+func setRowFlag(ctx context.Context, tx dbinterface.TxQuerier, runID int64, column string, rowIDs []int64) error {
+	if len(rowIDs) == 0 {
+		return nil
+	}
+
+	var placeholders strings.Builder
+	args := make([]any, 0, len(rowIDs)+1)
+	args = append(args, runID)
+	for i, rowID := range rowIDs {
+		if i > 0 {
+			placeholders.WriteString(", ")
+		}
+		placeholders.WriteString("?")
+		args = append(args, rowID)
+	}
+
+	_, err := tx.ExecContext(ctx, `
+		UPDATE delete_plan_rows SET `+column+` = 1
+		WHERE run_id = ? AND excluded = 0 AND id IN (`+placeholders.String()+`)
+	`, args...)
+	return err
 }
 
 // StartRunPlanning moves a run from pending to planning, and reports whether it did.
@@ -448,20 +464,20 @@ func (s *DeletePlanStore) InsertRows(ctx context.Context, runID int64, rows []*D
 
 		var query strings.Builder
 		query.WriteString(`INSERT INTO delete_plan_rows
-			(run_id, content_path, size_bytes, member_count, dead, included, excluded, exclude_reason, deciding_key, members)
+			(run_id, content_path, size_bytes, member_count, dead, included, unticked, excluded, exclude_reason, deciding_key, members)
 			VALUES `)
-		args := make([]any, 0, len(batch)*10)
+		args := make([]any, 0, len(batch)*11)
 		for j, planRow := range batch {
 			if j > 0 {
 				query.WriteString(", ")
 			}
-			query.WriteString("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+			query.WriteString("(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
 			membersJSON, err := json.Marshal(planRow.Members)
 			if err != nil {
 				return fmt.Errorf("marshal delete plan row members: %w", err)
 			}
 			args = append(args, runID, planRow.ContentPath, planRow.SizeBytes, planRow.MemberCount,
-				boolToInt(planRow.Dead), boolToInt(planRow.Included), boolToInt(planRow.Excluded),
+				boolToInt(planRow.Dead), boolToInt(planRow.Included), boolToInt(planRow.Unticked), boolToInt(planRow.Excluded),
 				planRow.ExcludeReason, planRow.DecidingKey, string(membersJSON))
 		}
 
@@ -539,7 +555,7 @@ func scanDeletePlanRunScanner(scan func(dest ...any) error) (*DeletePlanRun, err
 
 func scanDeletePlanRow(rows *sql.Rows) (*DeletePlanRow, error) {
 	var planRow DeletePlanRow
-	var dead, included, excluded int
+	var dead, included, unticked, excluded int
 	var membersJSON sql.NullString
 
 	if err := rows.Scan(
@@ -550,6 +566,7 @@ func scanDeletePlanRow(rows *sql.Rows) (*DeletePlanRow, error) {
 		&planRow.MemberCount,
 		&dead,
 		&included,
+		&unticked,
 		&excluded,
 		&planRow.ExcludeReason,
 		&planRow.DecidingKey,
@@ -563,6 +580,7 @@ func scanDeletePlanRow(rows *sql.Rows) (*DeletePlanRow, error) {
 
 	planRow.Dead = SQLiteIntToBool(dead)
 	planRow.Included = SQLiteIntToBool(included)
+	planRow.Unticked = SQLiteIntToBool(unticked)
 	planRow.Excluded = SQLiteIntToBool(excluded)
 	if membersJSON.Valid && membersJSON.String != "" {
 		if err := json.Unmarshal([]byte(membersJSON.String), &planRow.Members); err != nil {

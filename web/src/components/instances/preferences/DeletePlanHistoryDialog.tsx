@@ -48,6 +48,7 @@ export function DeletePlanHistoryDialog({
 
   const rankedGroups = run ? run.groups.filter((group) => !group.dead) : []
   const deadGroups = run ? run.groups.filter((group) => group.dead) : []
+  const includedRankedCount = rankedGroups.filter((group) => group.included).length
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -72,7 +73,7 @@ export function DeletePlanHistoryDialog({
           {run && (
             <>
               <Badge variant="outline" className="text-xs">
-                {t(deletePlanStatusLabelKey(run.status))}
+                {t([deletePlanStatusLabelKey(run.status), "preferences.deletePlan.statusLabels.unknown"])}
               </Badge>
 
               <DeletePlanRunProgress run={run} />
@@ -88,7 +89,7 @@ export function DeletePlanHistoryDialog({
               <DeletePlanConfiguration keys={run.keys} removeDeadGroups={run.removeDeadGroups} />
 
               <p className="text-xs text-muted-foreground">
-                {t("preferences.deletePlanPreview.includedGroups", { count: rankedGroups.length })}
+                {t("preferences.deletePlanPreview.includedGroups", { count: includedRankedCount })}
                 {" · "}
                 {t("preferences.deletePlanPreview.excludedGroups", { count: run.excludedGroups.length })}
               </p>

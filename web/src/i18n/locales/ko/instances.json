@@ -919,7 +919,8 @@
           "deleting": "삭제 중",
           "completed": "완료됨",
           "failed": "실패함",
-          "canceled": "취소됨"
+          "canceled": "취소됨",
+          "unknown": "알 수 없음"
         },
         "excludeReasons": {
           "incomplete": "구성원이 아직 다운로드 중입니다",
