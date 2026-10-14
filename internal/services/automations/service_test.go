@@ -330,6 +330,38 @@ func TestRuleUsesCondition_IncludesSortingConfig(t *testing.T) {
 			field: FieldFreeSpace,
 			want:  true,
 		},
+		{
+			name: "enabled keys sort field",
+			rule: &models.Automation{
+				Enabled: true,
+				SortingConfig: &models.SortingConfig{
+					SchemaVersion: "1",
+					Type:          models.SortingTypeKeys,
+					Direction:     models.SortDirectionASC,
+					Keys: []models.KeyRule{
+						{Field: models.FieldFreeSpace, Enabled: true, Direction: models.SortDirectionASC},
+					},
+				},
+			},
+			field: FieldFreeSpace,
+			want:  true,
+		},
+		{
+			name: "disabled keys sort field",
+			rule: &models.Automation{
+				Enabled: true,
+				SortingConfig: &models.SortingConfig{
+					SchemaVersion: "1",
+					Type:          models.SortingTypeKeys,
+					Direction:     models.SortDirectionASC,
+					Keys: []models.KeyRule{
+						{Field: models.FieldFreeSpace, Enabled: false, Direction: models.SortDirectionASC},
+					},
+				},
+			},
+			field: FieldFreeSpace,
+			want:  false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -581,6 +613,49 @@ func TestRulesCanShareSortingBatch_RejectsRuleScopedSortingContext(t *testing.T)
 		&models.Automation{SortingConfig: freeSpaceSort},
 		&models.Automation{SortingConfig: freeSpaceSort},
 	))
+}
+
+func TestSortingConfigEqual_Keys(t *testing.T) {
+	chain := func(keys ...models.KeyRule) *models.SortingConfig {
+		return &models.SortingConfig{
+			SchemaVersion: "1",
+			Type:          models.SortingTypeKeys,
+			Direction:     models.SortDirectionASC,
+			Keys:          keys,
+		}
+	}
+
+	size := models.KeyRule{Field: models.FieldSize, Enabled: true, Direction: models.SortDirectionASC}
+	seeders := models.KeyRule{Field: models.FieldNumComplete, Enabled: true, Direction: models.SortDirectionDESC}
+
+	tests := []struct {
+		name string
+		a, b *models.SortingConfig
+		want bool
+	}{
+		{name: "identical chains", a: chain(size, seeders), b: chain(size, seeders), want: true},
+		{name: "reordered keys", a: chain(size, seeders), b: chain(seeders, size), want: false},
+		{
+			name: "flipped enabled flag",
+			a:    chain(size),
+			b:    chain(models.KeyRule{Field: models.FieldSize, Enabled: false, Direction: models.SortDirectionASC}),
+			want: false,
+		},
+		{
+			name: "flipped direction",
+			a:    chain(size),
+			b:    chain(models.KeyRule{Field: models.FieldSize, Enabled: true, Direction: models.SortDirectionDESC}),
+			want: false,
+		},
+		{name: "different length", a: chain(size, seeders), b: chain(size), want: false},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			require.Equal(t, tc.want, sortingConfigEqual(tc.a, tc.b))
+			require.Equal(t, tc.want, sortingConfigEqual(tc.b, tc.a))
+		})
+	}
 }
 
 func TestPrepareRuleForDryRun(t *testing.T) {

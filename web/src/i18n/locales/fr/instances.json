@@ -1260,12 +1260,19 @@
         "types": {
           "default": "Le plus ancien en premier (défaut)",
           "simple": "Tri simple",
-          "score": "Score personnalisé"
+          "score": "Score personnalisé",
+          "keys": "Clés de classement"
         },
         "sortBy": "Trier par",
         "asc": "Asc",
         "desc": "Desc",
         "scoreRules": "Règles de score",
+        "keys": "Clés de classement",
+        "addKey": "Ajouter une clé",
+        "enableKey": "Activer la clé",
+        "moveKeyUp": "Déplacer la clé vers le haut",
+        "moveKeyDown": "Déplacer la clé vers le bas",
+        "removeKey": "Supprimer la clé",
         "lowToHigh": "Bas vers Haut",
         "highToLow": "Haut vers Bas",
         "fieldMultiplier": "Multiplicateur de champ",
@@ -1274,7 +1281,8 @@
         "addFieldMultiplier": "Ajouter Multiplicateur de champ",
         "addBonus": "Ajouter Bonus",
         "notSupportedForSimpleSort": "Non pris en charge pour le tri simple",
-        "notSupportedForScoreMultiplier": "Non pris en charge pour les multiplicateurs de score"
+        "notSupportedForScoreMultiplier": "Non pris en charge pour les multiplicateurs de score",
+        "notSupportedForKey": "Non pris en charge pour les clés de classement"
       },
       "conditionsLabel": "Conditions (facultatif)",
       "actions": {
@@ -1601,6 +1609,7 @@
         "enableLocalAccessOrDefault": "Activer l'accès local dans les paramètres de l'instance, ou utiliser Défaut (qBittorrent)",
         "enterPathOrDefault": "Entrez un chemin ou basculez la source d'espace sur Défaut (qBittorrent)",
         "addScoreRule": "Ajouter au moins une règle pour le tri par Score",
+        "addRankingKey": "Ajoutez au moins une clé de classement pour le tri par clés",
         "fieldMultiplierInvalid": "Le multiplicateur de champ doit être un nombre",
         "conditionalScoreInvalid": "Le score conditionnel doit être un nombre",
         "setSpeedLimit": "Définir au moins une limite de vitesse",

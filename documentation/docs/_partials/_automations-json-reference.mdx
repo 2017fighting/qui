@@ -196,10 +196,11 @@ This section lists every key of a rule as JSON, the condition fields and their o
 | Key | Type | Values | Description |
 | --- | --- | --- | --- |
 | `schemaVersion` | string |  | Must be `1`. |
-| `type` | string | `simple`, `score` | `simple` sorts by one field. `score` sorts by the sum of `scoreRules`. |
+| `type` | string | `simple`, `score`, `keys` | `simple` sorts by one field. `score` sorts by the sum of `scoreRules`. `keys` ranks by the first enabled key in `keys`, then the next. |
 | `direction` | string | `ASC`, `DESC` | `ASC` or `DESC`. |
 | `field` | condition field | `ADDED_ON`, `AMOUNT_LEFT`, `AVAILABILITY`, `CATEGORY`, `COMMENT`, `COMPLETION_ON`, `CONTENT_PATH`, `DL_SPEED`, `DOWNLOADED`, `FREE_SPACE`, `LAST_ACTIVITY`, `NAME`, `NUM_COMPLETE`, `NUM_INCOMPLETE`, `NUM_LEECHS`, `NUM_SEEDS`, `PROGRESS`, `RATIO`, `SAVE_PATH`, `SEEDING_TIME`, `SIZE`, `STATE`, `SYSTEM_DAY`, `SYSTEM_DAY_OF_WEEK`, `SYSTEM_HOUR`, `SYSTEM_MINUTE`, `SYSTEM_MONTH`, `SYSTEM_YEAR`, `TAGS`, `TIME_ACTIVE`, `TOTAL_SIZE`, `TRACKER`, `TRACKERS_COUNT`, `UPLOADED`, `UP_SPEED` | With type `simple`: the condition field to sort by. See Condition field names. |
 | `scoreRules` | array of object |  | With type `score`: the rules that add up to the score of each torrent. See `sortingConfig.scoreRules[]`. |
+| `keys` | array of object |  | With type `keys`: the ranking keys, tried in order. A disabled key is skipped. See `sortingConfig.keys[]`. |
 
 ### `sortingConfig.scoreRules[]`
 
@@ -222,6 +223,14 @@ This section lists every key of a rule as JSON, the condition fields and their o
 | --- | --- | --- | --- |
 | `condition` | condition |  | When the torrent matches this condition, score is added. See Condition object. |
 | `score` | number |  | The score to add. |
+
+### `sortingConfig.keys[]`
+
+| Key | Type | Values | Description |
+| --- | --- | --- | --- |
+| `field` | condition field | `ADDED_ON`, `AMOUNT_LEFT`, `AVAILABILITY`, `CATEGORY`, `COMMENT`, `COMPLETION_ON`, `CONTENT_PATH`, `DL_SPEED`, `DOWNLOADED`, `FREE_SPACE`, `GROUP_SIZE`, `LAST_ACTIVITY`, `NAME`, `NUM_COMPLETE`, `NUM_INCOMPLETE`, `NUM_LEECHS`, `NUM_SEEDS`, `PRIVATE`, `PROGRESS`, `RATIO`, `SAVE_PATH`, `SEEDING_TIME`, `SIZE`, `STATE`, `SYSTEM_DAY`, `SYSTEM_DAY_OF_WEEK`, `SYSTEM_HOUR`, `SYSTEM_MINUTE`, `SYSTEM_MONTH`, `SYSTEM_YEAR`, `TAGS`, `TIME_ACTIVE`, `TOTAL_SIZE`, `TRACKER`, `TRACKERS_COUNT`, `UPLOADED`, `UP_SPEED` | The condition field to rank by. See Condition field names. |
+| `enabled` | boolean |  | When false, this key is skipped and never changes the order. |
+| `direction` | string | `ASC`, `DESC` | `ASC` or `DESC`. |
 
 ### Condition object
 

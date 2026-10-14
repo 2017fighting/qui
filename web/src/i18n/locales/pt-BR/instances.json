@@ -1266,12 +1266,19 @@
         "types": {
           "default": "Padrão (Mais antigos primeiro)",
           "simple": "Ordenação Simples",
-          "score": "Métricas Baseadas em Pontos (Score)"
+          "score": "Métricas Baseadas em Pontos (Score)",
+          "keys": "Chaves de Classificação"
         },
         "sortBy": "Ordenar por",
         "asc": "Ascendente",
         "desc": "Descendente",
         "scoreRules": "Regras de Pontuação",
+        "keys": "Chaves de Classificação",
+        "addKey": "Adicionar Chave",
+        "enableKey": "Ativar chave",
+        "moveKeyUp": "Mover chave para cima",
+        "moveKeyDown": "Mover chave para baixo",
+        "removeKey": "Remover chave",
         "lowToHigh": "Mais fraco ao mais forte",
         "highToLow": "Mais forte ao mais fraco",
         "fieldMultiplier": "Multiplicadores",
@@ -1280,7 +1287,8 @@
         "addFieldMultiplier": "Campo P/ Multiplicar",
         "addBonus": "Adicionar Bônus",
         "notSupportedForSimpleSort": "Não suportado na ordenação simples",
-        "notSupportedForScoreMultiplier": "Não suportado nos multiplicadores de pontuação"
+        "notSupportedForScoreMultiplier": "Não suportado nos multiplicadores de pontuação",
+        "notSupportedForKey": "Não suportado nas chaves de classificação"
       },
       "conditionsLabel": "Condições (Quando a regra vai agir?)",
       "actions": {
@@ -1607,6 +1615,7 @@
         "enableLocalAccessOrDefault": "Ative o Acesso ao Sistema de Arquivos Local nas configurações da instância, ou use \"Pegar pelo próprio qBittorrent\"",
         "enterPathOrDefault": "Você precisa de um caminho na caixa para usar esta opção.",
         "addScoreRule": "Adicione as regras da sua prioridade.",
+        "addRankingKey": "Adicione pelo menos uma chave de classificação para a ordenação por chaves",
         "fieldMultiplierInvalid": "O multiplicador de campo deve ser um número válido.",
         "conditionalScoreInvalid": "A pontuação condicional deve ser um número válido.",
         "setSpeedLimit": "Coloque velocidades válidas para o corte.",

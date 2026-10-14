@@ -1266,12 +1266,19 @@
         "types": {
           "default": "Prima i più vecchi (predefinito)",
           "simple": "Ordinamento semplice",
-          "score": "Punteggio personalizzato"
+          "score": "Punteggio personalizzato",
+          "keys": "Chiavi di ordinamento"
         },
         "sortBy": "Ordina per",
         "asc": "Cresc",
         "desc": "Decresc",
         "scoreRules": "Regole di punteggio",
+        "keys": "Chiavi di ordinamento",
+        "addKey": "Aggiungi chiave",
+        "enableKey": "Abilita chiave",
+        "moveKeyUp": "Sposta la chiave in alto",
+        "moveKeyDown": "Sposta la chiave in basso",
+        "removeKey": "Rimuovi chiave",
         "lowToHigh": "Dal basso all'alto",
         "highToLow": "Dall'alto al basso",
         "fieldMultiplier": "Moltiplicatore di campo",
@@ -1280,7 +1287,8 @@
         "addFieldMultiplier": "Aggiungi moltiplicatore di campo",
         "addBonus": "Aggiungi bonus",
         "notSupportedForSimpleSort": "Non supportato per l'ordinamento semplice",
-        "notSupportedForScoreMultiplier": "Non supportato per i moltiplicatori di punteggio"
+        "notSupportedForScoreMultiplier": "Non supportato per i moltiplicatori di punteggio",
+        "notSupportedForKey": "Non supportato per le chiavi di ordinamento"
       },
       "conditionsLabel": "Condizioni (facoltativo)",
       "actions": {
@@ -1607,6 +1615,7 @@
         "enableLocalAccessOrDefault": "Abilita l'accesso al filesystem locale nelle impostazioni dell'istanza, oppure usa Predefinito (qBittorrent)",
         "enterPathOrDefault": "Inserisci un percorso o riporta l'origine dello spazio libero su Predefinito (qBittorrent)",
         "addScoreRule": "Aggiungi almeno una regola di punteggio per l'ordinamento per Punteggio",
+        "addRankingKey": "Aggiungi almeno una chiave di ordinamento per l'ordinamento a chiavi",
         "fieldMultiplierInvalid": "Il moltiplicatore del campo deve essere un numero valido",
         "conditionalScoreInvalid": "Il punteggio condizionale deve essere un numero valido",
         "setSpeedLimit": "Imposta almeno un limite di velocità",

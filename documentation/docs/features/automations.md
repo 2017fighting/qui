@@ -375,6 +375,7 @@ By default, qui processes matched torrents oldest first. Set the **Torrent Prior
 | **Default**| Standard oldest-first priority. |
 | **Simple** | Prioritize by one numeric, duration, or string field (for example `Size`, `Added Age`, `Name`) in ascending or descending order. |
 | **Score** | Rule-based priority. qui scores torrents with custom rules and sorts them by total score, ascending or descending. |
+| **Keys** | Rank by an ordered chain of keys. Each key has its own direction and can be switched off. |
 
 ### Score-based priority
 
@@ -385,6 +386,14 @@ Available score rule types:
 - **Conditional**: Evaluates a standard query condition (see [Query builder](#query-builder)). If the condition is true, qui adds a static value to the score.
 
 qui processes torrents by their final score. The **Live impact preview** shows the computed scores.
+
+### Key-based priority
+
+Key-based priority ranks torrents by an ordered chain of keys. The first key decides, the next key breaks its ties, and so on. Each key names a condition field and carries its own direction, so one chain can mix ascending and descending keys.
+
+Reorder a key with the up and down buttons, switch a key off with its toggle, and pick `Asc` or `Desc` per key. A disabled key never changes the order. When every key ties, qui falls back to the torrent hash, so the same input always gives the same order.
+
+The keys use the same field vocabulary as the query builder, plus `Group Size` and `Private`.
 
 ## Tracker matching
 

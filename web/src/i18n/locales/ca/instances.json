@@ -914,12 +914,19 @@
         "types": {
           "default": "Els més antics primer (predeterminat)",
           "simple": "Ordenació simple",
-          "score": "Puntuació personalitzada"
+          "score": "Puntuació personalitzada",
+          "keys": "Claus d'ordenació"
         },
         "sortBy": "Ordena per",
         "asc": "Asc.",
         "desc": "Desc.",
         "scoreRules": "Regles de puntuació",
+        "keys": "Claus d'ordenació",
+        "addKey": "Afegeix clau",
+        "enableKey": "Activa la clau",
+        "moveKeyUp": "Mou la clau cap amunt",
+        "moveKeyDown": "Mou la clau cap avall",
+        "removeKey": "Elimina la clau",
         "lowToHigh": "De menor a major",
         "highToLow": "De major a menor",
         "fieldMultiplier": "Multiplicador de camp",
@@ -928,7 +935,8 @@
         "addFieldMultiplier": "Afegeix un multiplicador de camp",
         "addBonus": "Afegeix una bonificació",
         "notSupportedForSimpleSort": "No compatible amb l'ordenació simple",
-        "notSupportedForScoreMultiplier": "No compatible amb els multiplicadors de puntuació"
+        "notSupportedForScoreMultiplier": "No compatible amb els multiplicadors de puntuació",
+        "notSupportedForKey": "No compatible amb les claus d'ordenació"
       },
       "conditionsLabel": "Condicions (opcional)",
       "actions": {
@@ -1255,6 +1263,7 @@
         "enableLocalAccessOrDefault": "Activa l'accés al sistema de fitxers local a la configuració de la instància, o fes servir Predeterminat (qBittorrent)",
         "enterPathOrDefault": "Introdueix un camí o torna a posar l'origen de l'espai lliure a Predeterminat (qBittorrent)",
         "addScoreRule": "Afegeix com a mínim una regla de puntuació per ordenar per puntuació",
+        "addRankingKey": "Afegeix almenys una clau d'ordenació per a l'ordenació per claus",
         "fieldMultiplierInvalid": "El multiplicador de camp ha de ser un número vàlid",
         "conditionalScoreInvalid": "La puntuació condicional ha de ser un número vàlid",
         "setSpeedLimit": "Defineix com a mínim un límit de velocitat",
