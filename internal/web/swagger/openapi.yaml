@@ -6142,6 +6142,125 @@ paths:
         '404':
           description: Run not found
 
+  # Delete Plan
+  /api/instances/{instanceID}/delete-plan/runs:
+    post:
+      tags:
+        - Delete Plan
+      summary: Create a delete plan
+      description: >-
+        Create a run and build its plan from the instance's torrents. Nothing is
+        deleted. Returns 409 while another run is active for the instance. The run
+        stays pending with waitingForSync until the instance's last successful sync
+        is newer than two minutes.
+      parameters:
+        - $ref: '#/components/parameters/instanceID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeletePlanCreateRequest'
+      responses:
+        '202':
+          description: Run created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletePlanRun'
+        '400':
+          description: Invalid request body or a target size that is not positive
+        '404':
+          description: Instance not found
+        '409':
+          description: A delete plan is already active for this instance
+        '500':
+          description: Failed to create the delete plan
+    get:
+      tags:
+        - Delete Plan
+      summary: List delete plan runs
+      description: Recent delete plan runs for an instance, newest first.
+      parameters:
+        - $ref: '#/components/parameters/instanceID'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Maximum number of runs to return
+      responses:
+        '200':
+          description: List of runs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletePlanRunList'
+        '500':
+          description: Failed to list delete plans
+
+  /api/instances/{instanceID}/delete-plan/runs/{runID}:
+    get:
+      tags:
+        - Delete Plan
+      summary: Get a delete plan run
+      description: Get a run with its frozen plan rows. A run belonging to another instance answers 404.
+      parameters:
+        - $ref: '#/components/parameters/instanceID'
+        - name: runID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Delete plan run ID
+      responses:
+        '200':
+          description: Run with its plan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletePlanRun'
+        '400':
+          description: Invalid run ID
+        '404':
+          description: Run not found
+        '500':
+          description: Failed to get the delete plan
+
+  /api/instances/{instanceID}/delete-plan/runs/{runID}/cancel:
+    post:
+      tags:
+        - Delete Plan
+      summary: Cancel a delete plan run
+      description: Cancel a pending, planning, or preview_ready run. A run that started deleting or already finished answers 409.
+      parameters:
+        - $ref: '#/components/parameters/instanceID'
+        - name: runID
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Delete plan run ID
+      responses:
+        '200':
+          description: Run canceled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletePlanRun'
+        '400':
+          description: Invalid run status for this operation
+        '404':
+          description: Run not found
+        '409':
+          description: The run already started deleting or finished
+        '500':
+          description: Failed to cancel the delete plan
+
   # RSS Feed Management
   /api/instances/{instanceID}/rss/events:
     get:
@@ -9555,6 +9674,168 @@ components:
               items:
                 $ref: '#/components/schemas/OrphanScanFile'
 
+    DeletePlanKeyRule:
+      type: object
+      description: One key of the ranking chain. A disabled key never moves a group.
+      properties:
+        field:
+          type: string
+          description: A condition field name from the automations vocabulary, for example GROUP_SIZE or NUM_COMPLETE.
+          example: GROUP_SIZE
+        enabled:
+          type: boolean
+        direction:
+          type: string
+          enum: [ASC, DESC]
+
+    DeletePlanMember:
+      type: object
+      description: One torrent in a content group.
+      properties:
+        hash:
+          type: string
+        name:
+          type: string
+        sizeBytes:
+          type: integer
+          format: int64
+        progress:
+          type: number
+          format: double
+        state:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        savePath:
+          type: string
+
+    DeletePlanRow:
+      type: object
+      description: One content group in a delete plan. Bytes count once, as the largest member's size.
+      properties:
+        id:
+          type: integer
+          format: int64
+        runId:
+          type: integer
+          format: int64
+        contentPath:
+          type: string
+        sizeBytes:
+          type: integer
+          format: int64
+        memberCount:
+          type: integer
+        dead:
+          type: boolean
+          description: True when no member is seeding.
+        included:
+          type: boolean
+        excluded:
+          type: boolean
+        excludeReason:
+          type: string
+          description: One of incomplete, no_delete_tag, partial_overlap, unreadable_files, nested_path. Empty when not excluded.
+        decidingKey:
+          type: string
+          description: The condition field name of the first enabled key that decided this group's position.
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeletePlanMember'
+
+    DeletePlanRun:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        instanceId:
+          type: integer
+        status:
+          type: string
+          enum: ["pending", "planning", "preview_ready", "deleting", "completed", "failed", "canceled"]
+        targetBytes:
+          type: integer
+          format: int64
+        keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeletePlanKeyRule'
+        removeDeadGroups:
+          type: boolean
+        waitingForSync:
+          type: boolean
+          description: True while the run is pending because the instance's last successful sync is older than two minutes.
+        plannedBytes:
+          type: integer
+          format: int64
+          description: Sum of the included ranked group sizes.
+        deadBytes:
+          type: integer
+          format: int64
+          description: Sum of the dead groups when removeDeadGroups is true; these do not count toward the target.
+        overshootBytes:
+          type: integer
+          format: int64
+        targetReached:
+          type: boolean
+          description: False when every available group was included and the target is still unmet.
+        removedBytes:
+          type: integer
+          format: int64
+          description: Bytes removed; 0 until the run deletes.
+        errorMessage:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        groups:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeletePlanRow'
+        excludedGroups:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeletePlanRow'
+
+    DeletePlanCreateRequest:
+      type: object
+      required: [targetBytes]
+      properties:
+        targetBytes:
+          type: integer
+          format: int64
+          description: Bytes to reclaim. Must be greater than zero.
+          example: 10995116277760
+        keys:
+          type: array
+          description: >-
+            Ranking chain. When omitted the server uses GROUP_SIZE ascending,
+            NUM_COMPLETE descending, SIZE ascending, PRIVATE ascending.
+          items:
+            $ref: '#/components/schemas/DeletePlanKeyRule'
+        removeDeadGroups:
+          type: boolean
+          default: true
+
+    DeletePlanRunList:
+      type: object
+      properties:
+        runs:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeletePlanRun'
+
     ArrInstance:
       type: object
       properties:
@@ -10387,6 +10668,8 @@ tags:
     description: Directory scanner operations for data-based matching and injection
   - name: Orphan Scan
     description: Orphan file scanning and cleanup (files on disk not associated with any torrent)
+  - name: Delete Plan
+    description: Plan and preview a one-shot delete plan for an instance. Nothing is deleted until the plan is confirmed.
   - name: Disc Scans
     description: BDInfo scans of Blu-ray Discs (BDMV folders and .iso files) in torrents
   - name: RSS
