@@ -21,6 +21,7 @@ var errNotStubbed = errors.New("deleteplan test: call not stubbed")
 type fakeSync struct {
 	getAllTorrents       func(ctx context.Context, instanceID int) ([]qbt.Torrent, error)
 	getTorrentFilesBatch func(ctx context.Context, instanceID int, hashes []string) (map[string]qbt.TorrentFiles, error)
+	bulkAction           func(ctx context.Context, instanceID int, hashes []string, action string) error
 	getClient            func(ctx context.Context, instanceID int) (healthChecker, error)
 	getInstance          func(ctx context.Context, id int) (*models.Instance, error)
 }
@@ -47,6 +48,13 @@ func (f *fakeSync) GetTorrentFilesBatch(ctx context.Context, instanceID int, has
 		return nil, errNotStubbed
 	}
 	return f.getTorrentFilesBatch(ctx, instanceID, hashes)
+}
+
+func (f *fakeSync) BulkAction(ctx context.Context, instanceID int, hashes []string, action string) error {
+	if f.bulkAction == nil {
+		return errNotStubbed
+	}
+	return f.bulkAction(ctx, instanceID, hashes, action)
 }
 
 func (f *fakeSync) Client(ctx context.Context, instanceID int) (healthChecker, error) {

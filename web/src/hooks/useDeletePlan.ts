@@ -92,3 +92,15 @@ export function useCancelDeletePlanRun(instanceId: number) {
     },
   })
 }
+
+export function useConfirmDeletePlanRun(instanceId: number) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (runId: number) => api.confirmDeletePlanRun(instanceId, runId),
+    onSuccess: (_data, runId) => {
+      queryClient.invalidateQueries({ queryKey: ["delete-plan", instanceId, "runs"] })
+      queryClient.invalidateQueries({ queryKey: ["delete-plan", instanceId, "run", runId] })
+    },
+  })
+}

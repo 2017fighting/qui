@@ -4,6 +4,7 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -26,9 +27,27 @@ func newDeletePlanRouter(handler *DeletePlanHandler) *chi.Mux {
 		r.Post("/runs", handler.CreateRun)
 		r.Get("/runs", handler.ListRuns)
 		r.Get("/runs/{runID}", handler.GetRun)
+		r.Post("/runs/{runID}/confirm", handler.ConfirmRun)
 		r.Post("/runs/{runID}/cancel", handler.CancelRun)
 	})
 	return router
+}
+
+// fakeDeletePlanService drives the confirm handler without a sync manager.
+type fakeDeletePlanService struct {
+	confirmErr error
+	confirmed  int64
+}
+
+func (f *fakeDeletePlanService) TriggerPlan(context.Context, int, deleteplan.PlanRequest) (int64, error) {
+	return 0, nil
+}
+
+func (f *fakeDeletePlanService) CancelRun(context.Context, int64) error { return nil }
+
+func (f *fakeDeletePlanService) ConfirmRun(_ context.Context, runID int64) error {
+	f.confirmed = runID
+	return f.confirmErr
 }
 
 func newDeletePlanHandlerFixture(t *testing.T, name string) (*models.InstanceStore, *models.DeletePlanStore, *models.Instance, *DeletePlanHandler, *chi.Mux) {
@@ -204,4 +223,50 @@ func TestDeletePlan_CancelRun(t *testing.T) {
 	resp = httptest.NewRecorder()
 	router.ServeHTTP(resp, httptest.NewRequestWithContext(t.Context(), http.MethodPost, url, nil))
 	require.Equal(t, http.StatusConflict, resp.Code, resp.Body.String())
+}
+
+func TestDeletePlan_ConfirmRunReturns202(t *testing.T) {
+	db := testdb.NewMigratedSQLite(t, "delete-plan-confirm")
+	instances, err := models.NewInstanceStore(db, []byte("01234567890123456789012345678901"))
+	require.NoError(t, err)
+	instance, err := instances.Create(t.Context(), "test", "http://example.invalid", "", "", nil, nil, false, nil)
+	require.NoError(t, err)
+	store := models.NewDeletePlanStore(db)
+	runID := seedDeletePlanRun(t, store, instance.ID, models.DeletePlanStatusPreviewReady)
+
+	service := &fakeDeletePlanService{}
+	router := newDeletePlanRouter(NewDeletePlanHandler(store, service))
+
+	resp := httptest.NewRecorder()
+	url := fmt.Sprintf("/api/instances/%d/delete-plan/runs/%d/confirm", instance.ID, runID)
+	router.ServeHTTP(resp, httptest.NewRequestWithContext(t.Context(), http.MethodPost, url, nil))
+	require.Equal(t, http.StatusAccepted, resp.Code, resp.Body.String())
+	require.Equal(t, runID, service.confirmed)
+
+	var run models.DeletePlanRun
+	require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &run))
+	require.Equal(t, models.DeletePlanStatusPreviewReady, run.Status)
+}
+
+func TestDeletePlan_ConfirmRunConflictsWhenNotPreviewReady(t *testing.T) {
+	_, store, instance, _, router := newDeletePlanHandlerFixture(t, "delete-plan-confirm-conflict")
+	runID := seedDeletePlanRun(t, store, instance.ID, models.DeletePlanStatusPending)
+
+	resp := httptest.NewRecorder()
+	url := fmt.Sprintf("/api/instances/%d/delete-plan/runs/%d/confirm", instance.ID, runID)
+	router.ServeHTTP(resp, httptest.NewRequestWithContext(t.Context(), http.MethodPost, url, nil))
+	require.Equal(t, http.StatusConflict, resp.Code, resp.Body.String())
+}
+
+func TestDeletePlan_ConfirmRunScopesToTheInstance(t *testing.T) {
+	instances, store, instance, _, router := newDeletePlanHandlerFixture(t, "delete-plan-confirm-scope")
+	runID := seedDeletePlanRun(t, store, instance.ID, models.DeletePlanStatusPreviewReady)
+
+	other, err := instances.Create(t.Context(), "other", "http://example.invalid", "", "", nil, nil, false, nil)
+	require.NoError(t, err)
+
+	resp := httptest.NewRecorder()
+	url := fmt.Sprintf("/api/instances/%d/delete-plan/runs/%d/confirm", other.ID, runID)
+	router.ServeHTTP(resp, httptest.NewRequestWithContext(t.Context(), http.MethodPost, url, nil))
+	require.Equal(t, http.StatusNotFound, resp.Code, resp.Body.String())
 }

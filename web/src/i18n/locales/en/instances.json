@@ -954,7 +954,8 @@
         "partial_overlap": "Shares only part of its files with another torrent",
         "unreadable_files": "Its file list cannot be read",
         "nested_path": "Its content path nests with another torrent's",
-        "unknown": "Excluded by a delete protection"
+        "unknown": "Excluded by a delete protection",
+        "members_changed": "Its members changed since the plan was built"
       }
     },
     "deletePlanOverview": {
@@ -967,6 +968,10 @@
       "activePlan": "Plan in progress",
       "noPlanYet": "No plan built yet.",
       "progress": "Removed {{removed}} of {{planned}}",
+      "deleting": "Deleting the plan...",
+      "completedResult": "Removed {{removed}}.",
+      "failedResult": "The plan failed.",
+      "canceledResult": "Canceled before deletion started.",
       "toast": {
         "planStartFailed": "Failed to create the delete plan",
         "planCanceled": "Delete plan canceled",
@@ -1026,7 +1031,9 @@
       "title": "Confirm the Delete Plan",
       "description": "Review what the plan removes before it starts.",
       "otherInstances": "Only this instance is checked. Other instances are not checked.",
-      "confirm": "Confirm and Delete"
+      "confirm": "Confirm and Delete",
+      "deadTotal": "Dead groups: {{dead}}",
+      "startFailed": "Failed to start the deletion"
     },
     "orphanScanSettings": {
       "settingsTitle": "Settings",

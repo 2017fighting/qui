@@ -32,6 +32,7 @@ type healthChecker interface {
 type syncReader interface {
 	GetAllTorrents(ctx context.Context, instanceID int) ([]qbt.Torrent, error)
 	GetTorrentFilesBatch(ctx context.Context, instanceID int, hashes []string) (map[string]qbt.TorrentFiles, error)
+	BulkAction(ctx context.Context, instanceID int, hashes []string, action string) error
 }
 
 type clientReadiness interface {
@@ -116,10 +117,14 @@ func (s *Service) emitRun(instanceID int, runID int64) {
 }
 
 // Start recovers runs left pending or planning by a restart. A plan is manual,
-// so there is no scheduler to start.
+// so there is no scheduler to start. A run interrupted mid-deletion is failed
+// rather than left in a non-terminal state.
 func (s *Service) Start(ctx context.Context) {
 	if s == nil {
 		return
+	}
+	if err := s.store.MarkDeletingRunsFailed(ctx, "Marked failed after restart"); err != nil {
+		log.Error().Err(err).Msg("deleteplan: failed to recover interrupted deletions")
 	}
 	statuses := []string{models.DeletePlanStatusPending, models.DeletePlanStatusPlanning}
 	if err := s.store.MarkStuckRunsFailed(ctx, s.cfg.StuckRunThreshold, statuses); err != nil {
@@ -173,7 +178,8 @@ func (s *Service) TriggerPlan(ctx context.Context, instanceID int, req PlanReque
 	return runID, nil
 }
 
-// CancelRun cancels a pending, planning, or preview_ready run.
+// CancelRun cancels a pending, planning, or preview_ready run. A run that already
+// started deleting cannot be canceled.
 func (s *Service) CancelRun(ctx context.Context, runID int64) error {
 	run, err := s.store.GetRun(ctx, runID)
 	if err != nil {
@@ -191,8 +197,14 @@ func (s *Service) CancelRun(ctx context.Context, runID int64) error {
 		}
 		s.cancelMu.Unlock()
 
-		if err := s.store.UpdateRunStatus(ctx, runID, models.DeletePlanStatusCanceled); err != nil {
+		// The conditional update closes the race with ConfirmRun: a run that
+		// reached deleting between the read and the update is not canceled.
+		canceled, err := s.store.CancelRunIfNotDeleting(ctx, runID)
+		if err != nil {
 			return err
+		}
+		if !canceled {
+			return ErrCannotCancelDuringDeletion
 		}
 		s.emitRun(run.InstanceID, runID)
 		return nil
@@ -203,6 +215,35 @@ func (s *Service) CancelRun(ctx context.Context, runID int64) error {
 	default:
 		return fmt.Errorf("%w: %s", ErrPlanRunInvalidStatus, run.Status)
 	}
+}
+
+// ConfirmRun moves a preview_ready run to deleting and starts the background
+// deletion. Any other status returns ErrPlanRunInvalidStatus.
+func (s *Service) ConfirmRun(ctx context.Context, runID int64) error {
+	run, err := s.store.GetRun(ctx, runID)
+	if err != nil {
+		return err
+	}
+	if run == nil {
+		return ErrPlanRunNotFound
+	}
+	if run.Status != models.DeletePlanStatusPreviewReady {
+		return fmt.Errorf("%w: %s", ErrPlanRunInvalidStatus, run.Status)
+	}
+
+	started, err := s.store.StartRunDeletion(ctx, runID)
+	if err != nil {
+		return err
+	}
+	if !started {
+		// A cancel or another confirm won the race.
+		return fmt.Errorf("%w: %s", ErrPlanRunInvalidStatus, models.DeletePlanStatusDeleting)
+	}
+	s.emitRun(run.InstanceID, runID)
+
+	// The deletion outlives the request, so it detaches from the request context.
+	go s.executeDeletion(context.WithoutCancel(ctx), run.InstanceID, runID)
+	return nil
 }
 
 func (s *Service) executePlan(ctx context.Context, instanceID int, runID int64) {

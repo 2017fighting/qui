@@ -954,7 +954,8 @@
           "partial_overlap": "Teilt nur einen Teil seiner Dateien mit einem anderen Torrent",
           "unreadable_files": "Seine Dateiliste kann nicht gelesen werden",
           "nested_path": "Sein Inhaltspfad verschachtelt sich mit dem eines anderen Torrents",
-          "unknown": "Durch einen Löschschutz ausgeschlossen"
+          "unknown": "Durch einen Löschschutz ausgeschlossen",
+          "members_changed": "Seine Mitglieder haben sich seit der Planerstellung geändert"
         }
       },
       "deletePlanOverview": {
@@ -967,6 +968,10 @@
         "activePlan": "Plan läuft",
         "noPlanYet": "Noch kein Plan erstellt.",
         "progress": "{{removed}} von {{planned}} entfernt",
+        "deleting": "Plan wird gelöscht...",
+        "completedResult": "{{removed}} entfernt.",
+        "failedResult": "Der Plan ist fehlgeschlagen.",
+        "canceledResult": "Vor dem Löschen abgebrochen.",
         "toast": {
           "planStartFailed": "Löschplan konnte nicht erstellt werden",
           "planCanceled": "Löschplan abgebrochen",
@@ -1026,7 +1031,9 @@
         "title": "Löschplan bestätigen",
         "description": "Prüfen Sie, was der Plan entfernt, bevor er startet.",
         "otherInstances": "Nur diese Instanz wird geprüft. Andere Instanzen werden nicht geprüft.",
-        "confirm": "Bestätigen und löschen"
+        "confirm": "Bestätigen und löschen",
+        "deadTotal": "Tote Gruppen: {{dead}}",
+        "startFailed": "Löschen konnte nicht gestartet werden"
       },
     "orphanScanSettings": {
       "settingsTitle": "Einstellungen",

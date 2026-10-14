@@ -987,7 +987,8 @@
           "partial_overlap": "Sdílí jen část svých souborů s jiným torrentem",
           "unreadable_files": "Jeho seznam souborů nelze přečíst",
           "nested_path": "Jeho cesta k obsahu se vnořuje do cesty jiného torrentu",
-          "unknown": "Vyloučeno ochranou proti smazání"
+          "unknown": "Vyloučeno ochranou proti smazání",
+          "members_changed": "Její členové se od vytvoření plánu změnili"
         }
       },
       "deletePlanOverview": {
@@ -1000,6 +1001,10 @@
         "activePlan": "Probíhající plán",
         "noPlanYet": "Zatím nebyl vytvořen žádný plán.",
         "progress": "Odstraněno {{removed}} z {{planned}}",
+        "deleting": "Mazání plánu...",
+        "completedResult": "Odstraněno {{removed}}.",
+        "failedResult": "Plán selhal.",
+        "canceledResult": "Zrušeno před zahájením mazání.",
         "toast": {
           "planStartFailed": "Plán mazání se nepodařilo vytvořit",
           "planCanceled": "Plán mazání zrušen",
@@ -1059,7 +1064,9 @@
         "title": "Potvrdit plán mazání",
         "description": "Zkontrolujte, co plán odstraní, než začne.",
         "otherInstances": "Kontroluje se jen tato instance. Ostatní instance se nekontrolují.",
-        "confirm": "Potvrdit a smazat"
+        "confirm": "Potvrdit a smazat",
+        "deadTotal": "Mrtvé skupiny: {{dead}}",
+        "startFailed": "Mazání se nepodařilo spustit"
       },
     "orphanScanSettings": {
       "settingsTitle": "Nastavení",

@@ -3,16 +3,15 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
+import { DeletePlanRunProgress } from "@/components/instances/preferences/DeletePlanRunProgress"
 import { DeletePlanWizardDialog } from "@/components/instances/preferences/DeletePlanWizardDialog"
 import { deletePlanStatusLabelKey } from "@/components/instances/preferences/deletePlanLabels"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useCancelDeletePlanRun, useDeletePlanRuns } from "@/hooks/useDeletePlan"
 import { useInstances } from "@/hooks/useInstances"
-import { formatBytes } from "@/lib/utils"
 import type { DeletePlanRunStatus, Instance } from "@/types"
 import { Eye, Info, Loader2, Play, X } from "lucide-react"
 import { useMemo, useState } from "react"
@@ -43,10 +42,6 @@ function InstanceDeletePlanRow({
 
   const latestRun = runsQuery.data?.[0]
   const isActive = !!latestRun && ACTIVE_STATUSES.includes(latestRun.status)
-  const canShowProgress = latestRun?.status === "deleting" && latestRun.plannedBytes > 0
-  const progressPercent = canShowProgress
-    ? Math.min(100, (latestRun.removedBytes / latestRun.plannedBytes) * 100)
-    : 0
 
   const handleCancel = () => {
     if (!latestRun) return
@@ -118,19 +113,11 @@ function InstanceDeletePlanRow({
       {latestRun && isActive && (
         <div className="space-y-1.5">
           <p className="text-xs text-muted-foreground">{t("preferences.deletePlanOverview.activePlan")}</p>
-          {canShowProgress && (
-            <>
-              <Progress value={progressPercent} />
-              <p className="text-xs text-muted-foreground">
-                {t("preferences.deletePlanOverview.progress", {
-                  removed: formatBytes(latestRun.removedBytes),
-                  planned: formatBytes(latestRun.plannedBytes),
-                })}
-              </p>
-            </>
-          )}
+          <DeletePlanRunProgress run={latestRun} />
         </div>
       )}
+
+      {latestRun && !isActive && <DeletePlanRunProgress run={latestRun} />}
 
       {!latestRun && !runsQuery.isLoading && (
         <p className="text-xs text-muted-foreground">{t("preferences.deletePlanOverview.noPlanYet")}</p>

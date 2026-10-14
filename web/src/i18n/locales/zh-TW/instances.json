@@ -927,7 +927,8 @@
           "partial_overlap": "與其他種子僅共用部分檔案",
           "unreadable_files": "無法讀取其檔案清單",
           "nested_path": "其內容路徑與其他種子嵌套",
-          "unknown": "被刪除保護排除"
+          "unknown": "被刪除保護排除",
+          "members_changed": "自計畫建立以來其成員已變更"
         }
       },
       "deletePlanOverview": {
@@ -940,6 +941,10 @@
         "activePlan": "計畫進行中",
         "noPlanYet": "尚未建立計畫。",
         "progress": "已刪除 {{removed}}，共 {{planned}}",
+        "deleting": "正在刪除計畫...",
+        "completedResult": "已刪除 {{removed}}。",
+        "failedResult": "計畫失敗。",
+        "canceledResult": "在刪除開始前已取消。",
         "toast": {
           "planStartFailed": "建立刪除計畫失敗",
           "planCanceled": "刪除計畫已取消",
@@ -999,7 +1004,9 @@
         "title": "確認刪除計畫",
         "description": "開始前請檢查計畫將刪除的內容。",
         "otherInstances": "僅檢查此執行個體，不檢查其他執行個體。",
-        "confirm": "確認並刪除"
+        "confirm": "確認並刪除",
+        "deadTotal": "死種群組：{{dead}}",
+        "startFailed": "無法開始刪除"
       },
     "orphanScanSettings": {
       "settingsTitle": "設定",

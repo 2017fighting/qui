@@ -16,7 +16,8 @@ export type DeletePlanRunStatus =
   | "failed"
   | "canceled"
 
-// The hard protections a group can be dropped by. `excludeReason` is "" when the
+// The hard protections a group can be dropped by, plus the row-level
+// `members_changed` the deletion re-check records. `excludeReason` is "" when the
 // group is not excluded.
 export type DeletePlanExcludeReason =
   | "incomplete"
@@ -24,6 +25,9 @@ export type DeletePlanExcludeReason =
   | "partial_overlap"
   | "unreadable_files"
   | "nested_path"
+
+// A row's removal outcome. Pending until the deletion reaches it.
+export type DeletePlanRowStatus = "pending" | "deleted" | "skipped" | "failed"
 
 export interface DeletePlanMember {
   hash: string
@@ -48,6 +52,9 @@ export interface DeletePlanRow {
   excludeReason: DeletePlanExcludeReason | ""
   decidingKey: string
   members: DeletePlanMember[]
+  rowStatus: DeletePlanRowStatus
+  rowReason: string
+  rowError: string
 }
 
 export interface DeletePlanRunSummary {
@@ -64,6 +71,8 @@ export interface DeletePlanRunSummary {
   targetReached: boolean
   removedBytes: number
   errorMessage: string
+  // Failure summary of a completed run that lost some chunks. Empty otherwise.
+  warningMessage: string
   createdAt: string
   updatedAt: string
   completedAt: string | null

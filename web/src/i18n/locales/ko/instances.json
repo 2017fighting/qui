@@ -927,7 +927,8 @@
           "partial_overlap": "다른 토렌트와 파일 일부만 공유합니다",
           "unreadable_files": "파일 목록을 읽을 수 없습니다",
           "nested_path": "콘텐츠 경로가 다른 토렌트와 중첩됩니다",
-          "unknown": "삭제 보호로 제외되었습니다"
+          "unknown": "삭제 보호로 제외되었습니다",
+          "members_changed": "계획 생성 후 구성원이 변경되었습니다"
         }
       },
       "deletePlanOverview": {
@@ -940,6 +941,10 @@
         "activePlan": "진행 중인 계획",
         "noPlanYet": "아직 만든 계획이 없습니다.",
         "progress": "{{planned}} 중 {{removed}} 제거됨",
+        "deleting": "계획 삭제 중...",
+        "completedResult": "{{removed}} 제거됨.",
+        "failedResult": "계획이 실패했습니다.",
+        "canceledResult": "삭제 시작 전에 취소되었습니다.",
         "toast": {
           "planStartFailed": "삭제 계획을 만들지 못했습니다",
           "planCanceled": "삭제 계획이 취소되었습니다",
@@ -999,7 +1004,9 @@
         "title": "삭제 계획 확인",
         "description": "시작하기 전에 계획이 제거하는 내용을 검토하세요.",
         "otherInstances": "이 인스턴스만 확인합니다. 다른 인스턴스는 확인하지 않습니다.",
-        "confirm": "확인 및 삭제"
+        "confirm": "확인 및 삭제",
+        "deadTotal": "죽은 그룹: {{dead}}",
+        "startFailed": "삭제를 시작하지 못했습니다"
       },
     "orphanScanSettings": {
       "settingsTitle": "설정",

@@ -948,7 +948,8 @@
           "partial_overlap": "Ne partage qu'une partie de ses fichiers avec un autre torrent",
           "unreadable_files": "Sa liste de fichiers est illisible",
           "nested_path": "Son chemin de contenu est imbriqué avec celui d'un autre torrent",
-          "unknown": "Exclu par une protection de suppression"
+          "unknown": "Exclu par une protection de suppression",
+          "members_changed": "Ses membres ont changé depuis la création du plan"
         }
       },
       "deletePlanOverview": {
@@ -961,6 +962,10 @@
         "activePlan": "Plan en cours",
         "noPlanYet": "Aucun plan créé pour l'instant.",
         "progress": "{{removed}} supprimés sur {{planned}}",
+        "deleting": "Suppression du plan...",
+        "completedResult": "{{removed}} supprimés.",
+        "failedResult": "Le plan a échoué.",
+        "canceledResult": "Annulé avant le début de la suppression.",
         "toast": {
           "planStartFailed": "Échec de la création du plan de suppression",
           "planCanceled": "Plan de suppression annulé",
@@ -1020,7 +1025,9 @@
         "title": "Confirmer le plan de suppression",
         "description": "Vérifiez ce que le plan supprime avant son démarrage.",
         "otherInstances": "Seule cette instance est vérifiée. Les autres instances ne sont pas vérifiées.",
-        "confirm": "Confirmer et supprimer"
+        "confirm": "Confirmer et supprimer",
+        "deadTotal": "Groupes morts : {{dead}}",
+        "startFailed": "Échec du démarrage de la suppression"
       },
     "orphanScanSettings": {
       "settingsTitle": "Paramètres",

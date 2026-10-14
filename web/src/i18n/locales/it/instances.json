@@ -954,7 +954,8 @@
           "partial_overlap": "Condivide solo parte dei suoi file con un altro torrent",
           "unreadable_files": "Il suo elenco di file non è leggibile",
           "nested_path": "Il suo percorso di contenuto è annidato in quello di un altro torrent",
-          "unknown": "Escluso da una protezione di eliminazione"
+          "unknown": "Escluso da una protezione di eliminazione",
+          "members_changed": "I suoi membri sono cambiati dopo la creazione del piano"
         }
       },
       "deletePlanOverview": {
@@ -967,6 +968,10 @@
         "activePlan": "Piano in corso",
         "noPlanYet": "Nessun piano creato.",
         "progress": "{{removed}} rimossi su {{planned}}",
+        "deleting": "Eliminazione del piano...",
+        "completedResult": "{{removed}} rimossi.",
+        "failedResult": "Il piano non è riuscito.",
+        "canceledResult": "Annullato prima dell'inizio dell'eliminazione.",
         "toast": {
           "planStartFailed": "Creazione del piano di eliminazione non riuscita",
           "planCanceled": "Piano di eliminazione annullato",
@@ -1026,7 +1031,9 @@
         "title": "Conferma il piano di eliminazione",
         "description": "Controlla cosa rimuove il piano prima che inizi.",
         "otherInstances": "Viene controllata solo questa istanza. Le altre istanze non vengono controllate.",
-        "confirm": "Conferma ed elimina"
+        "confirm": "Conferma ed elimina",
+        "deadTotal": "Gruppi morti: {{dead}}",
+        "startFailed": "Impossibile avviare l'eliminazione"
       },
     "orphanScanSettings": {
       "settingsTitle": "Impostazioni",
