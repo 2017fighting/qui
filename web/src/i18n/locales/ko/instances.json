@@ -908,6 +908,85 @@
       },
       "directory": "디렉터리"
     },
+      "deletePlan": {
+        "cancel": "취소",
+        "back": "뒤로",
+        "close": "닫기",
+        "statusLabels": {
+          "pending": "동기화 대기 중",
+          "planning": "계획 중",
+          "preview_ready": "검토 준비 완료",
+          "deleting": "삭제 중",
+          "completed": "완료됨",
+          "failed": "실패함",
+          "canceled": "취소됨"
+        },
+        "excludeReasons": {
+          "incomplete": "구성원이 아직 다운로드 중입니다",
+          "no_delete_tag": "구성원에 no_delete 태그가 있습니다",
+          "partial_overlap": "다른 토렌트와 파일 일부만 공유합니다",
+          "unreadable_files": "파일 목록을 읽을 수 없습니다",
+          "nested_path": "콘텐츠 경로가 다른 토렌트와 중첩됩니다",
+          "unknown": "삭제 보호로 제외되었습니다"
+        }
+      },
+      "deletePlanOverview": {
+        "title": "삭제 계획",
+        "tooltip": "목표 크기에 도달할 때까지 전체 콘텐츠 그룹을 제거하는 일회성 계획을 만듭니다. 확인하기 전에는 아무것도 제거되지 않습니다.",
+        "description": "한 인스턴스에서 원하는 크기의 공간을 회수합니다.",
+        "noInstancesDescription": "구성된 인스턴스가 없습니다. 이 서비스를 사용하려면 설정에서 인스턴스를 추가하세요.",
+        "newPlan": "새 계획",
+        "viewPlan": "계획 보기",
+        "activePlan": "진행 중인 계획",
+        "noPlanYet": "아직 만든 계획이 없습니다.",
+        "progress": "{{planned}} 중 {{removed}} 제거됨",
+        "toast": {
+          "planStartFailed": "삭제 계획을 만들지 못했습니다",
+          "planCanceled": "삭제 계획이 취소되었습니다",
+          "cancelFailed": "삭제 계획을 취소하지 못했습니다"
+        }
+      },
+      "deletePlanWizard": {
+        "title": "새 삭제 계획",
+        "description": "계획은 한 인스턴스에 대해 만들어지고 검토를 위해 고정됩니다. 확인하기 전에는 아무것도 제거되지 않습니다.",
+        "instance": "인스턴스",
+        "targetLabel": "목표 크기",
+        "targetPlaceholder": "10",
+        "buildPlan": "계획 만들기",
+        "reviewAndConfirm": "검토 및 확인",
+        "conflict": "이 인스턴스에 이미 활성 계획이 있습니다. 새로 만들기 전에 취소하세요.",
+        "targetRequired": "0보다 큰 목표 크기를 입력하세요.",
+        "waitingTitle": "최신 동기화 데이터를 기다리는 중",
+        "waitingDescription": "인스턴스의 토렌트 목록이 2분을 넘지 않으면 계획이 시작됩니다.",
+        "planning": "계획을 만드는 중...",
+        "loadFailed": "계획을 불러오지 못했습니다."
+      },
+      "deletePlanPreview": {
+        "target": "목표",
+        "planned": "계획된 회수량",
+        "overshoot": "초과량",
+        "targetNotReached": "목표에 도달할 수 없습니다: 사용 가능한 모든 그룹이 이미 포함되어 있습니다.",
+        "includedGroups": "계획된 그룹: {{count}}",
+        "excludedGroups": "제외된 그룹: {{count}}",
+        "contentPath": "콘텐츠 경로",
+        "size": "크기",
+        "membersColumn": "구성원",
+        "memberName": "이름",
+        "memberState": "상태",
+        "memberProgress": "진행률",
+        "reason": "이유",
+        "noGroups": "계획에 그룹이 없습니다.",
+        "loading": "계획을 불러오는 중...",
+        "exportCSV": "CSV 내보내기",
+        "exported": "계획을 CSV로 내보냈습니다",
+        "exportFailed": "계획을 내보내지 못했습니다"
+      },
+      "deletePlanConfirm": {
+        "title": "삭제 계획 확인",
+        "description": "시작하기 전에 계획이 제거하는 내용을 검토하세요.",
+        "otherInstances": "이 인스턴스만 확인합니다. 다른 인스턴스는 확인하지 않습니다.",
+        "confirm": "확인 및 삭제"
+      },
     "orphanScanSettings": {
       "settingsTitle": "설정",
       "enabled": "활성화됨",

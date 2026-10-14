@@ -908,6 +908,85 @@
       },
       "directory": "目錄"
     },
+      "deletePlan": {
+        "cancel": "取消",
+        "back": "返回",
+        "close": "關閉",
+        "statusLabels": {
+          "pending": "等待同步",
+          "planning": "規劃中",
+          "preview_ready": "可檢視",
+          "deleting": "刪除中",
+          "completed": "已完成",
+          "failed": "失敗",
+          "canceled": "已取消"
+        },
+        "excludeReasons": {
+          "incomplete": "有成員仍在下載",
+          "no_delete_tag": "有成員帶有 no_delete 標籤",
+          "partial_overlap": "與其他種子僅共用部分檔案",
+          "unreadable_files": "無法讀取其檔案清單",
+          "nested_path": "其內容路徑與其他種子嵌套",
+          "unknown": "被刪除保護排除"
+        }
+      },
+      "deletePlanOverview": {
+        "title": "刪除計畫",
+        "tooltip": "產生一次性計畫，逐個刪除完整內容群組，直到達到目標大小。確認之前不會刪除任何內容。",
+        "description": "從單一執行個體回收指定大小的空間。",
+        "noInstancesDescription": "未設定執行個體。請在設定中新增執行個體後使用此服務。",
+        "newPlan": "新增計畫",
+        "viewPlan": "檢視計畫",
+        "activePlan": "計畫進行中",
+        "noPlanYet": "尚未建立計畫。",
+        "progress": "已刪除 {{removed}}，共 {{planned}}",
+        "toast": {
+          "planStartFailed": "建立刪除計畫失敗",
+          "planCanceled": "刪除計畫已取消",
+          "cancelFailed": "取消刪除計畫失敗"
+        }
+      },
+      "deletePlanWizard": {
+        "title": "新增刪除計畫",
+        "description": "計畫針對單一執行個體產生並凍結以供檢視。確認之前不會刪除任何內容。",
+        "instance": "執行個體",
+        "targetLabel": "目標大小",
+        "targetPlaceholder": "10",
+        "buildPlan": "產生計畫",
+        "reviewAndConfirm": "檢視並確認",
+        "conflict": "此執行個體已有進行中的計畫。請先取消它，再建立新計畫。",
+        "targetRequired": "請輸入大於零的目標大小。",
+        "waitingTitle": "正在等待最新的同步資料",
+        "waitingDescription": "當執行個體的種子清單不超過兩分鐘時，計畫就會開始。",
+        "planning": "正在產生計畫...",
+        "loadFailed": "載入計畫失敗。"
+      },
+      "deletePlanPreview": {
+        "target": "目標",
+        "planned": "計畫回收",
+        "overshoot": "超出量",
+        "targetNotReached": "無法達到目標：所有可用的群組都已包含在內。",
+        "includedGroups": "計畫群組：{{count}}",
+        "excludedGroups": "排除群組：{{count}}",
+        "contentPath": "內容路徑",
+        "size": "大小",
+        "membersColumn": "成員",
+        "memberName": "名稱",
+        "memberState": "狀態",
+        "memberProgress": "進度",
+        "reason": "原因",
+        "noGroups": "計畫中沒有群組。",
+        "loading": "正在載入計畫...",
+        "exportCSV": "匯出 CSV",
+        "exported": "計畫已匯出為 CSV",
+        "exportFailed": "匯出計畫失敗"
+      },
+      "deletePlanConfirm": {
+        "title": "確認刪除計畫",
+        "description": "開始前請檢查計畫將刪除的內容。",
+        "otherInstances": "僅檢查此執行個體，不檢查其他執行個體。",
+        "confirm": "確認並刪除"
+      },
     "orphanScanSettings": {
       "settingsTitle": "設定",
       "enabled": "已啟用",

@@ -1583,6 +1583,85 @@
       "directory": "Directori",
       "noItems": "No hi ha res per mostrar."
     },
+      "deletePlan": {
+        "cancel": "Cancel·la",
+        "back": "Enrere",
+        "close": "Tanca",
+        "statusLabels": {
+          "pending": "Esperant la sincronització",
+          "planning": "Planificant",
+          "preview_ready": "A punt per revisar",
+          "deleting": "Suprimint",
+          "completed": "Completat",
+          "failed": "Ha fallat",
+          "canceled": "Cancel·lat"
+        },
+        "excludeReasons": {
+          "incomplete": "Un membre encara s'està baixant",
+          "no_delete_tag": "Un membre porta l'etiqueta no_delete",
+          "partial_overlap": "Comparteix només part dels seus fitxers amb un altre torrent",
+          "unreadable_files": "La seva llista de fitxers no es pot llegir",
+          "nested_path": "El seu camí de contingut s'imbrica amb el d'un altre torrent",
+          "unknown": "Exclòs per una protecció de supressió"
+        }
+      },
+      "deletePlanOverview": {
+        "title": "Pla de supressió",
+        "tooltip": "Crea un pla puntual que elimina grups de contingut sencers fins a arribar a la mida objectiu. No s'elimina res fins que ho confirmis.",
+        "description": "Recupera una quantitat d'espai triada d'una instància.",
+        "noInstancesDescription": "No hi ha cap instància configurada. Afegeix-ne una a la configuració per fer servir aquest servei.",
+        "newPlan": "Pla nou",
+        "viewPlan": "Mostra el pla",
+        "activePlan": "Pla en curs",
+        "noPlanYet": "Encara no s'ha creat cap pla.",
+        "progress": "{{removed}} de {{planned}} suprimits",
+        "toast": {
+          "planStartFailed": "No s'ha pogut crear el pla de supressió",
+          "planCanceled": "Pla de supressió cancel·lat",
+          "cancelFailed": "No s'ha pogut cancel·lar el pla de supressió"
+        }
+      },
+      "deletePlanWizard": {
+        "title": "Pla de supressió nou",
+        "description": "El pla es crea per a una instància i es congela per revisar-lo. No s'elimina res fins que ho confirmis.",
+        "instance": "Instància",
+        "targetLabel": "Mida objectiu",
+        "targetPlaceholder": "10",
+        "buildPlan": "Crea el pla",
+        "reviewAndConfirm": "Revisa i confirma",
+        "conflict": "Ja hi ha un pla actiu per a aquesta instància. Cancel·la'l abans de crear-ne un de nou.",
+        "targetRequired": "Introdueix una mida objectiu més gran que zero.",
+        "waitingTitle": "Esperant dades de sincronització recents",
+        "waitingDescription": "El pla comença quan la llista de torrents de la instància té com a màxim dos minuts.",
+        "planning": "S'està creant el pla...",
+        "loadFailed": "No s'ha pogut carregar el pla."
+      },
+      "deletePlanPreview": {
+        "target": "Objectiu",
+        "planned": "Recuperació prevista",
+        "overshoot": "Excés",
+        "targetNotReached": "No es pot assolir l'objectiu: tots els grups disponibles ja estan inclosos.",
+        "includedGroups": "Grups planificats: {{count}}",
+        "excludedGroups": "Grups exclosos: {{count}}",
+        "contentPath": "Camí del contingut",
+        "size": "Mida",
+        "membersColumn": "Membres",
+        "memberName": "Nom",
+        "memberState": "Estat",
+        "memberProgress": "Progrés",
+        "reason": "Motiu",
+        "noGroups": "El pla no té cap grup.",
+        "loading": "S'està carregant el pla...",
+        "exportCSV": "Exporta CSV",
+        "exported": "Pla exportat com a CSV",
+        "exportFailed": "No s'ha pogut exportar el pla"
+      },
+      "deletePlanConfirm": {
+        "title": "Confirma el pla de supressió",
+        "description": "Revisa què elimina el pla abans que comenci.",
+        "otherInstances": "Només es comprova aquesta instància. Les altres instàncies no es comproven.",
+        "confirm": "Confirma i suprimeix"
+      },
     "orphanScanSettings": {
       "settingsTitle": "Configuració",
       "enabled": "Activada",

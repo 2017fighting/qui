@@ -968,6 +968,85 @@
       },
       "directory": "Adresář"
     },
+      "deletePlan": {
+        "cancel": "Zrušit",
+        "back": "Zpět",
+        "close": "Zavřít",
+        "statusLabels": {
+          "pending": "Čeká na synchronizaci",
+          "planning": "Plánování",
+          "preview_ready": "Připraveno ke kontrole",
+          "deleting": "Mazání",
+          "completed": "Dokončeno",
+          "failed": "Selhalo",
+          "canceled": "Zrušeno"
+        },
+        "excludeReasons": {
+          "incomplete": "Některý člen se stále stahuje",
+          "no_delete_tag": "Některý člen má značku no_delete",
+          "partial_overlap": "Sdílí jen část svých souborů s jiným torrentem",
+          "unreadable_files": "Jeho seznam souborů nelze přečíst",
+          "nested_path": "Jeho cesta k obsahu se vnořuje do cesty jiného torrentu",
+          "unknown": "Vyloučeno ochranou proti smazání"
+        }
+      },
+      "deletePlanOverview": {
+        "title": "Plán mazání",
+        "tooltip": "Vytvoří jednorázový plán, který odstraní celé skupiny obsahu, dokud nedosáhne cílové velikosti. Nic se neodstraní, dokud nepotvrdíte.",
+        "description": "Získejte zpět zvolené množství místa z jedné instance.",
+        "noInstancesDescription": "Nejsou nakonfigurovány žádné instance. Přidejte ji v nastavení, abyste tuto službu mohli používat.",
+        "newPlan": "Nový plán",
+        "viewPlan": "Zobrazit plán",
+        "activePlan": "Probíhající plán",
+        "noPlanYet": "Zatím nebyl vytvořen žádný plán.",
+        "progress": "Odstraněno {{removed}} z {{planned}}",
+        "toast": {
+          "planStartFailed": "Plán mazání se nepodařilo vytvořit",
+          "planCanceled": "Plán mazání zrušen",
+          "cancelFailed": "Plán mazání se nepodařilo zrušit"
+        }
+      },
+      "deletePlanWizard": {
+        "title": "Nový plán mazání",
+        "description": "Plán se vytvoří pro jednu instanci a zafixuje se ke kontrole. Nic se neodstraní, dokud nepotvrdíte.",
+        "instance": "Instance",
+        "targetLabel": "Cílová velikost",
+        "targetPlaceholder": "10",
+        "buildPlan": "Vytvořit plán",
+        "reviewAndConfirm": "Zkontrolovat a potvrdit",
+        "conflict": "Pro tuto instanci už je aktivní plán. Zrušte ho, než vytvoříte nový.",
+        "targetRequired": "Zadejte cílovou velikost větší než nula.",
+        "waitingTitle": "Čeká se na čerstvá data synchronizace",
+        "waitingDescription": "Plán začne, jakmile bude seznam torrentů instance starý nejvýše dvě minuty.",
+        "planning": "Vytváření plánu...",
+        "loadFailed": "Plán se nepodařilo načíst."
+      },
+      "deletePlanPreview": {
+        "target": "Cíl",
+        "planned": "Plánované uvolnění",
+        "overshoot": "Překročení",
+        "targetNotReached": "Cíle nelze dosáhnout: všechny dostupné skupiny jsou už zahrnuty.",
+        "includedGroups": "Plánované skupiny: {{count}}",
+        "excludedGroups": "Vyloučené skupiny: {{count}}",
+        "contentPath": "Cesta k obsahu",
+        "size": "Velikost",
+        "membersColumn": "Členové",
+        "memberName": "Název",
+        "memberState": "Stav",
+        "memberProgress": "Průběh",
+        "reason": "Důvod",
+        "noGroups": "Plán neobsahuje žádné skupiny.",
+        "loading": "Načítání plánu...",
+        "exportCSV": "Exportovat CSV",
+        "exported": "Plán exportován jako CSV",
+        "exportFailed": "Plán se nepodařilo exportovat"
+      },
+      "deletePlanConfirm": {
+        "title": "Potvrdit plán mazání",
+        "description": "Zkontrolujte, co plán odstraní, než začne.",
+        "otherInstances": "Kontroluje se jen tato instance. Ostatní instance se nekontrolují.",
+        "confirm": "Potvrdit a smazat"
+      },
     "orphanScanSettings": {
       "settingsTitle": "Nastavení",
       "enabled": "Zapnuto",
