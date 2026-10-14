@@ -1367,6 +1367,9 @@ func (s *Service) previewDeleteIncludeCrossSeeds(
 		}
 
 		crossSeedGroup := cpIndex.Group(*torrent)
+		if cpIndex.NestedPathExclusion(crossSeedGroup) != "" {
+			continue
+		}
 
 		if !expandGroupForPreview(torrent, crossSeedGroup, state.expandedSet, state.crossSeedSet, fetchFiles) {
 			continue
@@ -2194,6 +2197,11 @@ func (s *Service) applyRulesForInstance(ctx context.Context, instanceID int, for
 				// A shared ContentPath is not proof of shared data, so every member is
 				// verified against the trigger's file list before it is deleted.
 				crossSeedGroup := cpIndex.Group(torrent)
+				if reason := cpIndex.NestedPathExclusion(crossSeedGroup); reason != "" {
+					log.Warn().Str("hash", torrent.Hash).Str("reason", reason).
+						Msg("automations: skipping delete, nested content path could remove another torrent's files")
+					continue
+				}
 				verifiedHashes, ok := contentgroup.VerifiedMembers(
 					torrent,
 					crossSeedGroup,
@@ -2242,7 +2250,9 @@ func (s *Service) applyRulesForInstance(ctx context.Context, instanceID int, for
 				}
 			case DeleteModeWithFilesPreserveCrossSeeds:
 				hashesToDelete = []string{hash}
-				if contentgroup.ShouldPreserveCrossSeedFiles(torrent, cpIndex, evalCtx.CrossSeedFilesByHash) {
+				// A nested Content Path outside the group means the files this delete would
+				// remove can belong to another torrent, so keep them.
+				if cpIndex.NestedPathExclusion(cpIndex.Group(torrent)) != "" || contentgroup.ShouldPreserveCrossSeedFiles(torrent, cpIndex, evalCtx.CrossSeedFilesByHash) {
 					actualMode = DeleteModeKeepFiles
 					logMsg = "automations: removing torrent (preserve cross-seeds - keeping files)"
 					keepingFiles = true
@@ -4644,6 +4654,10 @@ func deleteFreesSpace(
 		// Keep-files mode never frees disk space
 		return false
 	case DeleteModeWithFilesPreserveCrossSeeds:
+		// A nested Content Path outside the group keeps the files, so nothing is freed.
+		if cpIndex.NestedPathExclusion(cpIndex.Group(torrent)) != "" {
+			return false
+		}
 		return !contentgroup.ShouldPreserveCrossSeedFiles(torrent, cpIndex, filesByHash)
 	case DeleteModeWithFiles, DeleteModeWithFilesIncludeCrossSeeds:
 		// Always frees disk space (include mode deletes the whole group)

@@ -570,6 +570,7 @@ When a torrent matches the rule, qui finds other torrents that point to the same
 - **Safe expansion**: If qui cannot determine that another torrent uses the same files, qui does not include it in the deletion.
 - **File lists decide, not paths**: qui includes a candidate only when at least 90% of the smaller torrent's bytes use the same file locations. A torrent that shares only the folder, such as a pack with a top folder named `Season 2`, keeps its files and stays in the client. If overlap is above zero but below 90%, qui skips the entire deletion group.
 - **Safety-first**: If the file check cannot complete for any reason, qui skips the entire group to prevent broken torrents.
+- **Nested Content Paths**: qui skips a group when another torrent's Content Path nests with it, in either direction: a single-file torrent at `/data/Pack/extra.mkv` inside a pack at `/data/Pack`, or a pack at `/data/Pack` around a single file at `/data/Pack/extra.mkv`. The two paths land in different groups, so the file check never compares them, and a delete with files would remove files the other torrent needs. Nested means one path is a strict ancestor of the other on path-segment boundaries, so `/data/Pack` does not nest with `/data/Package`.
 - **Preview**: The delete preview shows all torrents that qui deletes in simulation, with cross-seeds marked.
 
 **Include hardlinked copies:**
@@ -1182,6 +1183,7 @@ The preview expands and shows cross-seeds only in `Remove with files (include cr
 
 - Torrents become candidates when they share the same Content Path. qui then compares their resolved file paths and sizes.
 - qui does not treat torrents in the same directory that use different files as cross-seeds. qui removes their files.
+- If another torrent's Content Path nests with the group's Content Path (see **Nested Content Paths** above), qui keeps the files.
 - If torrents share files or the file comparison cannot complete, qui keeps the files.
 - Only torrents whose files qui removes contribute to the free-space projection.
 
