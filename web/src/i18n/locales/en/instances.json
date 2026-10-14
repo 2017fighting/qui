@@ -935,6 +935,85 @@
       },
       "directory": "Directory"
     },
+    "deletePlan": {
+      "cancel": "Cancel",
+      "back": "Back",
+      "close": "Close",
+      "statusLabels": {
+        "pending": "Waiting for sync",
+        "planning": "Planning",
+        "preview_ready": "Ready for review",
+        "deleting": "Deleting",
+        "completed": "Completed",
+        "failed": "Failed",
+        "canceled": "Canceled"
+      },
+      "excludeReasons": {
+        "incomplete": "A member is still downloading",
+        "no_delete_tag": "A member carries the no_delete tag",
+        "partial_overlap": "Shares only part of its files with another torrent",
+        "unreadable_files": "Its file list cannot be read",
+        "nested_path": "Its content path nests with another torrent's",
+        "unknown": "Excluded by a delete protection"
+      }
+    },
+    "deletePlanOverview": {
+      "title": "Delete Plan",
+      "tooltip": "Builds a one-shot plan that removes whole content groups until it reaches the target size. Nothing is removed until you confirm.",
+      "description": "Reclaim a chosen amount of space from one instance.",
+      "noInstancesDescription": "No instances configured. Add one in Settings to use this service.",
+      "newPlan": "New Plan",
+      "viewPlan": "View Plan",
+      "activePlan": "Plan in progress",
+      "noPlanYet": "No plan built yet.",
+      "progress": "Removed {{removed}} of {{planned}}",
+      "toast": {
+        "planStartFailed": "Failed to create the delete plan",
+        "planCanceled": "Delete plan canceled",
+        "cancelFailed": "Failed to cancel the delete plan"
+      }
+    },
+    "deletePlanWizard": {
+      "title": "New Delete Plan",
+      "description": "The plan is built for one instance and frozen for review. Nothing is removed until you confirm.",
+      "instance": "Instance",
+      "targetLabel": "Target size",
+      "targetPlaceholder": "10",
+      "buildPlan": "Build Plan",
+      "reviewAndConfirm": "Review and Confirm",
+      "conflict": "A plan is already active for this instance. Cancel it before you build a new one.",
+      "targetRequired": "Enter a target size greater than zero.",
+      "waitingTitle": "Waiting for fresh sync data",
+      "waitingDescription": "The plan starts once the instance's torrent list is no longer than two minutes old.",
+      "planning": "Building the plan...",
+      "loadFailed": "Failed to load the plan."
+    },
+    "deletePlanPreview": {
+      "target": "Target",
+      "planned": "Planned reclaim",
+      "overshoot": "Overshoot",
+      "targetNotReached": "The target cannot be reached: every available group is already included.",
+      "includedGroups": "Planned groups: {{count}}",
+      "excludedGroups": "Excluded groups: {{count}}",
+      "contentPath": "Content path",
+      "size": "Size",
+      "membersColumn": "Members",
+      "memberName": "Name",
+      "memberState": "State",
+      "memberProgress": "Progress",
+      "reason": "Reason",
+      "noGroups": "The plan has no groups.",
+      "loading": "Loading the plan...",
+      "exportCSV": "Export CSV",
+      "exported": "Exported the plan as CSV",
+      "exportFailed": "Failed to export the plan"
+    },
+    "deletePlanConfirm": {
+      "title": "Confirm the Delete Plan",
+      "description": "Review what the plan removes before it starts.",
+      "otherInstances": "Only this instance is checked. Other instances are not checked.",
+      "confirm": "Confirm and Delete"
+    },
     "orphanScanSettings": {
       "settingsTitle": "Settings",
       "enabled": "Enabled",

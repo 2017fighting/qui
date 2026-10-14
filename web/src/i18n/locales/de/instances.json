@@ -935,6 +935,85 @@
       },
       "directory": "Verzeichnis"
     },
+      "deletePlan": {
+        "cancel": "Abbrechen",
+        "back": "Zurück",
+        "close": "Schließen",
+        "statusLabels": {
+          "pending": "Warte auf Synchronisierung",
+          "planning": "Planung",
+          "preview_ready": "Bereit zur Prüfung",
+          "deleting": "Löschen",
+          "completed": "Abgeschlossen",
+          "failed": "Fehlgeschlagen",
+          "canceled": "Abgebrochen"
+        },
+        "excludeReasons": {
+          "incomplete": "Ein Mitglied lädt noch herunter",
+          "no_delete_tag": "Ein Mitglied trägt das Tag no_delete",
+          "partial_overlap": "Teilt nur einen Teil seiner Dateien mit einem anderen Torrent",
+          "unreadable_files": "Seine Dateiliste kann nicht gelesen werden",
+          "nested_path": "Sein Inhaltspfad verschachtelt sich mit dem eines anderen Torrents",
+          "unknown": "Durch einen Löschschutz ausgeschlossen"
+        }
+      },
+      "deletePlanOverview": {
+        "title": "Löschplan",
+        "tooltip": "Erstellt einen einmaligen Plan, der ganze Inhaltsgruppen entfernt, bis die Zielgröße erreicht ist. Nichts wird entfernt, bis Sie bestätigen.",
+        "description": "Holen Sie eine gewählte Menge Speicherplatz von einer Instanz zurück.",
+        "noInstancesDescription": "Keine Instanzen konfiguriert. Fügen Sie eine in den Einstellungen hinzu, um diesen Dienst zu nutzen.",
+        "newPlan": "Neuer Plan",
+        "viewPlan": "Plan ansehen",
+        "activePlan": "Plan läuft",
+        "noPlanYet": "Noch kein Plan erstellt.",
+        "progress": "{{removed}} von {{planned}} entfernt",
+        "toast": {
+          "planStartFailed": "Löschplan konnte nicht erstellt werden",
+          "planCanceled": "Löschplan abgebrochen",
+          "cancelFailed": "Löschplan konnte nicht abgebrochen werden"
+        }
+      },
+      "deletePlanWizard": {
+        "title": "Neuer Löschplan",
+        "description": "Der Plan wird für eine Instanz erstellt und zur Prüfung eingefroren. Nichts wird entfernt, bis Sie bestätigen.",
+        "instance": "Instanz",
+        "targetLabel": "Zielgröße",
+        "targetPlaceholder": "10",
+        "buildPlan": "Plan erstellen",
+        "reviewAndConfirm": "Prüfen und bestätigen",
+        "conflict": "Für diese Instanz ist bereits ein Plan aktiv. Brechen Sie ihn ab, bevor Sie einen neuen erstellen.",
+        "targetRequired": "Geben Sie eine Zielgröße größer als null ein.",
+        "waitingTitle": "Warte auf frische Synchronisierungsdaten",
+        "waitingDescription": "Der Plan startet, sobald die Torrent-Liste der Instanz höchstens zwei Minuten alt ist.",
+        "planning": "Plan wird erstellt...",
+        "loadFailed": "Plan konnte nicht geladen werden."
+      },
+      "deletePlanPreview": {
+        "target": "Ziel",
+        "planned": "Geplante Rückgewinnung",
+        "overshoot": "Überschreitung",
+        "targetNotReached": "Das Ziel ist nicht erreichbar: Alle verfügbaren Gruppen sind bereits enthalten.",
+        "includedGroups": "Geplante Gruppen: {{count}}",
+        "excludedGroups": "Ausgeschlossene Gruppen: {{count}}",
+        "contentPath": "Inhaltspfad",
+        "size": "Größe",
+        "membersColumn": "Mitglieder",
+        "memberName": "Name",
+        "memberState": "Status",
+        "memberProgress": "Fortschritt",
+        "reason": "Grund",
+        "noGroups": "Der Plan enthält keine Gruppen.",
+        "loading": "Plan wird geladen...",
+        "exportCSV": "CSV exportieren",
+        "exported": "Plan als CSV exportiert",
+        "exportFailed": "Plan konnte nicht exportiert werden"
+      },
+      "deletePlanConfirm": {
+        "title": "Löschplan bestätigen",
+        "description": "Prüfen Sie, was der Plan entfernt, bevor er startet.",
+        "otherInstances": "Nur diese Instanz wird geprüft. Andere Instanzen werden nicht geprüft.",
+        "confirm": "Bestätigen und löschen"
+      },
     "orphanScanSettings": {
       "settingsTitle": "Einstellungen",
       "enabled": "Aktiviert",

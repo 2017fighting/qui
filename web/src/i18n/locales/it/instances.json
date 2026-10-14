@@ -935,6 +935,85 @@
       },
       "directory": "Cartella"
     },
+      "deletePlan": {
+        "cancel": "Annulla",
+        "back": "Indietro",
+        "close": "Chiudi",
+        "statusLabels": {
+          "pending": "In attesa di sincronizzazione",
+          "planning": "Pianificazione",
+          "preview_ready": "Pronto per la revisione",
+          "deleting": "Eliminazione",
+          "completed": "Completato",
+          "failed": "Non riuscito",
+          "canceled": "Annullato"
+        },
+        "excludeReasons": {
+          "incomplete": "Un membro è ancora in download",
+          "no_delete_tag": "Un membro ha il tag no_delete",
+          "partial_overlap": "Condivide solo parte dei suoi file con un altro torrent",
+          "unreadable_files": "Il suo elenco di file non è leggibile",
+          "nested_path": "Il suo percorso di contenuto è annidato in quello di un altro torrent",
+          "unknown": "Escluso da una protezione di eliminazione"
+        }
+      },
+      "deletePlanOverview": {
+        "title": "Piano di eliminazione",
+        "tooltip": "Crea un piano una tantum che rimuove interi gruppi di contenuto finché non raggiunge la dimensione target. Nulla viene rimosso finché non confermi.",
+        "description": "Recupera una quantità di spazio scelta da una sola istanza.",
+        "noInstancesDescription": "Nessuna istanza configurata. Aggiungine una nelle impostazioni per usare questo servizio.",
+        "newPlan": "Nuovo piano",
+        "viewPlan": "Vedi piano",
+        "activePlan": "Piano in corso",
+        "noPlanYet": "Nessun piano creato.",
+        "progress": "{{removed}} rimossi su {{planned}}",
+        "toast": {
+          "planStartFailed": "Creazione del piano di eliminazione non riuscita",
+          "planCanceled": "Piano di eliminazione annullato",
+          "cancelFailed": "Annullamento del piano di eliminazione non riuscito"
+        }
+      },
+      "deletePlanWizard": {
+        "title": "Nuovo piano di eliminazione",
+        "description": "Il piano viene creato per una sola istanza e bloccato per la revisione. Nulla viene rimosso finché non confermi.",
+        "instance": "Istanza",
+        "targetLabel": "Dimensione target",
+        "targetPlaceholder": "10",
+        "buildPlan": "Crea piano",
+        "reviewAndConfirm": "Rivedi e conferma",
+        "conflict": "Un piano è già attivo per questa istanza. Annullalo prima di crearne uno nuovo.",
+        "targetRequired": "Inserisci una dimensione target maggiore di zero.",
+        "waitingTitle": "In attesa di dati di sincronizzazione aggiornati",
+        "waitingDescription": "Il piano parte quando l'elenco dei torrent dell'istanza non ha più di due minuti.",
+        "planning": "Creazione del piano...",
+        "loadFailed": "Caricamento del piano non riuscito."
+      },
+      "deletePlanPreview": {
+        "target": "Obiettivo",
+        "planned": "Recupero previsto",
+        "overshoot": "Eccedenza",
+        "targetNotReached": "Il target non può essere raggiunto: ogni gruppo disponibile è già incluso.",
+        "includedGroups": "Gruppi pianificati: {{count}}",
+        "excludedGroups": "Gruppi esclusi: {{count}}",
+        "contentPath": "Percorso del contenuto",
+        "size": "Dimensione",
+        "membersColumn": "Membri",
+        "memberName": "Nome",
+        "memberState": "Stato",
+        "memberProgress": "Avanzamento",
+        "reason": "Motivo",
+        "noGroups": "Il piano non contiene gruppi.",
+        "loading": "Caricamento del piano...",
+        "exportCSV": "Esporta CSV",
+        "exported": "Piano esportato in CSV",
+        "exportFailed": "Esportazione del piano non riuscita"
+      },
+      "deletePlanConfirm": {
+        "title": "Conferma il piano di eliminazione",
+        "description": "Controlla cosa rimuove il piano prima che inizi.",
+        "otherInstances": "Viene controllata solo questa istanza. Le altre istanze non vengono controllate.",
+        "confirm": "Conferma ed elimina"
+      },
     "orphanScanSettings": {
       "settingsTitle": "Impostazioni",
       "enabled": "Abilitato",

@@ -929,6 +929,85 @@
       },
       "directory": "Dossier"
     },
+      "deletePlan": {
+        "cancel": "Annuler",
+        "back": "Retour",
+        "close": "Fermer",
+        "statusLabels": {
+          "pending": "En attente de synchronisation",
+          "planning": "Planification",
+          "preview_ready": "Prêt à vérifier",
+          "deleting": "Suppression",
+          "completed": "Terminé",
+          "failed": "Échec",
+          "canceled": "Annulé"
+        },
+        "excludeReasons": {
+          "incomplete": "Un membre est encore en téléchargement",
+          "no_delete_tag": "Un membre porte le tag no_delete",
+          "partial_overlap": "Ne partage qu'une partie de ses fichiers avec un autre torrent",
+          "unreadable_files": "Sa liste de fichiers est illisible",
+          "nested_path": "Son chemin de contenu est imbriqué avec celui d'un autre torrent",
+          "unknown": "Exclu par une protection de suppression"
+        }
+      },
+      "deletePlanOverview": {
+        "title": "Plan de suppression",
+        "tooltip": "Crée un plan ponctuel qui supprime des groupes de contenu entiers jusqu'à atteindre la taille cible. Rien n'est supprimé avant votre confirmation.",
+        "description": "Récupérez une quantité d'espace choisie sur une instance.",
+        "noInstancesDescription": "Aucune instance configurée. Ajoutez-en une dans les paramètres pour utiliser ce service.",
+        "newPlan": "Nouveau plan",
+        "viewPlan": "Voir le plan",
+        "activePlan": "Plan en cours",
+        "noPlanYet": "Aucun plan créé pour l'instant.",
+        "progress": "{{removed}} supprimés sur {{planned}}",
+        "toast": {
+          "planStartFailed": "Échec de la création du plan de suppression",
+          "planCanceled": "Plan de suppression annulé",
+          "cancelFailed": "Échec de l'annulation du plan de suppression"
+        }
+      },
+      "deletePlanWizard": {
+        "title": "Nouveau plan de suppression",
+        "description": "Le plan est créé pour une instance et figé pour vérification. Rien n'est supprimé avant votre confirmation.",
+        "instance": "Instance",
+        "targetLabel": "Taille cible",
+        "targetPlaceholder": "10",
+        "buildPlan": "Créer le plan",
+        "reviewAndConfirm": "Vérifier et confirmer",
+        "conflict": "Un plan est déjà actif pour cette instance. Annulez-le avant d'en créer un nouveau.",
+        "targetRequired": "Saisissez une taille cible supérieure à zéro.",
+        "waitingTitle": "En attente de données de synchronisation récentes",
+        "waitingDescription": "Le plan démarre dès que la liste des torrents de l'instance a moins de deux minutes.",
+        "planning": "Création du plan...",
+        "loadFailed": "Échec du chargement du plan."
+      },
+      "deletePlanPreview": {
+        "target": "Cible",
+        "planned": "Récupération prévue",
+        "overshoot": "Dépassement",
+        "targetNotReached": "La cible ne peut pas être atteinte : tous les groupes disponibles sont déjà inclus.",
+        "includedGroups": "Groupes prévus : {{count}}",
+        "excludedGroups": "Groupes exclus : {{count}}",
+        "contentPath": "Chemin du contenu",
+        "size": "Taille",
+        "membersColumn": "Membres",
+        "memberName": "Nom",
+        "memberState": "État",
+        "memberProgress": "Progression",
+        "reason": "Raison",
+        "noGroups": "Le plan ne contient aucun groupe.",
+        "loading": "Chargement du plan...",
+        "exportCSV": "Exporter en CSV",
+        "exported": "Plan exporté en CSV",
+        "exportFailed": "Échec de l'export du plan"
+      },
+      "deletePlanConfirm": {
+        "title": "Confirmer le plan de suppression",
+        "description": "Vérifiez ce que le plan supprime avant son démarrage.",
+        "otherInstances": "Seule cette instance est vérifiée. Les autres instances ne sont pas vérifiées.",
+        "confirm": "Confirmer et supprimer"
+      },
     "orphanScanSettings": {
       "settingsTitle": "Paramètres",
       "enabled": "Activé",

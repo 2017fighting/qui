@@ -48,6 +48,9 @@ import type {
   CrossSeedTorrentSearchSelection,
   DashboardSettings,
   DashboardSettingsInput,
+  DeletePlanCreateInput,
+  DeletePlanRun,
+  DeletePlanRunSummary,
   DirScanDirectory,
   DirScanDirectoryCreate,
   DirScanTriggerResponse,
@@ -2661,6 +2664,45 @@ class ApiClient {
     return this.request<{ status: string }>(
       `/instances/${instanceId}/orphan-scan/runs/${runId}`,
       { method: "DELETE" }
+    )
+  }
+
+  // Delete Plan endpoints
+  async createDeletePlan(
+    instanceId: number,
+    payload: DeletePlanCreateInput
+  ): Promise<DeletePlanRun> {
+    return this.request<DeletePlanRun>(`/instances/${instanceId}/delete-plan/runs`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    })
+  }
+
+  async listDeletePlanRuns(
+    instanceId: number,
+    params?: { limit?: number }
+  ): Promise<DeletePlanRunSummary[]> {
+    const search = new URLSearchParams()
+    if (params?.limit !== undefined) search.set("limit", params.limit.toString())
+
+    const query = search.toString()
+    const suffix = query ? `?${query}` : ""
+    const body = await this.request<{ runs?: DeletePlanRunSummary[] }>(
+      `/instances/${instanceId}/delete-plan/runs${suffix}`
+    )
+    return body.runs ?? []
+  }
+
+  async getDeletePlanRun(instanceId: number, runId: number): Promise<DeletePlanRun> {
+    return this.request<DeletePlanRun>(
+      `/instances/${instanceId}/delete-plan/runs/${runId}`
+    )
+  }
+
+  async cancelDeletePlanRun(instanceId: number, runId: number): Promise<DeletePlanRun> {
+    return this.request<DeletePlanRun>(
+      `/instances/${instanceId}/delete-plan/runs/${runId}/cancel`,
+      { method: "POST" }
     )
   }
 
