@@ -126,10 +126,10 @@ func TestSortByKeys_IsDeterministic(t *testing.T) {
 
 	first := []string{"a", "b", "c", "d", "e"}
 	second := []string{"e", "d", "c", "b", "a"}
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		SortByKeys(first, keys, func(hash string) []Value { return groups[hash] }, func(hash string) string { return hash })
 	}
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		SortByKeys(second, keys, func(hash string) []Value { return groups[hash] }, func(hash string) string { return hash })
 	}
 
