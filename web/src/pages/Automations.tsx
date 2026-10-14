@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
+import { DeletePlanOverview } from "@/components/instances/preferences/DeletePlanOverview"
 import { OrphanScanOverview } from "@/components/instances/preferences/OrphanScanOverview"
 import { OrphanScanSettingsDialog } from "@/components/instances/preferences/OrphanScanSettingsDialog"
 import { ReannounceOverview } from "@/components/instances/preferences/ReannounceOverview"
@@ -50,7 +51,7 @@ export function Automations() {
         </div>
       </div>
 
-      {/* Workflows full width, then Reannounce + Orphan Scan side by side */}
+      {/* Workflows full width, then Reannounce + Orphan Scan + Delete Plan in a grid */}
       <div className="space-y-6">
         <WorkflowsOverview
           expandedInstances={getExpandedForCard("workflows")}
@@ -67,6 +68,7 @@ export function Automations() {
             onExpandedInstancesChange={handleAccordionChange("orphan")}
             onConfigureInstance={setConfigureOrphanScanId}
           />
+          <DeletePlanOverview />
         </div>
       </div>
 

@@ -935,6 +935,85 @@
       },
       "directory": "Diretório"
     },
+      "deletePlan": {
+        "cancel": "Cancelar",
+        "back": "Voltar",
+        "close": "Fechar",
+        "statusLabels": {
+          "pending": "Aguardando sincronização",
+          "planning": "Planejando",
+          "preview_ready": "Pronto para revisão",
+          "deleting": "Excluindo",
+          "completed": "Concluído",
+          "failed": "Falhou",
+          "canceled": "Cancelado"
+        },
+        "excludeReasons": {
+          "incomplete": "Um membro ainda está baixando",
+          "no_delete_tag": "Um membro tem a tag no_delete",
+          "partial_overlap": "Compartilha apenas parte dos arquivos com outro torrent",
+          "unreadable_files": "A lista de arquivos não pode ser lida",
+          "nested_path": "O caminho de conteúdo está aninhado com o de outro torrent",
+          "unknown": "Excluído por uma proteção de exclusão"
+        }
+      },
+      "deletePlanOverview": {
+        "title": "Plano de exclusão",
+        "tooltip": "Cria um plano único que remove grupos de conteúdo inteiros até atingir o tamanho alvo. Nada é removido antes da confirmação.",
+        "description": "Recupere uma quantidade de espaço escolhida de uma instância.",
+        "noInstancesDescription": "Nenhuma instância configurada. Adicione uma nas configurações para usar este serviço.",
+        "newPlan": "Novo plano",
+        "viewPlan": "Ver plano",
+        "activePlan": "Plano em andamento",
+        "noPlanYet": "Nenhum plano criado ainda.",
+        "progress": "{{removed}} de {{planned}} removidos",
+        "toast": {
+          "planStartFailed": "Falha ao criar o plano de exclusão",
+          "planCanceled": "Plano de exclusão cancelado",
+          "cancelFailed": "Falha ao cancelar o plano de exclusão"
+        }
+      },
+      "deletePlanWizard": {
+        "title": "Novo plano de exclusão",
+        "description": "O plano é criado para uma instância e congelado para revisão. Nada é removido antes da confirmação.",
+        "instance": "Instância",
+        "targetLabel": "Tamanho alvo",
+        "targetPlaceholder": "10",
+        "buildPlan": "Criar plano",
+        "reviewAndConfirm": "Revisar e confirmar",
+        "conflict": "Já existe um plano ativo para esta instância. Cancele-o antes de criar um novo.",
+        "targetRequired": "Informe um tamanho alvo maior que zero.",
+        "waitingTitle": "Aguardando dados de sincronização recentes",
+        "waitingDescription": "O plano começa quando a lista de torrents da instância tem no máximo dois minutos.",
+        "planning": "Criando o plano...",
+        "loadFailed": "Falha ao carregar o plano."
+      },
+      "deletePlanPreview": {
+        "target": "Alvo",
+        "planned": "Recuperação planejada",
+        "overshoot": "Excedente",
+        "targetNotReached": "O alvo não pode ser atingido: todos os grupos disponíveis já estão incluídos.",
+        "includedGroups": "Grupos planejados: {{count}}",
+        "excludedGroups": "Grupos excluídos: {{count}}",
+        "contentPath": "Caminho do conteúdo",
+        "size": "Tamanho",
+        "membersColumn": "Membros",
+        "memberName": "Nome",
+        "memberState": "Estado",
+        "memberProgress": "Progresso",
+        "reason": "Motivo",
+        "noGroups": "O plano não tem grupos.",
+        "loading": "Carregando o plano...",
+        "exportCSV": "Exportar CSV",
+        "exported": "Plano exportado como CSV",
+        "exportFailed": "Falha ao exportar o plano"
+      },
+      "deletePlanConfirm": {
+        "title": "Confirmar o plano de exclusão",
+        "description": "Revise o que o plano remove antes de iniciar.",
+        "otherInstances": "Somente esta instância é verificada. As outras instâncias não são verificadas.",
+        "confirm": "Confirmar e excluir"
+      },
     "orphanScanSettings": {
       "settingsTitle": "Configurações",
       "enabled": "Ativado",

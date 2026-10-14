@@ -908,6 +908,85 @@
       },
       "directory": "目录"
     },
+      "deletePlan": {
+        "cancel": "取消",
+        "back": "返回",
+        "close": "关闭",
+        "statusLabels": {
+          "pending": "等待同步",
+          "planning": "规划中",
+          "preview_ready": "可查看",
+          "deleting": "删除中",
+          "completed": "已完成",
+          "failed": "失败",
+          "canceled": "已取消"
+        },
+        "excludeReasons": {
+          "incomplete": "有成员仍在下载",
+          "no_delete_tag": "有成员带有 no_delete 标签",
+          "partial_overlap": "与其他种子仅共享部分文件",
+          "unreadable_files": "无法读取其文件列表",
+          "nested_path": "其内容路径与其他种子嵌套",
+          "unknown": "被删除保护排除"
+        }
+      },
+      "deletePlanOverview": {
+        "title": "删除计划",
+        "tooltip": "生成一次性计划，逐个删除完整内容组，直到达到目标大小。确认之前不会删除任何内容。",
+        "description": "从单个实例回收指定大小的空间。",
+        "noInstancesDescription": "未配置实例。请在设置中添加实例后使用此服务。",
+        "newPlan": "新建计划",
+        "viewPlan": "查看计划",
+        "activePlan": "计划进行中",
+        "noPlanYet": "尚未创建计划。",
+        "progress": "已删除 {{removed}}，共 {{planned}}",
+        "toast": {
+          "planStartFailed": "创建删除计划失败",
+          "planCanceled": "删除计划已取消",
+          "cancelFailed": "取消删除计划失败"
+        }
+      },
+      "deletePlanWizard": {
+        "title": "新建删除计划",
+        "description": "计划针对单个实例生成并冻结以供查看。确认之前不会删除任何内容。",
+        "instance": "实例",
+        "targetLabel": "目标大小",
+        "targetPlaceholder": "10",
+        "buildPlan": "生成计划",
+        "reviewAndConfirm": "查看并确认",
+        "conflict": "此实例已有活动计划。请先取消它，再新建计划。",
+        "targetRequired": "请输入大于零的目标大小。",
+        "waitingTitle": "正在等待最新的同步数据",
+        "waitingDescription": "当实例的种子列表不超过两分钟时，计划就会开始。",
+        "planning": "正在生成计划...",
+        "loadFailed": "加载计划失败。"
+      },
+      "deletePlanPreview": {
+        "target": "目标",
+        "planned": "计划回收",
+        "overshoot": "超出量",
+        "targetNotReached": "无法达到目标：所有可用的组都已包含在内。",
+        "includedGroups": "计划组：{{count}}",
+        "excludedGroups": "排除组：{{count}}",
+        "contentPath": "内容路径",
+        "size": "大小",
+        "membersColumn": "成员",
+        "memberName": "名称",
+        "memberState": "状态",
+        "memberProgress": "进度",
+        "reason": "原因",
+        "noGroups": "计划中没有组。",
+        "loading": "正在加载计划...",
+        "exportCSV": "导出 CSV",
+        "exported": "计划已导出为 CSV",
+        "exportFailed": "导出计划失败"
+      },
+      "deletePlanConfirm": {
+        "title": "确认删除计划",
+        "description": "开始前请检查计划将删除的内容。",
+        "otherInstances": "仅检查此实例，不检查其他实例。",
+        "confirm": "确认并删除"
+      },
     "orphanScanSettings": {
       "settingsTitle": "设置",
       "enabled": "已启用",
