@@ -986,7 +986,17 @@
         "waitingTitle": "In attesa di dati di sincronizzazione aggiornati",
         "waitingDescription": "Il piano parte quando l'elenco dei torrent dell'istanza non ha più di due minuti.",
         "planning": "Creazione del piano...",
-        "loadFailed": "Caricamento del piano non riuscito."
+        "loadFailed": "Caricamento del piano non riuscito.",
+        "keysTitle": "Chiavi di ordinamento",
+        "keysDescription": "I gruppi escono in questo ordine. Disattiva una chiave per non farla decidere più l'ordine.",
+        "enableKey": "Abilita chiave",
+        "moveKeyUp": "Sposta la chiave in alto",
+        "moveKeyDown": "Sposta la chiave in basso",
+        "directionAsc": "Cresc",
+        "directionDesc": "Decresc",
+        "notSortableField": "Non è una chiave di ordinamento",
+        "removeDeadGroups": "Rimuovi prima i gruppi morti",
+        "removeDeadGroupsDescription": "I gruppi senza membri in seed escono qualunque sia l'obiettivo. I loro byte non contano ai fini dell'obiettivo."
       },
       "deletePlanPreview": {
         "target": "Obiettivo",
@@ -1006,7 +1016,11 @@
         "loading": "Caricamento del piano...",
         "exportCSV": "Esporta CSV",
         "exported": "Piano esportato in CSV",
-        "exportFailed": "Esportazione del piano non riuscita"
+        "exportFailed": "Esportazione del piano non riuscita",
+        "ranking": "Ordinamento",
+        "decidingKey": "Chiave decisiva",
+        "deadGroups": "Gruppi morti: {{count}}",
+        "deadTotal": "Totale morti: {{total}}"
       },
       "deletePlanConfirm": {
         "title": "Conferma il piano di eliminazione",

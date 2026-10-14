@@ -980,7 +980,17 @@
         "waitingTitle": "En attente de données de synchronisation récentes",
         "waitingDescription": "Le plan démarre dès que la liste des torrents de l'instance a moins de deux minutes.",
         "planning": "Création du plan...",
-        "loadFailed": "Échec du chargement du plan."
+        "loadFailed": "Échec du chargement du plan.",
+        "keysTitle": "Clés de classement",
+        "keysDescription": "Les groupes partent dans cet ordre. Désactivez une clé pour qu'elle ne décide plus de l'ordre.",
+        "enableKey": "Activer la clé",
+        "moveKeyUp": "Déplacer la clé vers le haut",
+        "moveKeyDown": "Déplacer la clé vers le bas",
+        "directionAsc": "Asc",
+        "directionDesc": "Desc",
+        "notSortableField": "Pas une clé de classement",
+        "removeDeadGroups": "Retirer d'abord les groupes morts",
+        "removeDeadGroupsDescription": "Les groupes sans membre en seed partent quel que soit l'objectif. Leurs octets ne comptent pas dans l'objectif."
       },
       "deletePlanPreview": {
         "target": "Cible",
@@ -1000,7 +1010,11 @@
         "loading": "Chargement du plan...",
         "exportCSV": "Exporter en CSV",
         "exported": "Plan exporté en CSV",
-        "exportFailed": "Échec de l'export du plan"
+        "exportFailed": "Échec de l'export du plan",
+        "ranking": "Classement",
+        "decidingKey": "Clé décisive",
+        "deadGroups": "Groupes morts : {{count}}",
+        "deadTotal": "Total mort : {{total}}"
       },
       "deletePlanConfirm": {
         "title": "Confirmer le plan de suppression",

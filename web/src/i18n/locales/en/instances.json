@@ -986,7 +986,17 @@
       "waitingTitle": "Waiting for fresh sync data",
       "waitingDescription": "The plan starts once the instance's torrent list is no longer than two minutes old.",
       "planning": "Building the plan...",
-      "loadFailed": "Failed to load the plan."
+      "loadFailed": "Failed to load the plan.",
+      "keysTitle": "Ranking keys",
+      "keysDescription": "Groups leave in this order. Switch a key off to stop it deciding the order.",
+      "enableKey": "Enable key",
+      "moveKeyUp": "Move key up",
+      "moveKeyDown": "Move key down",
+      "directionAsc": "Asc",
+      "directionDesc": "Desc",
+      "notSortableField": "Not a ranking key",
+      "removeDeadGroups": "Remove dead groups first",
+      "removeDeadGroupsDescription": "Groups with no seeding member leave whatever the target is. Their bytes do not count toward the target."
     },
     "deletePlanPreview": {
       "target": "Target",
@@ -1006,7 +1016,11 @@
       "loading": "Loading the plan...",
       "exportCSV": "Export CSV",
       "exported": "Exported the plan as CSV",
-      "exportFailed": "Failed to export the plan"
+      "exportFailed": "Failed to export the plan",
+      "ranking": "Ranking",
+      "decidingKey": "Deciding key",
+      "deadGroups": "Dead groups: {{count}}",
+      "deadTotal": "Dead total: {{total}}"
     },
     "deletePlanConfirm": {
       "title": "Confirm the Delete Plan",

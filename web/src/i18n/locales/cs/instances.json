@@ -1019,7 +1019,17 @@
         "waitingTitle": "Čeká se na čerstvá data synchronizace",
         "waitingDescription": "Plán začne, jakmile bude seznam torrentů instance starý nejvýše dvě minuty.",
         "planning": "Vytváření plánu...",
-        "loadFailed": "Plán se nepodařilo načíst."
+        "loadFailed": "Plán se nepodařilo načíst.",
+        "keysTitle": "Řadicí klíče",
+        "keysDescription": "Skupiny odcházejí v tomto pořadí. Vypněte klíč, aby přestal určovat pořadí.",
+        "enableKey": "Povolit klíč",
+        "moveKeyUp": "Posunout klíč nahoru",
+        "moveKeyDown": "Posunout klíč dolů",
+        "directionAsc": "Vzestupně",
+        "directionDesc": "Sestupně",
+        "notSortableField": "Není řadicí klíč",
+        "removeDeadGroups": "Nejprve odstranit mrtvé skupiny",
+        "removeDeadGroupsDescription": "Skupiny bez seedujícího člena se odstraní bez ohledu na cíl. Jejich bajty se do cíle nepočítají."
       },
       "deletePlanPreview": {
         "target": "Cíl",
@@ -1039,7 +1049,11 @@
         "loading": "Načítání plánu...",
         "exportCSV": "Exportovat CSV",
         "exported": "Plán exportován jako CSV",
-        "exportFailed": "Plán se nepodařilo exportovat"
+        "exportFailed": "Plán se nepodařilo exportovat",
+        "ranking": "Řazení",
+        "decidingKey": "Rozhodující klíč",
+        "deadGroups": "Mrtvé skupiny: {{count}}",
+        "deadTotal": "Mrtvé celkem: {{total}}"
       },
       "deletePlanConfirm": {
         "title": "Potvrdit plán mazání",

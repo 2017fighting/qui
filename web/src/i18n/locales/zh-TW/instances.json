@@ -959,7 +959,17 @@
         "waitingTitle": "正在等待最新的同步資料",
         "waitingDescription": "當執行個體的種子清單不超過兩分鐘時，計畫就會開始。",
         "planning": "正在產生計畫...",
-        "loadFailed": "載入計畫失敗。"
+        "loadFailed": "載入計畫失敗。",
+        "keysTitle": "排序鍵",
+        "keysDescription": "分組依此順序離開。關閉某個鍵後它不再決定順序。",
+        "enableKey": "啟用排序鍵",
+        "moveKeyUp": "上移排序鍵",
+        "moveKeyDown": "下移排序鍵",
+        "directionAsc": "升序",
+        "directionDesc": "降序",
+        "notSortableField": "不是排序鍵",
+        "removeDeadGroups": "先移除失效分組",
+        "removeDeadGroupsDescription": "沒有做種成員的分組無論目標為何都會被移除，其位元組不計入目標。"
       },
       "deletePlanPreview": {
         "target": "目標",
@@ -979,7 +989,11 @@
         "loading": "正在載入計畫...",
         "exportCSV": "匯出 CSV",
         "exported": "計畫已匯出為 CSV",
-        "exportFailed": "匯出計畫失敗"
+        "exportFailed": "匯出計畫失敗",
+        "ranking": "排序",
+        "decidingKey": "決定鍵",
+        "deadGroups": "失效分組：{{count}}",
+        "deadTotal": "失效總量：{{total}}"
       },
       "deletePlanConfirm": {
         "title": "確認刪除計畫",
