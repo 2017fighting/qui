@@ -964,7 +964,17 @@
         "waitingTitle": "최신 동기화 데이터를 기다리는 중",
         "waitingDescription": "인스턴스의 토렌트 목록이 2분을 넘지 않으면 계획이 시작됩니다.",
         "planning": "계획을 만드는 중...",
-        "loadFailed": "계획을 불러오지 못했습니다."
+        "loadFailed": "계획을 불러오지 못했습니다.",
+        "keysTitle": "순위 키",
+        "keysDescription": "그룹은 이 순서대로 제거됩니다. 키를 끄면 순서에 영향을 주지 않습니다.",
+        "enableKey": "키 사용",
+        "moveKeyUp": "키 위로 이동",
+        "moveKeyDown": "키 아래로 이동",
+        "directionAsc": "오름차순",
+        "directionDesc": "내림차순",
+        "notSortableField": "순위 키가 아님",
+        "removeDeadGroups": "죽은 그룹 먼저 제거",
+        "removeDeadGroupsDescription": "시딩하는 멤버가 없는 그룹은 목표와 관계없이 제거됩니다. 해당 용량은 목표에 포함되지 않습니다."
       },
       "deletePlanPreview": {
         "target": "목표",
@@ -984,7 +994,11 @@
         "loading": "계획을 불러오는 중...",
         "exportCSV": "CSV 내보내기",
         "exported": "계획을 CSV로 내보냈습니다",
-        "exportFailed": "계획을 내보내지 못했습니다"
+        "exportFailed": "계획을 내보내지 못했습니다",
+        "ranking": "순위",
+        "decidingKey": "결정 키",
+        "deadGroups": "죽은 그룹: {{count}}",
+        "deadTotal": "죽은 용량 합계: {{total}}"
       },
       "deletePlanConfirm": {
         "title": "삭제 계획 확인",

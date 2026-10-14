@@ -7,8 +7,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { cleanup, fireEvent, render } from "@testing-library/react"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { APIError } from "@/lib/api"
+import { BYTES_PER_UNIT } from "@/lib/unit-format"
 import { formatBytes } from "@/lib/utils"
-import type { DeletePlanRun } from "@/types"
+import type { DeletePlanCreateInput, DeletePlanRun } from "@/types"
 
 vi.mock("react-i18next", async (importOriginal) => ({
   ...await importOriginal<typeof import("react-i18next")>(),
@@ -38,6 +39,7 @@ vi.mock("@/hooks/useDeletePlan", () => ({
 }))
 
 import { DeletePlanWizardDialog } from "@/components/instances/preferences/DeletePlanWizardDialog"
+import { DEFAULT_DELETE_PLAN_KEYS, moveKey } from "@/components/instances/preferences/deletePlanKeys"
 import "@/i18n"
 
 const previewRun: DeletePlanRun = {
@@ -110,6 +112,7 @@ beforeEach(() => {
   runQuery.data = previewRun
   createMutation.mutate.mockReset()
   confirmMutation.mutate.mockReset()
+  cancelMutation.mutate.mockReset()
   // Radix dialog and select measure through ResizeObserver, which jsdom lacks.
   vi.stubGlobal("ResizeObserver", class {
     observe() {}
@@ -136,6 +139,16 @@ function renderWizard(props: { initialRunId?: number } = {}) {
     </TooltipProvider>
   )
 }
+
+describe("moveKey", () => {
+  it("moves a key by one and leaves the chain untouched at either end", () => {
+    const moved = moveKey(DEFAULT_DELETE_PLAN_KEYS, 0, 1)
+
+    expect(moved.map((key) => key.field)).toEqual(["NUM_COMPLETE", "GROUP_SIZE", "SIZE", "PRIVATE"])
+    expect(moveKey(DEFAULT_DELETE_PLAN_KEYS, 0, -1)).toBe(DEFAULT_DELETE_PLAN_KEYS)
+    expect(moveKey(DEFAULT_DELETE_PLAN_KEYS, 3, 1)).toBe(DEFAULT_DELETE_PLAN_KEYS)
+  })
+})
 
 describe("DeletePlanWizardDialog", () => {
   it("shows the instance and the target size field on the first step", () => {
@@ -253,5 +266,88 @@ describe("DeletePlanWizardDialog", () => {
     expect(document.body.textContent).toContain("preferences.deletePlanOverview.progress(")
     // The confirm action is gone once the deletion is running.
     expect(queryByRole("button", { name: "preferences.deletePlanConfirm.confirm" })).toBeNull()
+  })
+
+  it("sends the chain in the order the wizard shows", () => {
+    const { getAllByRole, getByRole } = renderWizard()
+
+    // The first key moves down one place, so the build must carry the new order.
+    fireEvent.click(getAllByRole("button", { name: "preferences.deletePlanWizard.moveKeyDown" })[0])
+    fireEvent.click(getByRole("button", { name: "preferences.deletePlanWizard.buildPlan" }))
+
+    const payload = createMutation.mutate.mock.calls[0][0] as DeletePlanCreateInput
+    expect(payload.keys?.map((key) => key.field)).toEqual(["NUM_COMPLETE", "GROUP_SIZE", "SIZE", "PRIVATE"])
+    expect(payload.removeDeadGroups).toBe(true)
+    expect(payload.targetBytes).toBe(10 * BYTES_PER_UNIT.TiB)
+  })
+
+  it("sends a switched-off key as disabled so it cannot move a group", () => {
+    const { getAllByRole, getByRole } = renderWizard()
+
+    fireEvent.click(getAllByRole("switch", { name: "preferences.deletePlanWizard.enableKey" })[0])
+    fireEvent.click(getByRole("button", { name: "preferences.deletePlanWizard.buildPlan" }))
+
+    const payload = createMutation.mutate.mock.calls[0][0] as DeletePlanCreateInput
+    expect(payload.keys?.[0]).toEqual({ field: "GROUP_SIZE", enabled: false, direction: "ASC" })
+  })
+
+  it("sends the dead groups switch as the user left it", () => {
+    const { getByRole } = renderWizard()
+
+    fireEvent.click(getByRole("switch", { name: "preferences.deletePlanWizard.removeDeadGroups" }))
+    fireEvent.click(getByRole("button", { name: "preferences.deletePlanWizard.buildPlan" }))
+
+    const payload = createMutation.mutate.mock.calls[0][0] as DeletePlanCreateInput
+    expect(payload.removeDeadGroups).toBe(false)
+  })
+
+  it("cancels the active run before it rebuilds over it", () => {
+    const { getByRole } = renderWizard({ initialRunId: 7 })
+
+    fireEvent.click(getByRole("button", { name: "preferences.deletePlan.back" }))
+    fireEvent.click(getByRole("button", { name: "preferences.deletePlanWizard.buildPlan" }))
+
+    // One active run per instance: the create waits for the cancel to succeed.
+    expect(createMutation.mutate).not.toHaveBeenCalled()
+    expect(cancelMutation.mutate).toHaveBeenCalledWith(7, expect.any(Object))
+
+    const cancelOptions = cancelMutation.mutate.mock.calls[0][1] as { onSuccess: () => void }
+    cancelOptions.onSuccess()
+    expect(createMutation.mutate).toHaveBeenCalledTimes(1)
+  })
+
+  it("shows the dead groups in their own section with their own total", () => {
+    const ranked = previewRun.groups[0]
+    const dead = { ...ranked, id: 93, contentPath: "/data/DeadGroup", dead: true, decidingKey: "SIZE" }
+    runQuery.data = { ...previewRun, groups: [ranked, dead], deadBytes: 2_000_000_000 }
+    renderWizard({ initialRunId: 7 })
+
+    const text = document.body.textContent
+    expect(text).toContain("/data/DeadGroup")
+    expect(text).toContain("preferences.deletePlanPreview.deadGroups(1)")
+    expect(text).toContain(`preferences.deletePlanPreview.deadTotal(${formatBytes(2_000_000_000)})`)
+  })
+
+  it("names the key that decided a group's position", () => {
+    runQuery.data = { ...previewRun, groups: [{ ...previewRun.groups[0], decidingKey: "NUM_COMPLETE" }] }
+    renderWizard({ initialRunId: 7 })
+
+    expect(document.body.textContent).toContain("queryBuilder.fields.NUM_COMPLETE")
+  })
+
+  it("shows the chain the run used, in order", () => {
+    runQuery.data = {
+      ...previewRun,
+      keys: [
+        { field: "NUM_COMPLETE", enabled: true, direction: "DESC" },
+        { field: "GROUP_SIZE", enabled: true, direction: "ASC" },
+      ],
+      groups: [{ ...previewRun.groups[0], decidingKey: "SIZE" }],
+    }
+    renderWizard({ initialRunId: 7 })
+
+    expect(document.body.textContent).toContain(
+      "preferences.deletePlanPreview.ranking: queryBuilder.fields.NUM_COMPLETE preferences.deletePlanWizard.directionDesc · queryBuilder.fields.GROUP_SIZE preferences.deletePlanWizard.directionAsc"
+    )
   })
 })

@@ -1639,7 +1639,17 @@
         "waitingTitle": "Esperant dades de sincronització recents",
         "waitingDescription": "El pla comença quan la llista de torrents de la instància té com a màxim dos minuts.",
         "planning": "S'està creant el pla...",
-        "loadFailed": "No s'ha pogut carregar el pla."
+        "loadFailed": "No s'ha pogut carregar el pla.",
+        "keysTitle": "Claus d'ordenació",
+        "keysDescription": "Els grups surten en aquest ordre. Desactiva una clau perquè deixi de decidir l'ordre.",
+        "enableKey": "Activa la clau",
+        "moveKeyUp": "Mou la clau cap amunt",
+        "moveKeyDown": "Mou la clau cap avall",
+        "directionAsc": "Asc.",
+        "directionDesc": "Desc.",
+        "notSortableField": "No és una clau d'ordenació",
+        "removeDeadGroups": "Treure primer els grups morts",
+        "removeDeadGroupsDescription": "Els grups sense cap membre sembrant surten sigui quin sigui l'objectiu. Els seus bytes no compten per a l'objectiu."
       },
       "deletePlanPreview": {
         "target": "Objectiu",
@@ -1659,7 +1669,11 @@
         "loading": "S'està carregant el pla...",
         "exportCSV": "Exporta CSV",
         "exported": "Pla exportat com a CSV",
-        "exportFailed": "No s'ha pogut exportar el pla"
+        "exportFailed": "No s'ha pogut exportar el pla",
+        "ranking": "Ordenació",
+        "decidingKey": "Clau decisiva",
+        "deadGroups": "Grups morts: {{count}}",
+        "deadTotal": "Total mort: {{total}}"
       },
       "deletePlanConfirm": {
         "title": "Confirma el pla de supressió",
