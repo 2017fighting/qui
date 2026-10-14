@@ -946,7 +946,8 @@
           "deleting": "Eliminazione",
           "completed": "Completato",
           "failed": "Non riuscito",
-          "canceled": "Annullato"
+          "canceled": "Annullato",
+          "unknown": "Sconosciuto"
         },
         "excludeReasons": {
           "incomplete": "Un membro è ancora in download",

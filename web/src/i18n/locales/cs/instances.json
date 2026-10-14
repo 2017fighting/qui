@@ -979,7 +979,8 @@
           "deleting": "Mazání",
           "completed": "Dokončeno",
           "failed": "Selhalo",
-          "canceled": "Zrušeno"
+          "canceled": "Zrušeno",
+          "unknown": "Neznámé"
         },
         "excludeReasons": {
           "incomplete": "Některý člen se stále stahuje",

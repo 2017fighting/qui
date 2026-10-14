@@ -163,7 +163,7 @@ func TestDeletePlanStore_UpdateRowSelectionUnticksAndKeepsOrder(t *testing.T) {
 	require.EqualValues(t, 0, run.ShortfallBytes, "a met target has no shortfall")
 	require.Len(t, run.Groups, 2)
 
-	applied, err := store.UpdateRowSelection(ctx, runID, []int64{run.Groups[1].ID}, 100, 0, 0, false)
+	applied, err := store.UpdateRowSelection(ctx, runID, []int64{run.Groups[1].ID}, []int64{run.Groups[0].ID}, 100, 0, 0, false)
 	require.NoError(t, err)
 	require.True(t, applied)
 
@@ -175,6 +175,7 @@ func TestDeletePlanStore_UpdateRowSelectionUnticksAndKeepsOrder(t *testing.T) {
 	require.False(t, run.TargetReached)
 	require.True(t, run.Groups[0].Included)
 	require.False(t, run.Groups[1].Included)
+	require.True(t, run.Groups[1].Unticked, "a vetoed row is remembered as unticked")
 	// Only the included flag changes: the unticked row keeps its plan position.
 	require.Equal(t, "/data/A", run.Groups[0].ContentPath)
 	require.Equal(t, "/data/B", run.Groups[1].ContentPath)
@@ -192,7 +193,7 @@ func TestDeletePlanStore_UpdateRowSelectionRefusesANonPreviewRun(t *testing.T) {
 	runID, err := store.CreateRunIfNoActive(ctx, instanceID, 1000, "[]", true)
 	require.NoError(t, err)
 
-	applied, err := store.UpdateRowSelection(ctx, runID, nil, 0, 0, 0, false)
+	applied, err := store.UpdateRowSelection(ctx, runID, nil, nil, 0, 0, 0, false)
 	require.NoError(t, err)
 	require.False(t, applied, "a pending run does not accept a row selection")
 }

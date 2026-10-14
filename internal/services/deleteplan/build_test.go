@@ -27,6 +27,7 @@ type planCorpusRow struct {
 
 	// verdict
 	wantIncluded      []string
+	wantCandidates    []string
 	wantExcluded      map[string]string
 	wantPlannedBytes  int64
 	wantDeadBytes     int64
@@ -104,7 +105,7 @@ func TestBuildPlan(t *testing.T) {
 			reason:            "the same directory with different content is not a copy, so the group is the trigger alone",
 		},
 		{
-			name: "the plan stops at the first group that reaches the target",
+			name: "the plan keeps the groups after the target as candidates",
 			torrents: []qbt.Torrent{
 				torrent("a", "/data/A", 100, 1, qbt.TorrentStateUploading, ""),
 				torrent("b", "/data/B", 200, 1, qbt.TorrentStateUploading, ""),
@@ -112,10 +113,11 @@ func TestBuildPlan(t *testing.T) {
 			},
 			targetBytes:       250,
 			wantIncluded:      []string{"/data/A", "/data/B"},
+			wantCandidates:    []string{"/data/C"},
 			wantPlannedBytes:  300,
 			wantOvershoot:     50,
 			wantTargetReached: true,
-			reason:            "groups are ranked smallest first, so A and B reach 300 and C is never reached",
+			reason:            "groups are ranked smallest first, so A and B reach 300 and C is kept as the next candidate a refill can add",
 		},
 		{
 			name: "the plan reports when the target cannot be reached",
@@ -236,7 +238,8 @@ func TestBuildPlan(t *testing.T) {
 				FilesByHash:      row.files,
 			})
 
-			require.Equal(t, row.wantIncluded, contentPaths(plan.Groups), row.reason)
+			require.Equal(t, row.wantIncluded, includedPaths(plan.Groups), row.reason)
+			require.Equal(t, row.wantCandidates, candidatePaths(plan.Groups), row.reason)
 			require.Equal(t, row.wantExcluded, excludedReasons(plan.ExcludedGroups), row.reason)
 			require.Equal(t, row.wantPlannedBytes, plan.PlannedBytes, row.reason)
 			require.Equal(t, row.wantDeadBytes, plan.DeadBytes, row.reason)
@@ -258,7 +261,7 @@ func TestBuildPlan_DefaultDeadGroupsOn(t *testing.T) {
 		RemoveDeadGroups: true,
 	})
 
-	require.Equal(t, []string{"/data/A", "/data/B"}, contentPaths(plan.Groups))
+	require.Equal(t, []string{"/data/A", "/data/B"}, includedPaths(plan.Groups))
 	require.Equal(t, int64(500), plan.DeadBytes)
 }
 
@@ -271,17 +274,28 @@ func TestBuildPlan_DecidingKey(t *testing.T) {
 	idx := contentgroup.BuildIndex(torrents)
 	plan := BuildPlan(torrents, idx, DefaultKeys(), 100, ProtectionRules{DeleteTag: DeleteProtectionTag})
 
-	require.Len(t, plan.Groups, 1)
+	require.Len(t, plan.Groups, 2)
+	require.True(t, plan.Groups[0].Included)
+	require.False(t, plan.Groups[1].Included, "the group after the target is a candidate")
 	require.Equal(t, models.FieldGroupSize, plan.Groups[0].DecidingKey)
 }
 
-func contentPaths(groups []PlanGroup) []string {
-	if len(groups) == 0 {
-		return nil
-	}
-	paths := make([]string, 0, len(groups))
+// includedPaths names the groups in the plan, in plan order.
+func includedPaths(groups []PlanGroup) []string {
+	return filterPaths(groups, func(group PlanGroup) bool { return group.Included })
+}
+
+// candidatePaths names the ranked groups after the target that a refill can add.
+func candidatePaths(groups []PlanGroup) []string {
+	return filterPaths(groups, func(group PlanGroup) bool { return !group.Included })
+}
+
+func filterPaths(groups []PlanGroup, keep func(PlanGroup) bool) []string {
+	var paths []string
 	for _, group := range groups {
-		paths = append(paths, group.ContentPath)
+		if keep(group) {
+			paths = append(paths, group.ContentPath)
+		}
 	}
 	return paths
 }

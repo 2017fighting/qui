@@ -74,14 +74,13 @@ func (s *Service) deleteGroups(ctx context.Context, instanceID int, run *models.
 		RemoveDeadGroups: run.RemoveDeadGroups,
 		FilesByHash:      filesByHash,
 	}
-	buckets := bucketsByPath(torrents)
 
 	targets := make([]deleteTarget, 0, len(run.Groups))
 	for _, row := range run.Groups {
 		if !row.Included {
 			continue
 		}
-		group, reason := recheckRow(row, buckets, idx, rules)
+		group, reason := recheckRow(row, idx, rules)
 		if reason != "" {
 			if err := s.store.UpdateRowOutcome(ctx, row.ID, models.DeletePlanRowStatusSkipped, reason, ""); err != nil {
 				return err
@@ -177,8 +176,8 @@ func buildDeletionChunks(targets []deleteTarget, size int) []deletionChunk {
 // recheckRow re-derives a frozen row's group from the fresh torrent list and
 // reports why the group must not be removed ("" when it may). A group is skipped
 // when a protection now trips or its verified member set changed (ADR 0018).
-func recheckRow(row *models.DeletePlanRow, buckets map[string][]qbt.Torrent, idx contentgroup.Index, rules ProtectionRules) (PlanGroup, string) {
-	bucket := buckets[contentgroup.NormalizePath(row.ContentPath)]
+func recheckRow(row *models.DeletePlanRow, idx contentgroup.Index, rules ProtectionRules) (PlanGroup, string) {
+	bucket := idx.GroupByPath(row.ContentPath)
 	if len(bucket) == 0 {
 		return PlanGroup{}, ReasonMembersChanged
 	}
@@ -190,20 +189,6 @@ func recheckRow(row *models.DeletePlanRow, buckets map[string][]qbt.Torrent, idx
 		return group, ReasonMembersChanged
 	}
 	return group, ""
-}
-
-// bucketsByPath groups the instance's torrents by normalized Content Path, the
-// lookup the re-check uses for a frozen row's path.
-func bucketsByPath(torrents []qbt.Torrent) map[string][]qbt.Torrent {
-	buckets := make(map[string][]qbt.Torrent, len(torrents)/2)
-	for _, torrent := range torrents {
-		normalized := contentgroup.NormalizePath(torrent.ContentPath)
-		if normalized == "" {
-			continue
-		}
-		buckets[normalized] = append(buckets[normalized], torrent)
-	}
-	return buckets
 }
 
 // sameMembers reports whether the fresh verified members are exactly the frozen ones.

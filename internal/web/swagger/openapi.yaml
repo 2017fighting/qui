@@ -6306,9 +6306,11 @@ paths:
       summary: Replace a delete plan run's unticked rows
       description: >-
         Replace the run's unticked set. An unticked row stays in the run with
-        included false and leaves plannedBytes and overshootBytes; targetReached
-        becomes false when the included bytes fall below the target, and the run
-        carries shortfallBytes. Only valid while the run is preview_ready.
+        included false and unticked true and leaves plannedBytes and
+        overshootBytes; targetReached becomes false when the included bytes fall
+        below the target, and the run carries shortfallBytes. A row omitted here
+        that was unticked is included again; a candidate stays a candidate. Only
+        valid while the run is preview_ready.
       parameters:
         - $ref: '#/components/parameters/instanceID'
         - name: runID
@@ -6346,9 +6348,10 @@ paths:
         - Delete Plan
       summary: Refill a delete plan run to the target
       description: >-
-        Re-include the unticked groups in plan order until the included bytes
-        reach the target, without reordering the groups that stay. The returned
-        run reports the new overshoot. Only valid while the run is preview_ready.
+        Add the next candidate groups in plan order until the included bytes
+        reach the target, without reordering the groups that stay. A vetoed group
+        is never re-included. The returned run reports the new overshoot. Only
+        valid while the run is preview_ready.
       parameters:
         - $ref: '#/components/parameters/instanceID'
         - name: runID
@@ -9846,6 +9849,11 @@ components:
           description: True when no member is seeding.
         included:
           type: boolean
+        unticked:
+          type: boolean
+          description: >-
+            True when the user vetoed this group. A refill never re-includes an
+            unticked row. False for a candidate the plan has not reached yet.
         excluded:
           type: boolean
         excludeReason:
@@ -9980,8 +9988,9 @@ components:
         unticked:
           type: array
           description: >-
-            Row IDs to take out of the plan. Replaces the run's unticked set, so
-            a row omitted here is included again.
+            Row IDs the user vetoed. Replaces the run's unticked set, so a row
+            omitted here is included again unless it is a candidate beyond the
+            target.
           items:
             type: integer
             format: int64

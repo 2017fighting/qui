@@ -260,20 +260,33 @@ func (s *Service) UpdateRunRows(ctx context.Context, runID int64, unticked []int
 		return fmt.Errorf("%w: %s", ErrPlanRunInvalidStatus, run.Status)
 	}
 
-	selected := make(map[int64]struct{}, len(unticked))
+	vetoed := make(map[int64]struct{}, len(unticked))
 	for _, rowID := range unticked {
 		if !hasRow(run.Groups, rowID) {
 			return fmt.Errorf("%w: %d", ErrPlanRowNotInRun, rowID)
 		}
-		selected[rowID] = struct{}{}
+		vetoed[rowID] = struct{}{}
 	}
 
-	planned, dead, overshoot, reached := selectionTotals(run.Groups, run.TargetBytes, selected)
-	return s.applyRowSelection(ctx, run, unticked, planned, dead, overshoot, reached)
+	// A veto takes a row out of the plan; a row that was vetoed and is no longer in
+	// the set comes back in. A candidate was never selected and stays a candidate.
+	included := make([]int64, 0, len(run.Groups))
+	for _, row := range run.Groups {
+		if _, isVetoed := vetoed[row.ID]; isVetoed {
+			continue
+		}
+		if row.Included || row.Unticked {
+			included = append(included, row.ID)
+		}
+	}
+
+	planned, dead, overshoot, reached := selectionTotals(run.Groups, run.TargetBytes, idSet(included))
+	return s.applyRowSelection(ctx, run, unticked, included, planned, dead, overshoot, reached)
 }
 
-// RefillRun re-includes the unticked groups in plan order until the included
-// bytes reach the target, without reordering the groups that stay.
+// RefillRun adds the next candidate groups in plan order until the included
+// bytes reach the target, without reordering the groups that stay. A vetoed row
+// is never re-included.
 func (s *Service) RefillRun(ctx context.Context, runID int64) error {
 	run, err := s.store.GetRun(ctx, runID)
 	if err != nil {
@@ -286,20 +299,36 @@ func (s *Service) RefillRun(ctx context.Context, runID int64) error {
 		return fmt.Errorf("%w: %s", ErrPlanRunInvalidStatus, run.Status)
 	}
 
-	remaining := refillSelection(run.Groups, run.TargetBytes, untickedRowIDs(run.Groups))
-	unticked := make([]int64, 0, len(remaining))
+	included := make([]int64, 0, len(run.Groups))
+	var planned int64
 	for _, row := range run.Groups {
-		if _, ok := remaining[row.ID]; ok {
-			unticked = append(unticked, row.ID)
+		if !row.Included {
+			continue
+		}
+		included = append(included, row.ID)
+		if !row.Dead {
+			planned += row.SizeBytes
 		}
 	}
 
-	planned, dead, overshoot, reached := selectionTotals(run.Groups, run.TargetBytes, remaining)
-	return s.applyRowSelection(ctx, run, unticked, planned, dead, overshoot, reached)
+	for _, row := range run.Groups {
+		if planned >= run.TargetBytes {
+			break
+		}
+		if row.Included || row.Unticked || row.Dead {
+			continue
+		}
+		included = append(included, row.ID)
+		planned += row.SizeBytes
+	}
+
+	unticked := untickedRowIDs(run.Groups)
+	planned, dead, overshoot, reached := selectionTotals(run.Groups, run.TargetBytes, idSet(included))
+	return s.applyRowSelection(ctx, run, unticked, included, planned, dead, overshoot, reached)
 }
 
-func (s *Service) applyRowSelection(ctx context.Context, run *models.DeletePlanRun, unticked []int64, planned, dead, overshoot int64, reached bool) error {
-	applied, err := s.store.UpdateRowSelection(ctx, run.ID, unticked, planned, dead, overshoot, reached)
+func (s *Service) applyRowSelection(ctx context.Context, run *models.DeletePlanRun, unticked, included []int64, planned, dead, overshoot int64, reached bool) error {
+	applied, err := s.store.UpdateRowSelection(ctx, run.ID, unticked, included, planned, dead, overshoot, reached)
 	if err != nil {
 		return err
 	}
@@ -311,11 +340,11 @@ func (s *Service) applyRowSelection(ctx context.Context, run *models.DeletePlanR
 	return nil
 }
 
-// selectionTotals recomputes a plan's totals from its rows and the unticked set.
+// selectionTotals recomputes a plan's totals from its rows and the selected set.
 // Dead bytes never count toward the target.
-func selectionTotals(rows []*models.DeletePlanRow, targetBytes int64, unticked map[int64]struct{}) (planned, dead, overshoot int64, targetReached bool) {
+func selectionTotals(rows []*models.DeletePlanRow, targetBytes int64, included map[int64]struct{}) (planned, dead, overshoot int64, targetReached bool) {
 	for _, row := range rows {
-		if _, isUnticked := unticked[row.ID]; isUnticked {
+		if _, isIncluded := included[row.ID]; !isIncluded {
 			continue
 		}
 		if row.Dead {
@@ -327,42 +356,20 @@ func selectionTotals(rows []*models.DeletePlanRow, targetBytes int64, unticked m
 	return planned, dead, max(planned-targetBytes, 0), planned >= targetBytes
 }
 
-// refillSelection returns the unticked set after re-including groups in plan
-// order until the included bytes reach the target. It only flips included flags,
-// so the groups that stay keep their order.
-func refillSelection(rows []*models.DeletePlanRow, targetBytes int64, unticked map[int64]struct{}) map[int64]struct{} {
-	var planned int64
-	for _, row := range rows {
-		if _, isUnticked := unticked[row.ID]; isUnticked || row.Dead {
-			continue
-		}
-		planned += row.SizeBytes
+func idSet(ids []int64) map[int64]struct{} {
+	set := make(map[int64]struct{}, len(ids))
+	for _, id := range ids {
+		set[id] = struct{}{}
 	}
-
-	remaining := make(map[int64]struct{}, len(unticked))
-	for rowID := range unticked {
-		remaining[rowID] = struct{}{}
-	}
-	for _, row := range rows {
-		if planned >= targetBytes {
-			break
-		}
-		if _, isUnticked := remaining[row.ID]; !isUnticked {
-			continue
-		}
-		delete(remaining, row.ID)
-		if !row.Dead {
-			planned += row.SizeBytes
-		}
-	}
-	return remaining
+	return set
 }
 
-func untickedRowIDs(rows []*models.DeletePlanRow) map[int64]struct{} {
-	unticked := make(map[int64]struct{})
+// untickedRowIDs returns the rows the user vetoed, which a refill never re-includes.
+func untickedRowIDs(rows []*models.DeletePlanRow) []int64 {
+	unticked := make([]int64, 0, len(rows))
 	for _, row := range rows {
-		if !row.Included {
-			unticked[row.ID] = struct{}{}
+		if row.Unticked {
+			unticked = append(unticked, row.ID)
 		}
 	}
 	return unticked

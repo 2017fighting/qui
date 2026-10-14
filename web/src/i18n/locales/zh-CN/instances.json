@@ -919,7 +919,8 @@
           "deleting": "删除中",
           "completed": "已完成",
           "failed": "失败",
-          "canceled": "已取消"
+          "canceled": "已取消",
+          "unknown": "未知"
         },
         "excludeReasons": {
           "incomplete": "有成员仍在下载",

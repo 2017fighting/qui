@@ -1594,7 +1594,8 @@
           "deleting": "Suprimint",
           "completed": "Completat",
           "failed": "Ha fallat",
-          "canceled": "Cancel·lat"
+          "canceled": "Cancel·lat",
+          "unknown": "Desconegut"
         },
         "excludeReasons": {
           "incomplete": "Un membre encara s'està baixant",

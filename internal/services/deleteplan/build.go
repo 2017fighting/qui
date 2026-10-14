@@ -101,22 +101,25 @@ func BuildPlan(torrents []qbt.Torrent, idx contentgroup.Index, keys []models.Key
 
 	ranked, dead := splitDead(groups)
 
+	// Every ranked group stays a row in plan order. Only the prefix that reaches the
+	// target is included; the groups after it are candidates a refill can add.
 	var plannedBytes int64
-	included := make([]PlanGroup, 0, len(ranked)+len(dead))
+	reached := false
+	planGroups := make([]PlanGroup, 0, len(ranked)+len(dead))
 	for _, group := range ranked {
-		group.Included = true
-		included = append(included, group)
-		plannedBytes += group.SizeBytes
-		if plannedBytes >= targetBytes {
-			break
+		if !reached {
+			group.Included = true
+			plannedBytes += group.SizeBytes
+			reached = plannedBytes >= targetBytes
 		}
+		planGroups = append(planGroups, group)
 	}
 
 	var deadBytes int64
 	if rules.RemoveDeadGroups {
 		for _, group := range dead {
 			group.Included = true
-			included = append(included, group)
+			planGroups = append(planGroups, group)
 			deadBytes += group.SizeBytes
 		}
 	}
@@ -124,7 +127,7 @@ func BuildPlan(torrents []qbt.Torrent, idx contentgroup.Index, keys []models.Key
 	overshoot := max(plannedBytes-targetBytes, 0)
 
 	return Plan{
-		Groups:         included,
+		Groups:         planGroups,
 		ExcludedGroups: excluded,
 		PlannedBytes:   plannedBytes,
 		DeadBytes:      deadBytes,

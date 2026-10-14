@@ -79,6 +79,13 @@ func (idx Index) Group(target qbt.Torrent) []qbt.Torrent {
 	return idx[p].torrents
 }
 
+// GroupByPath returns every torrent at a Content Path, looked up by path. A
+// frozen plan row carries the path, not the torrent, so the re-check reads the
+// same index the plan was built from rather than rebuilding the buckets.
+func (idx Index) GroupByPath(path string) []qbt.Torrent {
+	return idx[NormalizePath(path)].torrents
+}
+
 // SharedHashes returns the sorted hashes of torrents in buckets with more than one
 // member, the only buckets where a file-overlap check can find a partner.
 func (idx Index) SharedHashes() []string {

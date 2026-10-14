@@ -940,7 +940,8 @@
           "deleting": "Suppression",
           "completed": "Terminé",
           "failed": "Échec",
-          "canceled": "Annulé"
+          "canceled": "Annulé",
+          "unknown": "Inconnu"
         },
         "excludeReasons": {
           "incomplete": "Un membre est encore en téléchargement",

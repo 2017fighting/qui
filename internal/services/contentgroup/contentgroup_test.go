@@ -169,6 +169,22 @@ func TestIndexGroup(t *testing.T) {
 	}
 }
 
+// TestIndexGroupByPath covers the path lookup a frozen plan row's re-check uses.
+func TestIndexGroupByPath(t *testing.T) {
+	idx := BuildIndex([]qbt.Torrent{
+		{Hash: "a", ContentPath: "/downloads/Movies/Pack"},
+		{Hash: "b", ContentPath: "/downloads/movies/pack"},
+		{Hash: "c", ContentPath: "/downloads/Other"},
+	})
+
+	group := idx.GroupByPath("/downloads/Movies/Pack")
+	assert.Len(t, group, 2, "the lookup normalizes the path, so case does not split a bucket")
+	assert.ElementsMatch(t, []string{"a", "b"}, []string{group[0].Hash, group[1].Hash})
+
+	assert.Nil(t, idx.GroupByPath(""), "an empty path has no bucket")
+	assert.Nil(t, idx.GroupByPath("/downloads/Unknown"), "an unknown path has no bucket")
+}
+
 // -----------------------------------------------------------------------------
 // VerifiedMembers tests
 // -----------------------------------------------------------------------------

@@ -277,8 +277,9 @@ func TestDeletePlan_ConfirmRunScopesToTheInstance(t *testing.T) {
 	require.Equal(t, http.StatusNotFound, resp.Code, resp.Body.String())
 }
 
-// seedUntickableRun freezes a two-row plan that reaches its 250-byte target: rows
-// A (100) and B (200), planned 300, overshoot 50.
+// seedUntickableRun freezes a plan with a candidate beyond the target: rows A
+// (100) and B (200) are included against a 250-byte target, planned 300,
+// overshoot 50, and C (300) is the next candidate in plan order.
 func seedUntickableRun(t *testing.T, store *models.DeletePlanStore, instanceID int) int64 {
 	t.Helper()
 	ctx := t.Context()
@@ -302,6 +303,12 @@ func seedUntickableRun(t *testing.T, store *models.DeletePlanStore, instanceID i
 			Included:    true,
 			Members:     []models.DeletePlanMember{{Hash: "b", SizeBytes: 200, Progress: 1, State: "uploading"}},
 		},
+		{
+			ContentPath: "/data/C",
+			SizeBytes:   300,
+			MemberCount: 1,
+			Members:     []models.DeletePlanMember{{Hash: "c", SizeBytes: 300, Progress: 1, State: "uploading"}},
+		},
 	}))
 	frozen, err := store.UpdateRunPreview(ctx, runID, 300, 0, 50, true)
 	require.NoError(t, err)
@@ -315,7 +322,7 @@ func TestDeletePlan_UpdateRowsUnticksAndReportsTheShortfall(t *testing.T) {
 
 	before, err := store.GetRun(t.Context(), runID)
 	require.NoError(t, err)
-	require.Len(t, before.Groups, 2)
+	require.Len(t, before.Groups, 3)
 	untickedRowID := before.Groups[1].ID
 
 	body := fmt.Sprintf(`{"unticked":[%d]}`, untickedRowID)
@@ -326,9 +333,12 @@ func TestDeletePlan_UpdateRowsUnticksAndReportsTheShortfall(t *testing.T) {
 
 	var run models.DeletePlanRun
 	require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &run))
-	require.Len(t, run.Groups, 2, "an unticked row stays in the run")
+	require.Len(t, run.Groups, 3, "an unticked row stays in the run")
 	require.True(t, run.Groups[0].Included)
 	require.False(t, run.Groups[1].Included)
+	require.True(t, run.Groups[1].Unticked, "the veto is reported to the client")
+	require.False(t, run.Groups[2].Included, "a candidate stays out of the plan")
+	require.False(t, run.Groups[2].Unticked)
 	require.EqualValues(t, 100, run.PlannedBytes)
 	require.EqualValues(t, 0, run.OvershootBytes)
 	require.EqualValues(t, 150, run.ShortfallBytes)
@@ -345,17 +355,17 @@ func TestDeletePlan_UpdateRowsConflictsWhenNotPreviewReady(t *testing.T) {
 	require.Equal(t, http.StatusConflict, resp.Code, resp.Body.String())
 }
 
-func TestDeletePlan_RefillAddsGroupsInPlanOrder(t *testing.T) {
+func TestDeletePlan_RefillAddsTheNextCandidateInPlanOrder(t *testing.T) {
 	_, store, instance, _, router := newDeletePlanHandlerFixture(t, "delete-plan-refill")
 	runID := seedUntickableRun(t, store, instance.ID)
 
 	run, err := store.GetRun(t.Context(), runID)
 	require.NoError(t, err)
-	require.Len(t, run.Groups, 2)
-	rowIDs := []int64{run.Groups[0].ID, run.Groups[1].ID}
+	require.Len(t, run.Groups, 3)
+	untickedRowID := run.Groups[1].ID
 
-	// Untick both rows, so the plan is 250 bytes short of the target.
-	body := fmt.Sprintf(`{"unticked":[%d,%d]}`, rowIDs[0], rowIDs[1])
+	// Veto B, so the plan is 150 bytes short of the target.
+	body := fmt.Sprintf(`{"unticked":[%d]}`, untickedRowID)
 	untickResp := httptest.NewRecorder()
 	untickURL := fmt.Sprintf("/api/instances/%d/delete-plan/runs/%d/rows", instance.ID, runID)
 	router.ServeHTTP(untickResp, httptest.NewRequestWithContext(t.Context(), http.MethodPatch, untickURL, strings.NewReader(body)))
@@ -368,13 +378,17 @@ func TestDeletePlan_RefillAddsGroupsInPlanOrder(t *testing.T) {
 
 	var refilled models.DeletePlanRun
 	require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &refilled))
-	require.EqualValues(t, 300, refilled.PlannedBytes)
-	require.EqualValues(t, 50, refilled.OvershootBytes)
+	require.False(t, refilled.Groups[1].Included, "refill never re-includes the vetoed group")
+	require.True(t, refilled.Groups[1].Unticked)
+	require.True(t, refilled.Groups[2].Included, "refill adds the next candidate")
+	require.EqualValues(t, 400, refilled.PlannedBytes)
+	require.EqualValues(t, 150, refilled.OvershootBytes)
 	require.EqualValues(t, 0, refilled.ShortfallBytes)
 	require.True(t, refilled.TargetReached)
-	// Plan order is unchanged: A stays before B.
+	// Plan order is unchanged: A stays before B, B before C.
 	require.Equal(t, "/data/A", refilled.Groups[0].ContentPath)
 	require.Equal(t, "/data/B", refilled.Groups[1].ContentPath)
+	require.Equal(t, "/data/C", refilled.Groups[2].ContentPath)
 }
 
 func TestDeletePlan_RefillConflictsWhenNotPreviewReady(t *testing.T) {
