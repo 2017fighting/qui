@@ -12,10 +12,11 @@ import (
 
 	"github.com/autobrr/qui/internal/models"
 	"github.com/autobrr/qui/internal/qbittorrent"
+	"github.com/autobrr/qui/internal/services/contentgroup"
 )
 
 const (
-	groupKeyContentPath       = "contentPath"
+	groupKeyContentPath       = contentgroup.KeyContentPath
 	groupKeySavePath          = "savePath"
 	groupKeyEffectiveName     = "effectiveName"
 	groupKeyContentType       = "contentType"
@@ -31,8 +32,8 @@ const (
 )
 
 const (
-	groupAmbiguousVerifyOverlap = "verify_overlap"
-	groupAmbiguousSkip          = "skip"
+	groupAmbiguousVerifyOverlap = contentgroup.AmbiguityVerifyOverlap
+	groupAmbiguousSkip          = contentgroup.AmbiguitySkip
 )
 
 // GroupKeys are the values of a group definition's keys. buildGroupKey reads each one.
@@ -463,7 +464,7 @@ func buildGroupIndex(groupID string, def *models.GroupDefinition, torrents []qbt
 		idx.hashesByKey[key] = append(idx.hashesByKey[key], t.Hash)
 
 		// Mark ambiguity for contentPath-based groups when ContentPath == SavePath.
-		if containsKey(keys, groupKeyContentPath) && normalizePath(t.ContentPath) == normalizePath(t.SavePath) {
+		if containsKey(keys, groupKeyContentPath) && contentgroup.NormalizePath(t.ContentPath) == contentgroup.NormalizePath(t.SavePath) {
 			idx.ambiguousKeys[key] = struct{}{}
 		}
 	}
@@ -489,13 +490,13 @@ func buildGroupKey(keys []string, t qbt.Torrent, sm *qbittorrent.SyncManager, ev
 	for _, k := range keys {
 		switch k {
 		case groupKeyContentPath:
-			v := normalizePath(t.ContentPath)
+			v := contentgroup.NormalizePath(t.ContentPath)
 			if v == "" {
 				return "", false
 			}
 			parts = append(parts, v)
 		case groupKeySavePath:
-			v := normalizePath(t.SavePath)
+			v := contentgroup.NormalizePath(t.SavePath)
 			if v == "" {
 				return "", false
 			}

@@ -17,6 +17,7 @@ import (
 
 	"github.com/autobrr/qui/internal/models"
 	"github.com/autobrr/qui/internal/qbittorrent"
+	"github.com/autobrr/qui/internal/services/contentgroup"
 	"github.com/autobrr/qui/pkg/pathutil"
 )
 
@@ -207,7 +208,7 @@ func processTorrents(
 	}
 
 	crossSeedIndex := buildCrossSeedIndex(torrents)
-	cpIndex := buildContentPathIndex(torrents)
+	cpIndex := contentgroup.BuildIndex(torrents)
 
 	for _, torrent := range torrents {
 		// Skip if recently processed
@@ -265,7 +266,7 @@ func processTorrents(
 }
 
 // processRuleForTorrent applies a single rule to the torrent state.
-func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *torrentDesiredState, evalCtx *EvalContext, sm *qbittorrent.SyncManager, crossSeedIndex map[crossSeedKey][]qbt.Torrent, stats *ruleRunStats, allTorrents []qbt.Torrent, cpIndex contentPathIndex) {
+func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *torrentDesiredState, evalCtx *EvalContext, sm *qbittorrent.SyncManager, crossSeedIndex map[crossSeedKey][]qbt.Torrent, stats *ruleRunStats, allTorrents []qbt.Torrent, cpIndex contentgroup.Index) {
 	conditions := rule.Conditions
 	if conditions == nil {
 		return
@@ -684,7 +685,7 @@ func shouldBlockMoveForCrossSeeds(torrent qbt.Torrent, moveAction *models.MoveAc
 }
 
 func inSavePath(torrent qbt.Torrent, savePath string) bool {
-	return normalizePath(torrent.SavePath) == normalizePath(savePath)
+	return contentgroup.NormalizePath(torrent.SavePath) == contentgroup.NormalizePath(savePath)
 }
 
 // resolveMovePath returns the path to use for a move. The path is executed as a
@@ -903,7 +904,7 @@ func parseTorrentTags(tags string) map[string]struct{} {
 // This ensures keep-files and preserve-cross-seeds modes don't over-project freed disk space.
 // When DeleteSafeHardlinkSignatureByHash is populated, also dedupes by hardlink signature to avoid
 // double-counting torrents that share the same physical files via hardlinks.
-func updateCumulativeFreeSpaceCleared(torrent qbt.Torrent, evalCtx *EvalContext, deleteMode string, cpIndex contentPathIndex) {
+func updateCumulativeFreeSpaceCleared(torrent qbt.Torrent, evalCtx *EvalContext, deleteMode string, cpIndex contentgroup.Index) {
 	if evalCtx == nil || evalCtx.FilesToClear == nil {
 		return
 	}
@@ -959,13 +960,13 @@ func updateCumulativeFreeSpaceCleared(torrent qbt.Torrent, evalCtx *EvalContext,
 	evalCtx.FilesToClear[crossSeedKey] = struct{}{}
 }
 
-func updateCrossSeedFreeSpaceCleared(torrent qbt.Torrent, evalCtx *EvalContext, cpIndex contentPathIndex) {
+func updateCrossSeedFreeSpaceCleared(torrent qbt.Torrent, evalCtx *EvalContext, cpIndex contentgroup.Index) {
 	if _, counted := evalCtx.CrossSeedHashesToClear[torrent.Hash]; counted {
 		return
 	}
 
-	group := findCrossSeedGroup(torrent, cpIndex)
-	verifiedHashes, ok := crossSeedGroupMembers(
+	group := cpIndex.Group(torrent)
+	verifiedHashes, ok := contentgroup.VerifiedMembers(
 		torrent,
 		group,
 		evalCtx.CrossSeedHashesToClear,
@@ -1014,7 +1015,7 @@ func verifiedCrossSeedFileBytes(
 			continue
 		}
 		for _, file := range filesByHash[torrent.Hash] {
-			resolvedPath := resolvedTorrentFilePath(torrent, file.Name)
+			resolvedPath := contentgroup.ResolvedTorrentFilePath(torrent, file.Name)
 			previousSize := maxSizeByPath[resolvedPath]
 			if file.Size <= previousSize {
 				continue

@@ -11,6 +11,7 @@ import (
 
 	"github.com/autobrr/qui/internal/models"
 	"github.com/autobrr/qui/internal/qbittorrent"
+	"github.com/autobrr/qui/internal/services/contentgroup"
 	"github.com/autobrr/qui/pkg/pathutil"
 )
 
@@ -840,8 +841,8 @@ func TestUpdateCumulativeFreeSpaceCleared(t *testing.T) {
 		}
 
 		allTorrents := []qbt.Torrent{torrent1, torrent2}
-		updateCumulativeFreeSpaceCleared(torrent1, evalCtx, DeleteModeWithFiles, buildContentPathIndex(allTorrents))
-		updateCumulativeFreeSpaceCleared(torrent2, evalCtx, DeleteModeWithFiles, buildContentPathIndex(allTorrents))
+		updateCumulativeFreeSpaceCleared(torrent1, evalCtx, DeleteModeWithFiles, contentgroup.BuildIndex(allTorrents))
+		updateCumulativeFreeSpaceCleared(torrent2, evalCtx, DeleteModeWithFiles, contentgroup.BuildIndex(allTorrents))
 
 		// Should only count once
 		require.Equal(t, int64(50000000000), evalCtx.SpaceToClear)
@@ -869,8 +870,8 @@ func TestUpdateCumulativeFreeSpaceCleared(t *testing.T) {
 		}
 
 		allTorrents := []qbt.Torrent{torrent1, torrent2}
-		updateCumulativeFreeSpaceCleared(torrent1, evalCtx, DeleteModeWithFiles, buildContentPathIndex(allTorrents))
-		updateCumulativeFreeSpaceCleared(torrent2, evalCtx, DeleteModeWithFiles, buildContentPathIndex(allTorrents))
+		updateCumulativeFreeSpaceCleared(torrent1, evalCtx, DeleteModeWithFiles, contentgroup.BuildIndex(allTorrents))
+		updateCumulativeFreeSpaceCleared(torrent2, evalCtx, DeleteModeWithFiles, contentgroup.BuildIndex(allTorrents))
 
 		require.Equal(t, int64(80000000000), evalCtx.SpaceToClear)
 		require.Len(t, evalCtx.FilesToClear, 2)
@@ -937,7 +938,7 @@ func TestUpdateCumulativeFreeSpaceCleared(t *testing.T) {
 
 		// Deleting torrent1 with preserve-cross-seeds should NOT count toward SpaceToClear
 		// because torrent2 is a cross-seed that would keep the files
-		updateCumulativeFreeSpaceCleared(torrent1, evalCtx, DeleteModeWithFilesPreserveCrossSeeds, buildContentPathIndex(allTorrents))
+		updateCumulativeFreeSpaceCleared(torrent1, evalCtx, DeleteModeWithFilesPreserveCrossSeeds, contentgroup.BuildIndex(allTorrents))
 
 		require.Equal(t, int64(0), evalCtx.SpaceToClear)
 		require.Empty(t, evalCtx.FilesToClear)
@@ -961,7 +962,7 @@ func TestUpdateCumulativeFreeSpaceCleared(t *testing.T) {
 
 		// Deleting with preserve-cross-seeds should count toward SpaceToClear
 		// because there are no cross-seeds
-		updateCumulativeFreeSpaceCleared(torrent, evalCtx, DeleteModeWithFilesPreserveCrossSeeds, buildContentPathIndex(allTorrents))
+		updateCumulativeFreeSpaceCleared(torrent, evalCtx, DeleteModeWithFilesPreserveCrossSeeds, contentgroup.BuildIndex(allTorrents))
 
 		require.Equal(t, int64(50000000000), evalCtx.SpaceToClear)
 		require.Empty(t, evalCtx.FilesToClear)
@@ -996,8 +997,8 @@ func TestUpdateCumulativeFreeSpaceCleared(t *testing.T) {
 
 		allTorrents := []qbt.Torrent{torrent1, torrent2}
 
-		updateCumulativeFreeSpaceCleared(torrent1, evalCtx, DeleteModeWithFilesIncludeCrossSeeds, buildContentPathIndex(allTorrents))
-		updateCumulativeFreeSpaceCleared(torrent2, evalCtx, DeleteModeWithFilesIncludeCrossSeeds, buildContentPathIndex(allTorrents))
+		updateCumulativeFreeSpaceCleared(torrent1, evalCtx, DeleteModeWithFilesIncludeCrossSeeds, contentgroup.BuildIndex(allTorrents))
+		updateCumulativeFreeSpaceCleared(torrent2, evalCtx, DeleteModeWithFilesIncludeCrossSeeds, contentgroup.BuildIndex(allTorrents))
 
 		// Should only count once due to hardlink signature dedupe
 		require.Equal(t, int64(50000000000), evalCtx.SpaceToClear)
@@ -1025,7 +1026,7 @@ func TestUpdateCumulativeFreeSpaceCleared(t *testing.T) {
 
 		allTorrents := []qbt.Torrent{torrent}
 
-		updateCumulativeFreeSpaceCleared(torrent, evalCtx, DeleteModeWithFilesIncludeCrossSeeds, buildContentPathIndex(allTorrents))
+		updateCumulativeFreeSpaceCleared(torrent, evalCtx, DeleteModeWithFilesIncludeCrossSeeds, contentgroup.BuildIndex(allTorrents))
 
 		require.Equal(t, int64(50000000000), evalCtx.SpaceToClear)
 		// Should track via signature, not cross-seed key
@@ -1061,8 +1062,8 @@ func TestUpdateCumulativeFreeSpaceCleared(t *testing.T) {
 
 		allTorrents := []qbt.Torrent{torrent1, torrent2}
 
-		updateCumulativeFreeSpaceCleared(torrent1, evalCtx, DeleteModeWithFilesIncludeCrossSeeds, buildContentPathIndex(allTorrents))
-		updateCumulativeFreeSpaceCleared(torrent2, evalCtx, DeleteModeWithFilesIncludeCrossSeeds, buildContentPathIndex(allTorrents))
+		updateCumulativeFreeSpaceCleared(torrent1, evalCtx, DeleteModeWithFilesIncludeCrossSeeds, contentgroup.BuildIndex(allTorrents))
+		updateCumulativeFreeSpaceCleared(torrent2, evalCtx, DeleteModeWithFilesIncludeCrossSeeds, contentgroup.BuildIndex(allTorrents))
 
 		// Both should count (different dedupe methods)
 		require.Equal(t, int64(80000000000), evalCtx.SpaceToClear)
@@ -1100,8 +1101,8 @@ func TestUpdateCumulativeFreeSpaceCleared(t *testing.T) {
 		allTorrents := []qbt.Torrent{torrent1, torrent2}
 
 		// Using DeleteModeWithFiles - should NOT use hardlink signature dedupe
-		updateCumulativeFreeSpaceCleared(torrent1, evalCtx, DeleteModeWithFiles, buildContentPathIndex(allTorrents))
-		updateCumulativeFreeSpaceCleared(torrent2, evalCtx, DeleteModeWithFiles, buildContentPathIndex(allTorrents))
+		updateCumulativeFreeSpaceCleared(torrent1, evalCtx, DeleteModeWithFiles, contentgroup.BuildIndex(allTorrents))
+		updateCumulativeFreeSpaceCleared(torrent2, evalCtx, DeleteModeWithFiles, contentgroup.BuildIndex(allTorrents))
 
 		// Both should count because different ContentPaths and hardlink dedupe not applied
 		require.Equal(t, int64(100000000000), evalCtx.SpaceToClear)
@@ -1129,7 +1130,7 @@ func TestUpdateCumulativeFreeSpaceCleared(t *testing.T) {
 			SavePath:    "/data",
 		}
 
-		updateCumulativeFreeSpaceCleared(torrent, evalCtx, DeleteModeWithFilesIncludeCrossSeeds, buildContentPathIndex([]qbt.Torrent{torrent}))
+		updateCumulativeFreeSpaceCleared(torrent, evalCtx, DeleteModeWithFilesIncludeCrossSeeds, contentgroup.BuildIndex([]qbt.Torrent{torrent}))
 
 		require.Equal(t, map[string]string{"abc123": "grouping-sig"}, evalCtx.HardlinkSignatureByHash)
 		require.Equal(t, map[string]string{"abc123": "delete-sig"}, evalCtx.DeleteSafeHardlinkSignatureByHash)
@@ -1669,34 +1670,34 @@ func TestDeleteFreesSpace(t *testing.T) {
 	}
 
 	t.Run("returns false for DeleteModeKeepFiles", func(t *testing.T) {
-		result := deleteFreesSpace(DeleteModeKeepFiles, allTorrents[0], buildContentPathIndex(allTorrents), filesByHash)
+		result := deleteFreesSpace(DeleteModeKeepFiles, allTorrents[0], contentgroup.BuildIndex(allTorrents), filesByHash)
 		require.False(t, result)
 	})
 
 	t.Run("returns false for empty mode", func(t *testing.T) {
-		result := deleteFreesSpace("", allTorrents[0], buildContentPathIndex(allTorrents), filesByHash)
+		result := deleteFreesSpace("", allTorrents[0], contentgroup.BuildIndex(allTorrents), filesByHash)
 		require.False(t, result)
 	})
 
 	t.Run("returns false for DeleteModeNone", func(t *testing.T) {
-		result := deleteFreesSpace(DeleteModeNone, allTorrents[0], buildContentPathIndex(allTorrents), filesByHash)
+		result := deleteFreesSpace(DeleteModeNone, allTorrents[0], contentgroup.BuildIndex(allTorrents), filesByHash)
 		require.False(t, result)
 	})
 
 	t.Run("returns true for DeleteModeWithFiles", func(t *testing.T) {
-		result := deleteFreesSpace(DeleteModeWithFiles, allTorrents[0], buildContentPathIndex(allTorrents), filesByHash)
+		result := deleteFreesSpace(DeleteModeWithFiles, allTorrents[0], contentgroup.BuildIndex(allTorrents), filesByHash)
 		require.True(t, result)
 	})
 
 	t.Run("returns false for preserve-cross-seeds when cross-seeds exist", func(t *testing.T) {
 		// Torrent a has cross-seed b
-		result := deleteFreesSpace(DeleteModeWithFilesPreserveCrossSeeds, allTorrents[0], buildContentPathIndex(allTorrents), filesByHash)
+		result := deleteFreesSpace(DeleteModeWithFilesPreserveCrossSeeds, allTorrents[0], contentgroup.BuildIndex(allTorrents), filesByHash)
 		require.False(t, result)
 	})
 
 	t.Run("returns true for preserve-cross-seeds when no cross-seeds exist", func(t *testing.T) {
 		// Torrent c has no cross-seeds
-		result := deleteFreesSpace(DeleteModeWithFilesPreserveCrossSeeds, allTorrents[2], buildContentPathIndex(allTorrents), filesByHash)
+		result := deleteFreesSpace(DeleteModeWithFilesPreserveCrossSeeds, allTorrents[2], contentgroup.BuildIndex(allTorrents), filesByHash)
 		require.True(t, result)
 	})
 }
