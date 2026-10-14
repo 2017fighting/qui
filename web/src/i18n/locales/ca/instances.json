@@ -1606,7 +1606,19 @@
           "members_changed": "Els seus membres han canviat des que es va crear el pla"
         }
       },
+      "deletePlanHistory": {
+        "title": "Historial de plans",
+        "description": "El pla que ha creat aquesta execució, només de lectura.",
+        "view": "Mostra",
+        "viewRun": "Mostra l'execució {{id}}",
+        "removed": "Eliminat",
+        "noKeys": "No s'ha registrat cap clau d'ordenació",
+        "disabledKey": "{{key}} (desactivada)",
+        "enabled": "Sí",
+        "disabled": "No"
+      },
       "deletePlanOverview": {
+        "history": "Historial",
         "title": "Pla de supressió",
         "tooltip": "Crea un pla puntual que elimina grups de contingut sencers fins a arribar a la mida objectiu. No s'elimina res fins que ho confirmis.",
         "description": "Recupera una quantitat d'espai triada d'una instància.",

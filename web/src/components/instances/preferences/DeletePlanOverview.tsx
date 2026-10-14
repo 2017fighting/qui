@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: GPL-2.0-or-later
  */
 
+import { DeletePlanHistoryDialog } from "@/components/instances/preferences/DeletePlanHistoryDialog"
 import { DeletePlanRunProgress } from "@/components/instances/preferences/DeletePlanRunProgress"
 import { DeletePlanWizardDialog } from "@/components/instances/preferences/DeletePlanWizardDialog"
 import { deletePlanStatusLabelKey } from "@/components/instances/preferences/deletePlanLabels"
@@ -12,6 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { useCancelDeletePlanRun, useDeletePlanRuns } from "@/hooks/useDeletePlan"
 import { useInstances } from "@/hooks/useInstances"
+import { formatBytes } from "@/lib/utils"
 import type { DeletePlanRunStatus, Instance } from "@/types"
 import { Eye, Info, Loader2, Play, X } from "lucide-react"
 import { useMemo, useState } from "react"
@@ -39,9 +41,12 @@ function InstanceDeletePlanRow({
   const { t } = useTranslation("instances")
   const runsQuery = useDeletePlanRuns(instance.id, { limit: 5 })
   const cancelMutation = useCancelDeletePlanRun(instance.id)
+  const [historyRunId, setHistoryRunId] = useState<number | null>(null)
 
   const latestRun = runsQuery.data?.[0]
   const isActive = !!latestRun && ACTIVE_STATUSES.includes(latestRun.status)
+  // Finished runs read back read-only; the active run is handled by the wizard.
+  const pastRuns = (runsQuery.data ?? []).filter((run) => !ACTIVE_STATUSES.includes(run.status))
 
   const handleCancel = () => {
     if (!latestRun) return
@@ -119,8 +124,47 @@ function InstanceDeletePlanRow({
 
       {latestRun && !isActive && <DeletePlanRunProgress run={latestRun} />}
 
+      {pastRuns.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">{t("preferences.deletePlanOverview.history")}</p>
+          <div className="divide-y rounded-md border">
+            {pastRuns.map((run) => (
+              <div key={run.id} className="flex flex-wrap items-center justify-between gap-2 p-2">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  <Badge variant="outline" className="text-xs">
+                    {t(deletePlanStatusLabelKey(run.status))}
+                  </Badge>
+                  <span>{t("preferences.deletePlanPreview.target")} {formatBytes(run.targetBytes)}</span>
+                  <span>{t("preferences.deletePlanPreview.planned")} {formatBytes(run.plannedBytes)}</span>
+                  <span>{t("preferences.deletePlanHistory.removed")} {formatBytes(run.removedBytes)}</span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8"
+                  onClick={() => setHistoryRunId(run.id)}
+                  aria-label={t("preferences.deletePlanHistory.viewRun", { id: run.id })}
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  {t("preferences.deletePlanHistory.view")}
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {!latestRun && !runsQuery.isLoading && (
         <p className="text-xs text-muted-foreground">{t("preferences.deletePlanOverview.noPlanYet")}</p>
+      )}
+
+      {historyRunId !== null && (
+        <DeletePlanHistoryDialog
+          open
+          onOpenChange={(open) => !open && setHistoryRunId(null)}
+          instanceId={instance.id}
+          runId={historyRunId}
+        />
       )}
     </div>
   )

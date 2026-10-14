@@ -991,7 +991,19 @@
           "members_changed": "Její členové se od vytvoření plánu změnili"
         }
       },
+      "deletePlanHistory": {
+        "title": "Historie plánů",
+        "description": "Plán, který tento běh vytvořil, pouze pro čtení.",
+        "view": "Zobrazit",
+        "viewRun": "Zobrazit běh {{id}}",
+        "removed": "Odstraněno",
+        "noKeys": "Nejsou zaznamenány žádné klíče řazení",
+        "disabledKey": "{{key}} (vypnuto)",
+        "enabled": "Ano",
+        "disabled": "Ne"
+      },
       "deletePlanOverview": {
+        "history": "Historie",
         "title": "Plán mazání",
         "tooltip": "Vytvoří jednorázový plán, který odstraní celé skupiny obsahu, dokud nedosáhne cílové velikosti. Nic se neodstraní, dokud nepotvrdíte.",
         "description": "Získejte zpět zvolené množství místa z jedné instance.",
