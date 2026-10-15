@@ -106,9 +106,17 @@ State required checks run, skipped/deferred checks with reason, and unresolved f
 
 ## Agent skills
 
-- Issue tracker: bug reports and feature requests are GitHub Discussions; `ready-for-agent` work becomes a linked issue. See `docs/agents/issue-tracker.md`.
-- Triage: labels equal the six role names in `docs/agents/triage-labels.md`. Both the workflow and a local `/triage` session obey `docs/agents/triage.md`; its outcomes override the skill's own outcomes. `ready-for-agent` (`bug` only) creates the linked issue and closes the discussion. Do not post the brief on the discussion.
-- Domain docs: `GLOSSARY.md` at the root, ADRs in `docs/adr/`. See `docs/agents/domain.md`.
+### Issue tracker
+
+Bug reports and feature requests are GitHub Discussions on `autobrr/qui`; `ready-for-agent` work becomes a linked issue. This clone is a fork, so skills publish to its own issues. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Labels equal the six role names in `docs/agents/triage-labels.md`. Both the workflow and a local `/triage` session obey `docs/agents/triage.md`; its outcomes override the skill's own outcomes. `ready-for-agent` (`bug` only) creates the linked issue and closes the discussion. Do not post the brief on the discussion.
+
+### Domain docs
+
+`GLOSSARY.md` at the root, ADRs in `docs/adr/`. See `docs/agents/domain.md`.
 
 ## Code Review Rules
 
