@@ -118,7 +118,13 @@ func TestClientPool_GetClientWithTimeout_ConcurrentUnhealthyProbesBackoffOnce(t 
 	var wg sync.WaitGroup
 	for range callers {
 		wg.Go(func() {
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			// go-qbittorrent retries the probe 5 times: 100ms*2^n backoff plus up to 1s
+			// of jitter per attempt, so a refused connection surfaces anywhere between
+			// ~1.5s and ~5.5s. A budget that expires mid-retry replaces that hard
+			// connection error with a deadline, which the pool deliberately reads as
+			// slow-not-down and does not record (#2408), flaking this assertion.
+			// Keep the budget well above the retry schedule.
+			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 			defer cancel()
 			_, _ = pool.GetClientWithTimeout(ctx, instanceID, 60*time.Second)
 		})
