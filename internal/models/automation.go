@@ -71,6 +71,7 @@ type SortingType string
 const (
 	SortingTypeSimple SortingType = "simple"
 	SortingTypeScore  SortingType = "score"
+	SortingTypeKeys   SortingType = "keys"
 )
 
 // FieldMultiplierScoreRule applies a multiplier to a numeric field.
@@ -92,14 +93,22 @@ type ScoreRule struct {
 	Conditional     *ConditionalScoreRule     `json:"conditional,omitempty" doc:"With type 'conditional': the condition and score."`
 }
 
+// KeyRule is one key of a 'keys' sort chain.
+type KeyRule struct {
+	Field     ConditionField `json:"field" doc:"The condition field to rank by."`
+	Enabled   bool           `json:"enabled" doc:"When false, this key is skipped and never changes the order."`
+	Direction SortDirection  `json:"direction" doc:"'ASC' or 'DESC'."`
+}
+
 // SortingConfig defines how torrents are sorted before processing.
 // This is the top-level structure stored in the `sorting_config` JSON column.
 type SortingConfig struct {
 	SchemaVersion string         `json:"schemaVersion" doc:"Must be '1'."`
-	Type          SortingType    `json:"type" doc:"'simple' sorts by one field. 'score' sorts by the sum of 'scoreRules'."`
+	Type          SortingType    `json:"type" doc:"'simple' sorts by one field. 'score' sorts by the sum of 'scoreRules'. 'keys' ranks by the first enabled key in 'keys', then the next."`
 	Direction     SortDirection  `json:"direction" doc:"'ASC' or 'DESC'."`
 	Field         ConditionField `json:"field,omitempty" doc:"With type 'simple': the condition field to sort by."`
 	ScoreRules    []ScoreRule    `json:"scoreRules,omitempty" doc:"With type 'score': the rules that add up to the score of each torrent."`
+	Keys          []KeyRule      `json:"keys,omitempty" doc:"With type 'keys': the ranking keys, tried in order. A disabled key is skipped."`
 }
 
 func (c *SortingConfig) Validate() error {
@@ -148,6 +157,21 @@ func (c *SortingConfig) Validate() error {
 				}
 			default:
 				return fmt.Errorf("score rule %d: unknown type %s", i, r.Type)
+			}
+		}
+	case SortingTypeKeys:
+		if len(c.Keys) == 0 {
+			return errors.New("keys sort requires at least one key")
+		}
+		for i, k := range c.Keys {
+			if k.Field == "" {
+				return fmt.Errorf("key %d: field required", i)
+			}
+			if !k.Field.IsSortableKey() {
+				return fmt.Errorf("key %d: unknown sort field: %s", i, k.Field)
+			}
+			if k.Direction != SortDirectionASC && k.Direction != SortDirectionDESC {
+				return fmt.Errorf("key %d: invalid direction: %s", i, k.Direction)
 			}
 		}
 	case "":
@@ -754,6 +778,47 @@ const (
 	FieldHardlinkScope      ConditionField = "HARDLINK_SCOPE"
 	FieldHardlinkScopeCross ConditionField = "HARDLINK_SCOPE_CROSS"
 )
+
+//nolint:exhaustive // Only sortable numeric fields belong here.
+func (f ConditionField) IsNumeric() bool {
+	switch f {
+	case FieldSize, FieldTotalSize, FieldDownloaded, FieldUploaded, FieldAmountLeft, FieldFreeSpace,
+		FieldAddedOn, FieldCompletionOn, FieldLastActivity, FieldSeedingTime, FieldTimeActive,
+		FieldAddedOnAge, FieldCompletionOnAge, FieldLastActivityAge,
+		FieldRatio, FieldProgress, FieldAvailability,
+		FieldDlSpeed, FieldUpSpeed,
+		FieldNumSeeds, FieldNumLeechs, FieldNumComplete, FieldNumIncomplete, FieldTrackersCount,
+		FieldSystemHour, FieldSystemMinute, FieldSystemDayOfWeek, FieldSystemDay, FieldSystemMonth, FieldSystemYear:
+		return true
+	default:
+		return false
+	}
+}
+
+// IsSortableKey reports whether a condition field can be a ranking key. It
+// accepts the numeric and string fields the sorter compares directly, plus
+// GROUP_SIZE (the member count of the active group) and PRIVATE, which the
+// sorter reads as 0 or 1.
+//
+//nolint:exhaustive // Only fields with a sort value belong here.
+func (f ConditionField) IsSortableKey() bool {
+	switch f {
+	case FieldGroupSize, FieldPrivate:
+		return true
+	default:
+		return f.IsNumeric() || f.IsString()
+	}
+}
+
+//nolint:exhaustive // Only sortable string fields belong here.
+func (f ConditionField) IsString() bool {
+	switch f {
+	case FieldName, FieldCategory, FieldTags, FieldTracker, FieldState, FieldSavePath, FieldContentPath, FieldComment:
+		return true
+	default:
+		return false
+	}
+}
 
 // WrapsBetween reports whether a BETWEEN range on this field wraps when the
 // minimum is greater than the maximum. Clock fields cycle, so 20 to 6 on the

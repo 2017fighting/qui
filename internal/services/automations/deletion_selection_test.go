@@ -111,9 +111,11 @@ func TestDeletionSelection_LaterClaimStillExpandsWiderScope(t *testing.T) {
 
 func TestDeletionSelection_HardlinkRuleFollowsTakenTorrent(t *testing.T) {
 	// The pack shares files with both episodes, and the library copy is a hardlink of the pack.
+	// The episode paths are siblings of the pack, not children: a nested pair stops the
+	// expansion (ADR 0017, nested_path_guard_test.go), and this test is about the hardlink.
 	torrents := []qbt.Torrent{
-		{Hash: "episode1", Tags: "first", AddedOn: 1, SavePath: "/data", ContentPath: "/data/show/e1.mkv"},
-		{Hash: "episode2", Tags: "second", AddedOn: 2, SavePath: "/data", ContentPath: "/data/show/e2.mkv"},
+		{Hash: "episode1", Tags: "first", AddedOn: 1, SavePath: "/data", ContentPath: "/data/show-e1.mkv"},
+		{Hash: "episode2", Tags: "second", AddedOn: 2, SavePath: "/data", ContentPath: "/data/show-e2.mkv"},
 		{Hash: "pack", AddedOn: 3, SavePath: "/data", ContentPath: "/data/show"},
 		{Hash: "copy", AddedOn: 4, SavePath: "/library", ContentPath: "/library/show"},
 	}

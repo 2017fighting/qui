@@ -7,7 +7,8 @@
   "tabs": {
     "workflows": "工作流",
     "reannounce": "重新通報",
-    "orphanScan": "孤立項目掃描"
+    "orphanScan": "孤立項目掃描",
+    "deletePlan": "刪除計畫"
   },
   "queryBuilder": {
     "noConditions": "無條件",

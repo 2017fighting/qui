@@ -4,6 +4,7 @@
  */
 
 import { AUTOMATIONS_NAV_GROUPS, type AutomationsTab } from "@/components/automations/tabs"
+import { DeletePlanOverview } from "@/components/instances/preferences/DeletePlanOverview"
 import { OrphanScanOverview } from "@/components/instances/preferences/OrphanScanOverview"
 import { OrphanScanSettingsDialog } from "@/components/instances/preferences/OrphanScanSettingsDialog"
 import { ReannounceOverview } from "@/components/instances/preferences/ReannounceOverview"
@@ -46,6 +47,7 @@ export function Automations({ activeTab, onTabChange }: AutomationsProps) {
         {activeTab === "workflows" && <WorkflowsOverview />}
         {activeTab === "reannounce" && <ReannounceOverview onConfigureInstance={setConfigureInstanceId} />}
         {activeTab === "orphan-scan" && <OrphanScanOverview onConfigureInstance={setConfigureOrphanScanId} />}
+        {activeTab === "delete-plan" && <DeletePlanOverview />}
       </SectionedPage>
 
       <ReannounceSettingsDialog

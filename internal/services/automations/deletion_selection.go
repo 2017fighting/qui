@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	qbt "github.com/autobrr/go-qbittorrent"
+	"github.com/rs/zerolog/log"
 
 	"github.com/autobrr/qui/internal/models"
 )
@@ -136,6 +137,9 @@ func (s *Service) selectDeletions(ctx context.Context, instanceID int, in deleti
 		failedRules: make(map[int]error),
 	}
 	evalCtx := in.evalCtx
+	// ADR 0017: the guards below read the nested-path exclusion, so fill it once here for
+	// the live run, the dry run and the preview alike.
+	prepareNestedPathExclusion(evalCtx, in.torrents)
 	// A torrent is about 2 KB. Build the map only for the modes that expand groups, so the
 	// preview of another mode does not pay for it. The run builds the map later in any case.
 	if evalCtx.torrentsByHash == nil && slices.ContainsFunc(in.rules, deleteExpandsGroups) {
@@ -281,6 +285,13 @@ func (s *Service) expandDeleteTrigger(
 
 	switch deleteMode {
 	case DeleteModeWithFilesIncludeCrossSeeds:
+		// ADR 0017: a nested Content Path outside the group means the expansion would
+		// remove files another torrent needs.
+		if nestedPathExcluded(in.evalCtx, trigger.Hash) {
+			log.Warn().Int("instanceID", instanceID).Str("hash", trigger.Hash).
+				Msg("automations: skipping delete, nested content path could remove another torrent's files")
+			return
+		}
 		var hardlinks *HardlinkIndex
 		if deleteAction.IncludeHardlinks {
 			hardlinks = in.evalCtx.hardlinkIndex
@@ -358,6 +369,11 @@ func groupKeepsFilesForOtherInstances(evalCtx *EvalContext, hashes []string) (lo
 // preserveCrossSeedsDelete keeps the files of the trigger when a torrent on
 // this instance or on another instance can need them.
 func preserveCrossSeedsDelete(trigger qbt.Torrent, in deletionSelectionInput) (batchMode, logMsg string) {
+	// ADR 0017: a nested Content Path outside the group means the files this delete
+	// would remove can belong to another torrent, so keep them.
+	if nestedPathExcluded(in.evalCtx, trigger.Hash) {
+		return DeleteModeKeepFiles, "automations: removing torrent (nested content path - keeping files)"
+	}
 	if keepMsg, keep := otherInstanceKeepsFiles(in.evalCtx, trigger.Hash); keep {
 		return DeleteModeKeepFiles, keepMsg
 	}

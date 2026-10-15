@@ -7,7 +7,8 @@
   "tabs": {
     "workflows": "Workflows",
     "reannounce": "Reanuncia",
-    "orphanScan": "Exploració d'orfes"
+    "orphanScan": "Exploració d'orfes",
+    "deletePlan": "Pla de supressió"
   },
   "queryBuilder": {
     "noConditions": "Cap condició",
