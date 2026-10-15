@@ -36,6 +36,13 @@ qui manages torrent-client state and workflows for a self-hosted installation.
 - **Stop folder**: A folder that the folder cleanup never removes and never climbs past: the default save path, the download path, a category folder in either of them, or the hardlink base dir. A folder qBittorrent monitors for `.torrent` files, and the save path set for it, is never removed either, but is not a stop folder: it sets no climb limit of its own. _Avoid_: base dir, root, ceiling.
 - **Folder cleanup**: The step that removes leftover folders after qui deletes or moves a torrent. _Avoid_: prune, managed delete cleanup.
 
+## Delete plan
+
+- **Content group**: The local torrents on one instance that hold the same data. Their Content Paths are equal once normalized, and a file-overlap check confirms they use the same files; release metadata never makes one. It is the unit a delete plan removes, because deleting with files removes the files of the whole path. _Avoid_: Cross-seed set, duplicate torrent (that is a torrent whose infohash the client already has), seed group.
+- **Delete plan**: The frozen, ordered list of content groups one run removes to reach a target size, together with the dead groups it removes whatever that target is. _Avoid_: Cleanup run, prune list, delete queue.
+- **Dead group**: A content group in which no member is seeding. _Avoid_: Dead torrent (a swarm with no seeders), orphan (an orphan file has no torrent at all).
+- **Delete protection tag**: The tag that takes a content group out of a delete plan when any member carries it. The tag is `no_delete`. _Avoid_: Keep tag, skip tag, blocklist tag.
+
 ## Release classification
 
 - **Content type**: The kind of media a release name describes: movie, TV, music, audiobook, book, comic, game, app, adult, or unknown. Automations decide it from the name alone; cross-seed also corrects it with the torrent's file sizes. Magazines are books. Courses are unknown: rls gives video courses and book publishers the same type, so no category filter fits them all. When the caller passes no categories, an indexer search picks them from the query and IDs, which is not a content type. _Avoid_: category (a qBittorrent category is a different thing), media type (the disc format read from a RIAJ code).

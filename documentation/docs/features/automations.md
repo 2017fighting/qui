@@ -375,6 +375,7 @@ By default, qui processes matched torrents oldest first. Set the **Torrent Prior
 | **Default**| Standard oldest-first priority. |
 | **Simple** | Prioritize by one numeric, duration, or string field (for example `Size`, `Added Age`, `Name`) in ascending or descending order. |
 | **Score** | Rule-based priority. qui scores torrents with custom rules and sorts them by total score, ascending or descending. |
+| **Keys** | Rank by an ordered chain of keys. Each key has its own direction and can be switched off. |
 
 ### Score-based priority
 
@@ -385,6 +386,14 @@ Available score rule types:
 - **Conditional**: Evaluates a standard query condition (see [Query builder](#query-builder)). If the condition is true, qui adds a static value to the score.
 
 qui processes torrents by their final score. The **Live impact preview** shows the computed scores.
+
+### Key-based priority
+
+Key-based priority ranks torrents by an ordered chain of keys. The first key decides, the next key breaks its ties, and so on. Each key names a condition field and carries its own direction, so one chain can mix ascending and descending keys.
+
+Reorder a key with the up and down buttons, switch a key off with its toggle, and pick `Asc` or `Desc` per key. A disabled key never changes the order. When every key ties, qui falls back to the torrent hash, so the same input always gives the same order.
+
+The keys use the same field vocabulary as the query builder, plus `Group Size` and `Private`.
 
 ## Tracker matching
 
@@ -561,6 +570,7 @@ When a torrent matches the rule, qui finds other torrents that point to the same
 - **Safe expansion**: If qui cannot determine that another torrent uses the same files, qui does not include it in the deletion.
 - **File lists decide, not paths**: qui includes a candidate only when at least 90% of the smaller torrent's bytes use the same file locations. A torrent that shares only the folder, such as a pack with a top folder named `Season 2`, keeps its files and stays in the client. If overlap is above zero but below 90%, qui skips the entire deletion group.
 - **Safety-first**: If the file check cannot complete for any reason, qui skips the entire group to prevent broken torrents.
+- **Nested Content Paths**: qui skips a group when another torrent's Content Path nests with it, in either direction: a single-file torrent at `/data/Pack/extra.mkv` inside a pack at `/data/Pack`, or a pack at `/data/Pack` around a single file at `/data/Pack/extra.mkv`. The two paths land in different groups, so the file check never compares them, and a delete with files would remove files the other torrent needs. Nested means one path is a strict ancestor of the other on path-segment boundaries, so `/data/Pack` does not nest with `/data/Package`.
 - **Preview**: The delete preview shows all torrents that qui deletes in simulation, with cross-seeds marked.
 
 **Include hardlinked copies:**
@@ -1182,6 +1192,7 @@ The preview expands and shows cross-seeds only in `Remove with files (include cr
 
 - Two torrents are candidates when they have the same Content Path, or when one Content Path is inside the folder of the other torrent. They are also candidates when they have the same Save Path and one torrent has no subfolder. qui then compares their resolved file paths and sizes.
 - qui does not treat torrents in the same directory that use different files as cross-seeds. qui removes their files.
+- If another torrent's Content Path nests with the group's Content Path (see **Nested Content Paths** above), qui keeps the files.
 - If torrents share files or the file comparison cannot complete, qui keeps the files.
 - Only torrents whose files qui removes contribute to the free-space projection.
 

@@ -201,6 +201,10 @@ var sqliteMigrationFilenameRenames = []migrationFilenameRename{
 		from: "091_drop_unused_timestamp_indexes.sql",
 		to:   "093_drop_unused_timestamp_indexes.sql",
 	},
+	{
+		from: "106_add_delete_plan.sql",
+		to:   "107_add_delete_plan.sql",
+	},
 }
 
 var postgresMigrationFilenameRenames = []migrationFilenameRename{
@@ -263,6 +267,10 @@ var postgresMigrationFilenameRenames = []migrationFilenameRename{
 	{
 		from: "093_drop_unused_timestamp_indexes.sql",
 		to:   "094_drop_unused_timestamp_indexes.sql",
+	},
+	{
+		from: "107_add_delete_plan.sql",
+		to:   "108_add_delete_plan.sql",
 	},
 }
 

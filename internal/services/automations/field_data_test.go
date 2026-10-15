@@ -97,6 +97,19 @@ func TestNeedsFor(t *testing.T) {
 			want: RuleNeeds{SkippedFiles: true},
 		},
 		{
+			name: "keys sorting enabled key",
+			rules: sorted(&models.SortingConfig{Type: models.SortingTypeKeys, Keys: []models.KeyRule{
+				{Field: FieldFreeSpace, Enabled: true, Direction: models.SortDirectionASC},
+			}}),
+			want: RuleNeeds{FreeSpace: true},
+		},
+		{
+			name: "keys sorting disabled key",
+			rules: sorted(&models.SortingConfig{Type: models.SortingTypeKeys, Keys: []models.KeyRule{
+				{Field: FieldFreeSpace, Enabled: false, Direction: models.SortDirectionASC},
+			}}),
+		},
+		{
 			name:  "include hardlinks",
 			rules: enabled(&models.ActionConditions{Delete: &models.DeleteAction{Enabled: true, IncludeHardlinks: true, Mode: DeleteModeWithFilesIncludeCrossSeeds}}),
 			want:  RuleNeeds{HardlinkScope: true, CrossMatch: CrossMatchNeeds{SameContent: true}},

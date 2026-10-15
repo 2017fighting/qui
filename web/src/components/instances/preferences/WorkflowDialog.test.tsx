@@ -179,6 +179,53 @@ describe("WorkflowDialog tracker pattern", () => {
   })
 })
 
+describe("WorkflowDialog ranking keys", () => {
+  const keysRule: Automation = {
+    ...rule,
+    name: "Ranking keys",
+    conditions: { schemaVersion: "1", pause: { enabled: true } },
+    sortingConfig: {
+      schemaVersion: "1",
+      type: "keys",
+      direction: "ASC",
+      keys: [
+        { field: "SIZE", enabled: true, direction: "ASC" },
+        { field: "NUM_COMPLETE", enabled: true, direction: "DESC" },
+      ],
+    },
+  }
+
+  it("reorders and switches off a key before saving the chain", async () => {
+    mocks.instancesQuery.data = []
+    mocks.save.mockResolvedValue(keysRule)
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    render(
+      <QueryClientProvider client={client}>
+        <WorkflowDialog open onOpenChange={() => {}} instanceId={1} rule={keysRule} />
+      </QueryClientProvider>
+    )
+
+    expect(screen.getAllByRole("switch", { name: key("priority.enableKey") })).toHaveLength(2)
+
+    // Move the first key down, so NUM_COMPLETE leads the chain, then switch it off.
+    fireEvent.click(screen.getAllByRole("button", { name: key("priority.moveKeyDown") })[0])
+    fireEvent.click(screen.getAllByRole("switch", { name: key("priority.enableKey") })[0])
+
+    fireEvent.click(screen.getByRole("button", { name: key("save") }))
+    await waitFor(() => expect(mocks.save).toHaveBeenCalled())
+    expect(mocks.save.mock.calls[0][2].sortingConfig).toEqual({
+      schemaVersion: "1",
+      type: "keys",
+      direction: "ASC",
+      keys: [
+        { field: "NUM_COMPLETE", enabled: false, direction: "DESC" },
+        { field: "SIZE", enabled: true, direction: "ASC" },
+      ],
+    })
+    client.clear()
+  })
+})
+
 describe("WorkflowDialog skip small files", () => {
   const skipRule: Automation = {
     ...rule,

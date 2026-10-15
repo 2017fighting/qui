@@ -54,6 +54,9 @@ type EvalContext struct {
 	// The deletion projection uses the same snapshot and hardlink index as execution.
 	torrentsByHash map[string]qbt.Torrent
 	hardlinkIndex  *HardlinkIndex
+	// nestedPathExcluded holds the hashes whose Content Path nests with another
+	// torrent's. ADR 0017: a delete that expands to a content group keeps their files.
+	nestedPathExcluded map[string]struct{}
 
 	// UnregisteredSet contains hashes of unregistered torrents (from SyncManager health counts)
 	UnregisteredSet map[string]struct{}

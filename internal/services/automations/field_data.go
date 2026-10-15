@@ -235,6 +235,12 @@ func (n *RuleNeeds) addSorting(config *models.SortingConfig) {
 				n.addTree(rule.Conditional.Condition)
 			}
 		}
+	case models.SortingTypeKeys:
+		for _, key := range config.Keys {
+			if key.Enabled {
+				n.addField(key.Field)
+			}
+		}
 	}
 }
 
