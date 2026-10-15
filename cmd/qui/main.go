@@ -42,6 +42,7 @@ import (
 	"github.com/autobrr/qui/internal/services/automations"
 	"github.com/autobrr/qui/internal/services/crossseed"
 	"github.com/autobrr/qui/internal/services/crossseedroute"
+	"github.com/autobrr/qui/internal/services/deleteplan"
 	"github.com/autobrr/qui/internal/services/dirscan"
 	"github.com/autobrr/qui/internal/services/discscan"
 	"github.com/autobrr/qui/internal/services/externalprograms"
@@ -807,6 +808,10 @@ func (app *Application) runServer() {
 	syncManager.SetFolderCleanup(folderCleanup)
 	folderCleanup.Start(context.Background())
 
+	deletePlanStore := models.NewDeletePlanStore(db)
+	deletePlanService := deleteplan.NewService(deleteplan.DefaultConfig(), instanceStore, deletePlanStore, syncManager)
+	deletePlanService.SetActivityPublisher(activityHub)
+
 	discScanStore := models.NewDiscScanStore(db)
 	discScanService := discscan.NewService(discScanStore)
 	discScanService.SetActivityPublisher(activityHub)
@@ -843,6 +848,10 @@ func (app *Application) runServer() {
 	orphanScanCtx, orphanScanCancel := context.WithCancel(context.Background())
 	defer orphanScanCancel()
 	orphanScanService.Start(orphanScanCtx)
+
+	deletePlanCtx, deletePlanCancel := context.WithCancel(context.Background())
+	defer deletePlanCancel()
+	deletePlanService.Start(deletePlanCtx)
 
 	discScanCtx, discScanCancel := context.WithCancel(context.Background())
 	defer discScanCancel()
@@ -965,6 +974,8 @@ func (app *Application) runServer() {
 		CrossSeedRoutes:                  crossSeedRoutes,
 		OrphanScanStore:                  orphanScanStore,
 		OrphanScanService:                orphanScanService,
+		DeletePlanStore:                  deletePlanStore,
+		DeletePlanService:                deletePlanService,
 		DiscScanStore:                    discScanStore,
 		DiscScanService:                  discScanService,
 		BackendPool:                      backendPool,

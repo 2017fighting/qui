@@ -24,6 +24,7 @@ import (
 	"github.com/autobrr/qui/internal/models"
 	"github.com/autobrr/qui/internal/qbittorrent"
 	"github.com/autobrr/qui/internal/services/activity"
+	"github.com/autobrr/qui/internal/services/contentgroup"
 	"github.com/autobrr/qui/internal/services/crossseed"
 	"github.com/autobrr/qui/internal/services/crossseedroute"
 	"github.com/autobrr/qui/internal/services/externalprograms"
@@ -3548,6 +3549,17 @@ func cachedTorrentFilesFetcher(filesByHash map[string]qbt.TorrentFiles) torrentF
 	}
 }
 
+// crossSeedFileBatchFetcher reads an instance's file lists through the files reader,
+// in the shape contentgroup's overlap checks take.
+func (s *Service) crossSeedFileBatchFetcher(instanceID int) contentgroup.BatchFileFetcher {
+	if s == nil || s.filesReader == nil {
+		return nil
+	}
+	return func(ctx context.Context, hashes []string) (map[string]qbt.TorrentFiles, error) {
+		return s.filesReader.GetTorrentFilesBatch(ctx, instanceID, hashes)
+	}
+}
+
 // fileOverlapIndex records the trigger's files by their resolved on-disk path.
 type fileOverlapIndex struct {
 	sizeByPath map[string]int64
@@ -3703,28 +3715,7 @@ func shouldPreserveCrossSeedFiles(torrent qbt.Torrent, crossSeeds crossSeedGroup
 // Returns true if verification passes, false if not enough overlap or verification failed.
 // This is used as a safety check when ContentPath matching is ambiguous.
 func (s *Service) verifyFileOverlap(ctx context.Context, instanceID int, torrent1, torrent2 qbt.Torrent, minOverlapPercent int) (bool, error) {
-	if err := ctx.Err(); err != nil {
-		return false, err
-	}
-
-	// Get files for both torrents
-	filesByHash, err := s.filesReader.GetTorrentFilesBatch(ctx, instanceID, []string{torrent1.Hash, torrent2.Hash})
-	if err != nil {
-		return false, fmt.Errorf("failed to fetch files: %w", err)
-	}
-
-	if err := ctx.Err(); err != nil {
-		return false, err
-	}
-
-	if minOverlapPercent <= 0 {
-		minOverlapPercent = minFileOverlapPercent
-	}
-	percent := fileOverlapPercent(buildFileOverlapIndex(torrent1, filesByHash[torrent1.Hash]), torrent2, filesByHash[torrent2.Hash])
-	if percent == overlapUnknown {
-		return false, errors.New("cannot compute overlap: missing or zero-size file lists")
-	}
-	return percent >= int64(minOverlapPercent), nil
+	return contentgroup.VerifyFileOverlap(ctx, s.crossSeedFileBatchFetcher(instanceID), torrent1, torrent2, minOverlapPercent)
 }
 
 // expandTagStatesForCrossSeeds propagates pending tag decisions flagged with
@@ -3855,8 +3846,9 @@ func (e *tagExpansion) inject(sibTorrent qbt.Torrent, tag string, intent tagExpa
 	markTagReset(sibState, tag, reset && intent.action == "add")
 }
 
-// shouldExpandGroupWithAmbiguityPolicy returns whether a grouping expansion should be applied
-// for a trigger torrent when ContentPath is ambiguous (ContentPath == SavePath).
+// shouldExpandGroupWithAmbiguityPolicy resolves the group's ambiguous policy and asks
+// contentgroup to verify the overlap. It returns whether a grouping expansion should be
+// applied for a trigger torrent when ContentPath is ambiguous (ContentPath == SavePath).
 //
 // This is only relevant for group definitions that include the contentPath key. When ambiguous:
 // - ambiguousPolicy == "skip": never expand
@@ -3873,9 +3865,6 @@ func (s *Service) shouldExpandGroupWithAmbiguityPolicy(
 	if idx == nil || triggerHash == "" {
 		return true
 	}
-	if !idx.IsAmbiguousForHash(triggerHash) {
-		return true
-	}
 
 	def := (*models.GroupDefinition)(nil)
 	if rule != nil && rule.Conditions != nil && rule.Conditions.Grouping != nil {
@@ -3884,46 +3873,8 @@ func (s *Service) shouldExpandGroupWithAmbiguityPolicy(
 	if def == nil {
 		def = builtinGroupDefinition(groupID)
 	}
-	if def == nil || !containsKey(def.Keys, groupKeyContentPath) {
-		return true
-	}
 
-	policy := strings.TrimSpace(def.AmbiguousPolicy)
-	if policy == "" {
-		policy = groupAmbiguousVerifyOverlap
-	}
-	if policy == groupAmbiguousSkip {
-		return false
-	}
-
-	if s == nil || s.filesReader == nil {
-		return false
-	}
-	triggerTorrent, ok := torrentByHash[triggerHash]
-	if !ok {
-		return false
-	}
-
-	minPercent := def.MinFileOverlapPercent
-	if minPercent <= 0 {
-		minPercent = minFileOverlapPercent
-	}
-
-	members := idx.MembersForHash(triggerHash)
-	for _, otherHash := range members {
-		if otherHash == triggerHash {
-			continue
-		}
-		otherTorrent, ok := torrentByHash[otherHash]
-		if !ok {
-			return false
-		}
-		hasOverlap, err := s.verifyFileOverlap(ctx, instanceID, triggerTorrent, otherTorrent, minPercent)
-		if err != nil || !hasOverlap {
-			return false
-		}
-	}
-	return true
+	return contentgroup.ShouldExpandAmbiguousGroup(ctx, s.crossSeedFileBatchFetcher(instanceID), def, idx, triggerHash, torrentByHash)
 }
 
 // groupHoldsSharedFiles reports whether every torrent that shares a file with
@@ -4046,21 +3997,27 @@ func sortingConfigUsesField(config *models.SortingConfig, field ConditionField) 
 		return false
 	}
 
-	if config.Type == models.SortingTypeSimple {
+	switch config.Type {
+	case models.SortingTypeSimple:
 		return config.Field == field
-	}
-
-	if config.Type != models.SortingTypeScore {
+	case models.SortingTypeScore:
+		for i := range config.ScoreRules {
+			if scoreRuleUsesField(config.ScoreRules[i], field) {
+				return true
+			}
+		}
+		return false
+	case models.SortingTypeKeys:
+		// A disabled key never moves the order, so it needs no prepared data.
+		for _, key := range config.Keys {
+			if key.Enabled && key.Field == field {
+				return true
+			}
+		}
+		return false
+	default:
 		return false
 	}
-
-	for i := range config.ScoreRules {
-		if scoreRuleUsesField(config.ScoreRules[i], field) {
-			return true
-		}
-	}
-
-	return false
 }
 
 func scoreRuleUsesField(rule models.ScoreRule, field ConditionField) bool {
@@ -5464,6 +5421,8 @@ func sortingConfigEqual(a, b *models.SortingConfig) bool {
 			return false
 		}
 		return scoreRulesEqual(a.ScoreRules, b.ScoreRules)
+	case models.SortingTypeKeys:
+		return slices.Equal(a.Keys, b.Keys)
 	default:
 		return false
 	}

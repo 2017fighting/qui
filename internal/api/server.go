@@ -34,6 +34,7 @@ import (
 	"github.com/autobrr/qui/internal/services/automations"
 	"github.com/autobrr/qui/internal/services/crossseed"
 	"github.com/autobrr/qui/internal/services/crossseedroute"
+	"github.com/autobrr/qui/internal/services/deleteplan"
 	"github.com/autobrr/qui/internal/services/dirscan"
 	"github.com/autobrr/qui/internal/services/discscan"
 	"github.com/autobrr/qui/internal/services/externalprograms"
@@ -99,6 +100,8 @@ type Server struct {
 	crossSeedRoutes                  *crossseedroute.Service
 	orphanScanStore                  *models.OrphanScanStore
 	orphanScanService                *orphanscan.Service
+	deletePlanStore                  *models.DeletePlanStore
+	deletePlanService                *deleteplan.Service
 	discScanStore                    *models.DiscScanStore
 	discScanService                  *discscan.Service
 	backendPool                      *fsops.Pool
@@ -154,6 +157,8 @@ type Dependencies struct {
 	CrossSeedRoutes                  *crossseedroute.Service
 	OrphanScanStore                  *models.OrphanScanStore
 	OrphanScanService                *orphanscan.Service
+	DeletePlanStore                  *models.DeletePlanStore
+	DeletePlanService                *deleteplan.Service
 	DiscScanStore                    *models.DiscScanStore
 	DiscScanService                  *discscan.Service
 	BackendPool                      *fsops.Pool
@@ -233,6 +238,8 @@ func NewServer(deps *Dependencies) *Server {
 		crossSeedRoutes:                  deps.CrossSeedRoutes,
 		orphanScanStore:                  deps.OrphanScanStore,
 		orphanScanService:                deps.OrphanScanService,
+		deletePlanStore:                  deps.DeletePlanStore,
+		deletePlanService:                deps.DeletePlanService,
 		discScanStore:                    deps.DiscScanStore,
 		discScanService:                  deps.DiscScanService,
 		backendPool:                      deps.BackendPool,
@@ -410,6 +417,7 @@ func (s *Server) Handler() (*chi.Mux, error) {
 	)
 	automationsHandler := handlers.NewAutomationHandler(s.automationStore, s.automationActivityStore, s.instanceStore, s.externalProgramStore, s.automationService)
 	orphanScanHandler := handlers.NewOrphanScanHandler(s.orphanScanStore, s.instanceStore, s.orphanScanService)
+	deletePlanHandler := handlers.NewDeletePlanHandler(s.deletePlanStore, s.deletePlanService)
 	discScanHandler := handlers.NewDiscScanHandler(s.discScanService, s.discScanStore, s.syncManager, s.backendPool)
 	var dirScanHandler *handlers.DirScanHandler
 	if s.dirScanService != nil {
@@ -749,6 +757,19 @@ func (s *Server) Handler() (*chi.Mux, error) {
 							r.Get("/", orphanScanHandler.GetRun)
 							r.Post("/confirm", orphanScanHandler.ConfirmDeletion)
 							r.Delete("/", orphanScanHandler.CancelRun)
+						})
+					})
+
+					// Delete plans
+					r.Route("/delete-plan", func(r chi.Router) {
+						r.Post("/runs", deletePlanHandler.CreateRun)
+						r.Get("/runs", deletePlanHandler.ListRuns)
+						r.Route("/runs/{runID}", func(r chi.Router) {
+							r.Get("/", deletePlanHandler.GetRun)
+							r.Patch("/rows", deletePlanHandler.UpdateRows)
+							r.Post("/refill", deletePlanHandler.RefillRun)
+							r.Post("/confirm", deletePlanHandler.ConfirmRun)
+							r.Post("/cancel", deletePlanHandler.CancelRun)
 						})
 					})
 				})

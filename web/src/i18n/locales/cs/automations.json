@@ -7,7 +7,8 @@
   "tabs": {
     "workflows": "Postupy automatizace",
     "reannounce": "Opakované hlášení",
-    "orphanScan": "Vyhledání sirotků"
+    "orphanScan": "Vyhledání sirotků",
+    "deletePlan": "Plán mazání"
   },
   "queryBuilder": {
     "noConditions": "Žádné podmínky",

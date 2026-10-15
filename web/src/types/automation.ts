@@ -304,6 +304,12 @@ export type ScoreRule =
   | { type: "field_multiplier"; fieldMultiplier: FieldMultiplierScoreRule }
   | { type: "conditional"; conditional: ConditionalScoreRule }
 
+export interface KeyRule {
+  field: ConditionField
+  enabled: boolean
+  direction: "ASC" | "DESC"
+}
+
 export type SortingConfig =
   | {
     schemaVersion: string
@@ -316,6 +322,12 @@ export type SortingConfig =
     type: "score"
     direction: "ASC" | "DESC"
     scoreRules: ScoreRule[]
+  }
+  | {
+    schemaVersion: string
+    type: "keys"
+    direction: "ASC" | "DESC"
+    keys: KeyRule[]
   }
 
 export interface Automation {

@@ -12,10 +12,11 @@ import (
 
 	"github.com/autobrr/qui/internal/models"
 	"github.com/autobrr/qui/internal/qbittorrent"
+	"github.com/autobrr/qui/internal/services/contentgroup"
 )
 
 const (
-	groupKeyContentPath       = "contentPath"
+	groupKeyContentPath       = contentgroup.KeyContentPath
 	groupKeySavePath          = "savePath"
 	groupKeyEffectiveName     = "effectiveName"
 	groupKeyContentType       = "contentType"
@@ -31,8 +32,8 @@ const (
 )
 
 const (
-	groupAmbiguousVerifyOverlap = "verify_overlap"
-	groupAmbiguousSkip          = "skip"
+	groupAmbiguousVerifyOverlap = contentgroup.AmbiguityVerifyOverlap
+	groupAmbiguousSkip          = contentgroup.AmbiguitySkip
 )
 
 // GroupKeys are the values of a group definition's keys. buildGroupKey reads each one.

@@ -7,7 +7,8 @@
   "tabs": {
     "workflows": "Робочі процеси",
     "reannounce": "Повторно оголосити",
-    "orphanScan": "Орфанне сканування"
+    "orphanScan": "Орфанне сканування",
+    "deletePlan": "План видалення"
   },
   "queryBuilder": {
     "noConditions": "Немає умов",
