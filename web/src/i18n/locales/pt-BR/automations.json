@@ -7,7 +7,8 @@
   "tabs": {
     "workflows": "Workflows",
     "reannounce": "Reanúncio Automático",
-    "orphanScan": "Varredura de Órfãos"
+    "orphanScan": "Varredura de Órfãos",
+    "deletePlan": "Plano de exclusão"
   },
   "queryBuilder": {
     "noConditions": "Sem condições",

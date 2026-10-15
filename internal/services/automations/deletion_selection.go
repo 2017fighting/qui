@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	qbt "github.com/autobrr/go-qbittorrent"
+	"github.com/rs/zerolog/log"
 
 	"github.com/autobrr/qui/internal/models"
 )
@@ -115,6 +116,7 @@ func (s *Service) selectDeletions(ctx context.Context, instanceID int, in deleti
 		failedRules: make(map[int]error),
 	}
 	evalCtx := in.evalCtx
+	prepareNestedPathExclusion(evalCtx, in.torrents)
 	if evalCtx.torrentsByHash == nil && slices.ContainsFunc(in.rules, deleteExpandsGroups) {
 		evalCtx.torrentsByHash = make(map[string]*qbt.Torrent, len(in.torrents))
 		for _, torrent := range in.torrents {
@@ -269,6 +271,13 @@ func (s *Service) expandDeleteTrigger(
 
 	switch deleteMode {
 	case DeleteModeWithFilesIncludeCrossSeeds:
+		// ADR 0017: a nested Content Path outside the group means the expansion would
+		// remove files another torrent needs.
+		if nestedPathExcluded(in.evalCtx, trigger.Hash) {
+			log.Warn().Int("instanceID", instanceID).Str("hash", trigger.Hash).
+				Msg("automations: skipping delete, nested content path could remove another torrent's files")
+			return
+		}
 		var hardlinks *HardlinkIndex
 		if deleteAction.IncludeHardlinks {
 			hardlinks = in.evalCtx.hardlinkIndex
@@ -341,6 +350,11 @@ func groupKeepsFilesForOtherInstances(evalCtx *EvalContext, hashes []string) (lo
 }
 
 func preserveCrossSeedsDelete(trigger qbt.Torrent, in deletionSelectionInput) (batchMode, logMsg string) {
+	// ADR 0017: a nested Content Path outside the group means the files this delete
+	// would remove can belong to another torrent, so keep them.
+	if nestedPathExcluded(in.evalCtx, trigger.Hash) {
+		return DeleteModeKeepFiles, "automations: removing torrent (nested content path - keeping files)"
+	}
 	if keepMsg, keep := otherInstanceKeepsFiles(in.evalCtx, trigger.Hash); keep {
 		return DeleteModeKeepFiles, keepMsg
 	}
