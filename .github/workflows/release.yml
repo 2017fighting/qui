@@ -111,7 +111,13 @@ jobs:
 
   goreleaserbuild:
     name: Build distribution binaries
-    if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/develop'
+    # This fork has no RELEASE_SIGNING_PRIVATE_KEY, and publishing a release needs
+    # the private key behind the updater certificate in internal/update, which
+    # only upstream holds: on a tag this job fails at the step that checks for
+    # that key, which turns a tag push red. Branch runs keep their snapshot
+    # build, and other refs still skip this job. Set the repository variable
+    # PUBLISH_RELEASES to true to run it on tags again once the key exists here.
+    if: ${{ (startsWith(github.ref, 'refs/tags/') && vars.PUBLISH_RELEASES == 'true') || github.ref == 'refs/heads/develop' }}
     # The MSI needs wixl 0.105 or later for Environment. Ubuntu 24.04 ships 0.103.
     runs-on: ubuntu-26.04
     needs: [test, web]
@@ -256,18 +262,15 @@ jobs:
   docker-matrix:
     name: Determine Docker platforms
     needs: changes
-    if: needs.changes.outputs.code == 'true'
+    # This fork builds and pushes an image for its tags only, for linux/amd64.
+    # A fork pull request's image comes from the manual build-pr-image workflow.
+    if: ${{ needs.changes.outputs.code == 'true' && startsWith(github.ref, 'refs/tags/') }}
     runs-on: ubuntu-latest
     outputs:
       platforms: ${{ steps.set.outputs.platforms }}
     steps:
       - id: set
-        run: |
-          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
-            echo 'platforms=["linux/amd64","linux/arm64"]' >> "$GITHUB_OUTPUT"
-          else
-            echo 'platforms=["linux/amd64","linux/amd64/v2","linux/amd64/v3","linux/arm/v6","linux/arm/v7","linux/arm64"]' >> "$GITHUB_OUTPUT"
-          fi
+        run: echo 'platforms=["linux/amd64"]' >> "$GITHUB_OUTPUT"
 
   docker:
     name: Build Docker images
