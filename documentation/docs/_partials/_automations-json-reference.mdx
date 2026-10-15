@@ -33,6 +33,7 @@ This section lists every key of a rule as JSON, the condition fields and their o
 | `tags` | array of object |  | Tag actions. Each entry manages its own set of tags. See `conditions.tags[]`. |
 | `category` | object |  | Set the category of matching torrents. See `conditions.category`. |
 | `move` | object |  | Move matching torrents to a different save path. See `conditions.move`. |
+| `skipSmallFiles` | object |  | Set every file under a size threshold to `Do not download`. See `conditions.skipSmallFiles`. |
 | `externalProgram` | object |  | Run an external program for each matching torrent. See `conditions.externalProgram`. |
 | `autoManagement` | object |  | Turn automatic torrent management on or off. See `conditions.autoManagement`. |
 | `exportToInstance` | object |  | Add matching torrents to a different qBittorrent instance. See `conditions.exportToInstance`. |
@@ -146,6 +147,14 @@ This section lists every key of a rule as JSON, the condition fields and their o
 | `atomic` | string | `all` | With `groupId`: `all` moves the group only when every torrent in it matches. |
 | `condition` | condition |  | Optional. When set, the action applies only to torrents that also match this condition. See Condition object. |
 
+### `conditions.skipSmallFiles`
+
+| Key | Type | Values | Description |
+| --- | --- | --- | --- |
+| `enabled` | boolean |  | Whether the action runs. |
+| `maxSizeBytes` | integer |  | Files under this size are set to `Do not download`. In bytes, at least 1048576 when `enabled` is `true`. |
+| `condition` | condition |  | Optional. When set, the action applies only to torrents that also match this condition. See Condition object. |
+
 ### `conditions.externalProgram`
 
 | Key | Type | Values | Description |
@@ -187,10 +196,11 @@ This section lists every key of a rule as JSON, the condition fields and their o
 | Key | Type | Values | Description |
 | --- | --- | --- | --- |
 | `schemaVersion` | string |  | Must be `1`. |
-| `type` | string | `simple`, `score` | `simple` sorts by one field. `score` sorts by the sum of `scoreRules`. |
+| `type` | string | `simple`, `score`, `keys` | `simple` sorts by one field. `score` sorts by the sum of `scoreRules`. `keys` ranks by the first enabled key in `keys`, then the next. |
 | `direction` | string | `ASC`, `DESC` | `ASC` or `DESC`. |
 | `field` | condition field | `ADDED_ON`, `AMOUNT_LEFT`, `AVAILABILITY`, `CATEGORY`, `COMMENT`, `COMPLETION_ON`, `CONTENT_PATH`, `DL_SPEED`, `DOWNLOADED`, `FREE_SPACE`, `LAST_ACTIVITY`, `NAME`, `NUM_COMPLETE`, `NUM_INCOMPLETE`, `NUM_LEECHS`, `NUM_SEEDS`, `PROGRESS`, `RATIO`, `SAVE_PATH`, `SEEDING_TIME`, `SIZE`, `STATE`, `SYSTEM_DAY`, `SYSTEM_DAY_OF_WEEK`, `SYSTEM_HOUR`, `SYSTEM_MINUTE`, `SYSTEM_MONTH`, `SYSTEM_YEAR`, `TAGS`, `TIME_ACTIVE`, `TOTAL_SIZE`, `TRACKER`, `TRACKERS_COUNT`, `UPLOADED`, `UP_SPEED` | With type `simple`: the condition field to sort by. See Condition field names. |
 | `scoreRules` | array of object |  | With type `score`: the rules that add up to the score of each torrent. See `sortingConfig.scoreRules[]`. |
+| `keys` | array of object |  | With type `keys`: the ranking keys, tried in order. A disabled key is skipped. See `sortingConfig.keys[]`. |
 
 ### `sortingConfig.scoreRules[]`
 
@@ -213,6 +223,14 @@ This section lists every key of a rule as JSON, the condition fields and their o
 | --- | --- | --- | --- |
 | `condition` | condition |  | When the torrent matches this condition, score is added. See Condition object. |
 | `score` | number |  | The score to add. |
+
+### `sortingConfig.keys[]`
+
+| Key | Type | Values | Description |
+| --- | --- | --- | --- |
+| `field` | condition field | `ADDED_ON`, `AMOUNT_LEFT`, `AVAILABILITY`, `CATEGORY`, `COMMENT`, `COMPLETION_ON`, `CONTENT_PATH`, `DL_SPEED`, `DOWNLOADED`, `FREE_SPACE`, `GROUP_SIZE`, `LAST_ACTIVITY`, `NAME`, `NUM_COMPLETE`, `NUM_INCOMPLETE`, `NUM_LEECHS`, `NUM_SEEDS`, `PRIVATE`, `PROGRESS`, `RATIO`, `SAVE_PATH`, `SEEDING_TIME`, `SIZE`, `STATE`, `SYSTEM_DAY`, `SYSTEM_DAY_OF_WEEK`, `SYSTEM_HOUR`, `SYSTEM_MINUTE`, `SYSTEM_MONTH`, `SYSTEM_YEAR`, `TAGS`, `TIME_ACTIVE`, `TOTAL_SIZE`, `TRACKER`, `TRACKERS_COUNT`, `UPLOADED`, `UP_SPEED` | The condition field to rank by. See Condition field names. |
+| `enabled` | boolean |  | When false, this key is skipped and never changes the order. |
+| `direction` | string | `ASC`, `DESC` | `ASC` or `DESC`. |
 
 ### Condition object
 

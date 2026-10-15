@@ -17,6 +17,8 @@ import (
 
 	"github.com/autobrr/qui/internal/models"
 	"github.com/autobrr/qui/internal/qbittorrent"
+	"github.com/autobrr/qui/internal/services/contentgroup"
+	"github.com/autobrr/qui/internal/services/ranking"
 	"github.com/autobrr/qui/pkg/pathutil"
 )
 
@@ -207,7 +209,7 @@ func processTorrents(
 	}
 
 	crossSeedIndex := buildCrossSeedIndex(torrents)
-	cpIndex := buildContentPathIndex(torrents)
+	cpIndex := contentgroup.BuildIndex(torrents)
 
 	for _, torrent := range torrents {
 		// Skip if recently processed
@@ -265,7 +267,7 @@ func processTorrents(
 }
 
 // processRuleForTorrent applies a single rule to the torrent state.
-func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *torrentDesiredState, evalCtx *EvalContext, sm *qbittorrent.SyncManager, crossSeedIndex map[crossSeedKey][]qbt.Torrent, stats *ruleRunStats, allTorrents []qbt.Torrent, cpIndex contentPathIndex) {
+func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *torrentDesiredState, evalCtx *EvalContext, sm *qbittorrent.SyncManager, crossSeedIndex map[crossSeedKey][]qbt.Torrent, stats *ruleRunStats, allTorrents []qbt.Torrent, cpIndex contentgroup.Index) {
 	conditions := rule.Conditions
 	if conditions == nil {
 		return
@@ -684,7 +686,7 @@ func shouldBlockMoveForCrossSeeds(torrent qbt.Torrent, moveAction *models.MoveAc
 }
 
 func inSavePath(torrent qbt.Torrent, savePath string) bool {
-	return normalizePath(torrent.SavePath) == normalizePath(savePath)
+	return contentgroup.NormalizePath(torrent.SavePath) == contentgroup.NormalizePath(savePath)
 }
 
 // resolveMovePath returns the path to use for a move. The path is executed as a
@@ -903,7 +905,7 @@ func parseTorrentTags(tags string) map[string]struct{} {
 // This ensures keep-files and preserve-cross-seeds modes don't over-project freed disk space.
 // When DeleteSafeHardlinkSignatureByHash is populated, also dedupes by hardlink signature to avoid
 // double-counting torrents that share the same physical files via hardlinks.
-func updateCumulativeFreeSpaceCleared(torrent qbt.Torrent, evalCtx *EvalContext, deleteMode string, cpIndex contentPathIndex) {
+func updateCumulativeFreeSpaceCleared(torrent qbt.Torrent, evalCtx *EvalContext, deleteMode string, cpIndex contentgroup.Index) {
 	if evalCtx == nil || evalCtx.FilesToClear == nil {
 		return
 	}
@@ -959,13 +961,18 @@ func updateCumulativeFreeSpaceCleared(torrent qbt.Torrent, evalCtx *EvalContext,
 	evalCtx.FilesToClear[crossSeedKey] = struct{}{}
 }
 
-func updateCrossSeedFreeSpaceCleared(torrent qbt.Torrent, evalCtx *EvalContext, cpIndex contentPathIndex) {
+func updateCrossSeedFreeSpaceCleared(torrent qbt.Torrent, evalCtx *EvalContext, cpIndex contentgroup.Index) {
 	if _, counted := evalCtx.CrossSeedHashesToClear[torrent.Hash]; counted {
 		return
 	}
 
-	group := findCrossSeedGroup(torrent, cpIndex)
-	verifiedHashes, ok := crossSeedGroupMembers(
+	// A nested Content Path outside the group skips the delete, so it frees nothing.
+	if cpIndex.NestedPathExclusion(cpIndex.Group(torrent)) != "" {
+		return
+	}
+
+	group := cpIndex.Group(torrent)
+	verifiedHashes, ok := contentgroup.VerifiedMembers(
 		torrent,
 		group,
 		evalCtx.CrossSeedHashesToClear,
@@ -1014,7 +1021,7 @@ func verifiedCrossSeedFileBytes(
 			continue
 		}
 		for _, file := range filesByHash[torrent.Hash] {
-			resolvedPath := resolvedTorrentFilePath(torrent, file.Name)
+			resolvedPath := contentgroup.ResolvedTorrentFilePath(torrent, file.Name)
 			previousSize := maxSizeByPath[resolvedPath]
 			if file.Size <= previousSize {
 				continue
@@ -1099,9 +1106,29 @@ func SortTorrents(torrents []qbt.Torrent, config *models.SortingConfig, evalCtx 
 					return fmt.Errorf("score rule %d: unknown type %s", i, r.Type)
 				}
 			}
+		case models.SortingTypeKeys:
+			if len(config.Keys) == 0 {
+				return errors.New("keys sort requires at least one key")
+			}
+			for i, k := range config.Keys {
+				if !k.Field.IsSortableKey() {
+					return fmt.Errorf("keys sort key %d: unsupported sort field: %s", i, k.Field)
+				}
+				if k.Direction != models.SortDirectionASC && k.Direction != models.SortDirectionDESC {
+					return fmt.Errorf("keys sort key %d: invalid direction: %s", i, k.Direction)
+				}
+			}
 		default:
 			return fmt.Errorf("unsupported sorting type: %s", config.Type)
 		}
+	}
+
+	// A key chain compares value lists, so it ranks with the shared sorter.
+	if config != nil && config.Type == models.SortingTypeKeys {
+		ranking.SortByKeys(torrents, config.Keys, func(t qbt.Torrent) []ranking.Value {
+			return torrentKeyValues(t, config.Keys, evalCtx)
+		}, func(t qbt.Torrent) string { return t.Hash })
+		return nil
 	}
 
 	// Optimization: Pre-calculate scores if using score mode to avoid re-evaluating in sort loop
@@ -1118,6 +1145,20 @@ func SortTorrents(torrents []qbt.Torrent, config *models.SortingConfig, evalCtx 
 	})
 
 	return nil
+}
+
+// torrentKeyValues returns one ranking value per key, in the same order as keys.
+func torrentKeyValues(t qbt.Torrent, keys []models.KeyRule, evalCtx *EvalContext) []ranking.Value {
+	values := make([]ranking.Value, len(keys))
+	for i, key := range keys {
+		if key.Field.IsString() {
+			text, _ := extractStringValue(t, key.Field)
+			values[i] = ranking.Value{Text: text, IsText: true}
+			continue
+		}
+		values[i] = ranking.Value{Number: getNumericFieldValue(t, key.Field, evalCtx)}
+	}
+	return values
 }
 
 // compareTorrents is a helper function that returns true if t1 should sort before t2.
@@ -1242,6 +1283,16 @@ func getNumericFieldValue(t qbt.Torrent, field models.ConditionField, evalCtx *E
 		return float64(t.NumIncomplete)
 	case models.FieldTrackersCount:
 		return float64(t.TrackersCount)
+	case models.FieldGroupSize:
+		if evalCtx != nil && evalCtx.activeGroupIndex != nil {
+			return float64(evalCtx.activeGroupIndex.SizeForHash(t.Hash))
+		}
+		return 0
+	case models.FieldPrivate:
+		if t.Private {
+			return 1
+		}
+		return 0
 	case models.FieldSystemHour:
 		return float64(evaluateTime(evalCtx).Hour())
 	case models.FieldSystemMinute:
