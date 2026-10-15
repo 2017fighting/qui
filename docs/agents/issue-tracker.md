@@ -4,6 +4,19 @@ Bug reports and feature requests arrive as GitHub Discussions in the categories 
 
 Use the `gh` CLI for all operations. GitHub shares one number space across discussions and issues. Resolve a bare `#42` in one call: `gh api graphql -f query='{repository(owner:"autobrr",name:"qui"){issueOrPullRequest(number:42){__typename} discussion(number:42){title}}}'`. The command exits non-zero when one side is missing; read `data` anyway. `__typename` tells an issue from a PR.
 
+## Working in a fork
+
+The project tracker is `autobrr/qui`. A clone whose remote is a fork publishes to that fork's issues instead, because `gh` infers the repo from the remote and a contributor's token usually has no write access upstream. `/to-spec` and `/to-tickets` follow the remote: in a fork clone they create issues in the fork. Those issues are working material until someone with upstream write access republishes them there.
+
+A fork starts with Issues disabled and with a small label set. Enable Issues and create every label from `docs/agents/triage-labels.md` that is missing:
+
+```bash
+gh api --method PATCH repos/<owner>/<repo> -F has_issues=true
+for l in needs-triage needs-info ready-for-agent ready-for-human wontfix needs-grilling; do gh label create "$l" --repo <owner>/<repo>; done
+```
+
+Upstream Discussions stay the triage surface: a bug report or feature request is still filed and triaged on `autobrr/qui`, whatever the clone's remote is.
+
 ## Discussions
 
 - **List**: `gh discussion list --category issue-triage --label needs-triage --state open --json number,title,labels`. Category slugs: `issue-triage`, `feature-requests-ideas`.
