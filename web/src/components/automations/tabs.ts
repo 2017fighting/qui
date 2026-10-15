@@ -14,6 +14,7 @@ export const AUTOMATIONS_NAV_GROUPS = [
       { tab: "workflows", labelKey: "tabs.workflows" },
       { tab: "reannounce", labelKey: "tabs.reannounce" },
       { tab: "orphan-scan", labelKey: "tabs.orphanScan" },
+      { tab: "delete-plan", labelKey: "tabs.deletePlan" },
     ],
   },
 ] as const

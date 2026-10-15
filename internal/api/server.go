@@ -39,6 +39,7 @@ import (
 	"github.com/autobrr/qui/internal/services/crossseed"
 	"github.com/autobrr/qui/internal/services/crossseedroute"
 	"github.com/autobrr/qui/internal/services/dbshrink"
+	"github.com/autobrr/qui/internal/services/deleteplan"
 	"github.com/autobrr/qui/internal/services/dirscan"
 	"github.com/autobrr/qui/internal/services/discscan"
 	"github.com/autobrr/qui/internal/services/externalprograms"
@@ -111,6 +112,8 @@ type Server struct {
 	crossSeedRoutes                  *crossseedroute.Service
 	orphanScanStore                  *models.OrphanScanStore
 	orphanScanService                *orphanscan.Service
+	deletePlanStore                  *models.DeletePlanStore
+	deletePlanService                *deleteplan.Service
 	discScanStore                    *models.DiscScanStore
 	discScanService                  *discscan.Service
 	transferHistory                  *transferhistory.Module
@@ -175,6 +178,8 @@ type Dependencies struct {
 	CrossSeedRoutes                  *crossseedroute.Service
 	OrphanScanStore                  *models.OrphanScanStore
 	OrphanScanService                *orphanscan.Service
+	DeletePlanStore                  *models.DeletePlanStore
+	DeletePlanService                *deleteplan.Service
 	DiscScanStore                    *models.DiscScanStore
 	DiscScanService                  *discscan.Service
 	TransferHistory                  *transferhistory.Module
@@ -268,6 +273,8 @@ func NewServer(deps *Dependencies) *Server {
 		crossSeedRoutes:                  deps.CrossSeedRoutes,
 		orphanScanStore:                  deps.OrphanScanStore,
 		orphanScanService:                deps.OrphanScanService,
+		deletePlanStore:                  deps.DeletePlanStore,
+		deletePlanService:                deps.DeletePlanService,
 		discScanStore:                    deps.DiscScanStore,
 		discScanService:                  deps.DiscScanService,
 		transferHistory:                  deps.TransferHistory,
@@ -480,6 +487,7 @@ func (s *Server) Handler() (*chi.Mux, error) {
 	automationsHandler := handlers.NewAutomationHandler(s.automationStore, s.automationActivityStore, s.instanceStore, s.externalProgramStore, s.automationService)
 	automationsHandler.SetCrossSeedRoutes(s.crossSeedRoutes)
 	orphanScanHandler := handlers.NewOrphanScanHandler(s.orphanScanStore, s.instanceStore, s.orphanScanService)
+	deletePlanHandler := handlers.NewDeletePlanHandler(s.deletePlanStore, s.deletePlanService)
 	discScanHandler := handlers.NewDiscScanHandler(s.discScanService, s.discScanStore, s.syncManager, s.backendPool)
 	transferHistoryHandler := handlers.NewTransferHistoryHandler(s.transferHistory)
 	liveSamplesHandler := handlers.NewLiveSamplesHandler(s.liveSamples)
@@ -862,6 +870,19 @@ func (s *Server) Handler() (*chi.Mux, error) {
 							r.With(orphanScan.Read).Get("/", orphanScanHandler.GetRun)
 							r.With(orphanScan.Write).Post("/confirm", orphanScanHandler.ConfirmDeletion)
 							r.With(orphanScan.Run).Delete("/", orphanScanHandler.CancelRun)
+						})
+					})
+
+					// Delete plans
+					r.Route("/delete-plan", func(r chi.Router) {
+						r.Post("/runs", deletePlanHandler.CreateRun)
+						r.Get("/runs", deletePlanHandler.ListRuns)
+						r.Route("/runs/{runID}", func(r chi.Router) {
+							r.Get("/", deletePlanHandler.GetRun)
+							r.Patch("/rows", deletePlanHandler.UpdateRows)
+							r.Post("/refill", deletePlanHandler.RefillRun)
+							r.Post("/confirm", deletePlanHandler.ConfirmRun)
+							r.Post("/cancel", deletePlanHandler.CancelRun)
 						})
 					})
 				})

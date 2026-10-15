@@ -7,7 +7,8 @@
   "tabs": {
     "workflows": "워크플로",
     "reannounce": "재요청",
-    "orphanScan": "고아 항목 스캔"
+    "orphanScan": "고아 항목 스캔",
+    "deletePlan": "삭제 계획"
   },
   "queryBuilder": {
     "noConditions": "조건 없음",

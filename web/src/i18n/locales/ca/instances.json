@@ -734,7 +734,7 @@
       "transferStarted": "Iniciat",
       "tagActions_one": "{{count}} acció d'etiqueta",
       "tagActions_other": "{{count}} accions d'etiqueta",
-      "skipped": "Omesos"
+      "skipped": "Omesa"
     },
     "runWorkflowNow": {
       "action": "Executa ara",

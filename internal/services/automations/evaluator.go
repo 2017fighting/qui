@@ -44,6 +44,9 @@ type EvalContext struct {
 
 	// trackers holds the tracker list of each torrent, when the rules read trackers.
 	trackers qbittorrent.TrackerLookup
+	// nestedPathExcluded holds the hashes whose Content Path nests with another
+	// torrent's. ADR 0017: a delete that expands to a content group keeps their files.
+	nestedPathExcluded map[string]struct{}
 	// TrackerHealth is the tracker health snapshot of the instance. It is nil
 	// when the instance has no tracker health yet.
 	TrackerHealth *qbittorrent.TrackerHealthSnapshot

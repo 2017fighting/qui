@@ -3228,6 +3228,12 @@ func sortingConfigUsesField(config *models.SortingConfig, field ConditionField) 
 		return config.Field == field
 	}
 
+	if config.Type == models.SortingTypeKeys {
+		return slices.ContainsFunc(config.Keys, func(key models.KeyRule) bool {
+			return key.Enabled && key.Field == field
+		})
+	}
+
 	if config.Type != models.SortingTypeScore {
 		return false
 	}
@@ -4144,6 +4150,16 @@ func sortingConfigEqual(a, b *models.SortingConfig) bool {
 			return false
 		}
 		return scoreRulesEqual(a.ScoreRules, b.ScoreRules)
+	case models.SortingTypeKeys:
+		if a.Direction != b.Direction || len(a.Keys) != len(b.Keys) {
+			return false
+		}
+		for i := range a.Keys {
+			if a.Keys[i] != b.Keys[i] {
+				return false
+			}
+		}
+		return true
 	default:
 		return false
 	}

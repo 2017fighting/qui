@@ -69,8 +69,10 @@ var keyValues = map[string][]string{
 	"SortingConfig.field":                  conditionFieldNames(automations.FieldSpec.Sortable),
 	"FieldMultiplierScoreRule.field":       conditionFieldNames(automations.FieldSpec.Scorable),
 	"FreeSpaceSource.type":                 {string(models.FreeSpaceSourceQBittorrent), string(models.FreeSpaceSourcePath), string(models.FreeSpaceSourceQbitPath), string(models.FreeSpaceSourceAllowance)},
-	"SortingConfig.type":                   {string(models.SortingTypeSimple), string(models.SortingTypeScore)},
+	"SortingConfig.type":                   {string(models.SortingTypeSimple), string(models.SortingTypeScore), string(models.SortingTypeKeys)},
 	"SortingConfig.direction":              {string(models.SortDirectionASC), string(models.SortDirectionDESC)},
+	"KeyRule.field":                        keyFieldNames(),
+	"KeyRule.direction":                    {string(models.SortDirectionASC), string(models.SortDirectionDESC)},
 	"ScoreRule.type":                       {string(models.ScoreRuleTypeFieldMultiplier), string(models.ScoreRuleTypeConditional)},
 }
 
@@ -124,6 +126,20 @@ var (
 )
 
 // conditionFieldNames returns the sorted names of the current condition fields for which keep returns true.
+// keyFieldNames lists the fields a Keys order accepts. It is the one list that the
+// ranking key predicate in models decides, not the field table, because a key also
+// reads the group-aware GROUP_SIZE and PRIVATE.
+func keyFieldNames() []string {
+	var names []string
+	for field, spec := range automations.ConditionFields {
+		if !spec.Legacy && field.IsSortableKey() {
+			names = append(names, string(field))
+		}
+	}
+	slices.Sort(names)
+	return names
+}
+
 func conditionFieldNames(keep func(automations.FieldSpec) bool) []string {
 	var names []string
 	for field, spec := range automations.ConditionFields {

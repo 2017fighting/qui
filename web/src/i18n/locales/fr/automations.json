@@ -7,7 +7,8 @@
   "tabs": {
     "workflows": "Workflows",
     "reannounce": "Réannoncer",
-    "orphanScan": "Analyse d'orphelins"
+    "orphanScan": "Analyse d'orphelins",
+    "deletePlan": "Plan de suppression"
   },
   "queryBuilder": {
     "noConditions": "Aucune condition",

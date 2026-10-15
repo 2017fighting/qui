@@ -19,6 +19,7 @@ import (
 	"github.com/autobrr/qui/internal/fsops"
 	"github.com/autobrr/qui/internal/models"
 	"github.com/autobrr/qui/internal/qbittorrent"
+	"github.com/autobrr/qui/internal/services/ranking"
 	"github.com/autobrr/qui/pkg/pathcmp"
 	"github.com/autobrr/qui/pkg/pathutil"
 )
@@ -1314,12 +1315,32 @@ func SortTorrents(torrents []*qbt.Torrent, config *models.SortingConfig, evalCtx
 					return fmt.Errorf("score rule %d: unknown type %s", i, r.Type)
 				}
 			}
+		case models.SortingTypeKeys:
+			if len(config.Keys) == 0 {
+				return errors.New("keys sort requires at least one key")
+			}
+			for i, k := range config.Keys {
+				if !k.Field.IsSortableKey() {
+					return fmt.Errorf("keys sort key %d: unsupported sort field: %s", i, k.Field)
+				}
+				if k.Direction != models.SortDirectionASC && k.Direction != models.SortDirectionDESC {
+					return fmt.Errorf("keys sort key %d: invalid direction: %s", i, k.Direction)
+				}
+			}
 		default:
 			return fmt.Errorf("unsupported sorting type: %s", config.Type)
 		}
 		if err := sortFieldsError(config, "unsupported sort field"); err != nil {
 			return err
 		}
+	}
+
+	// A key chain compares value lists, so it ranks with the shared sorter.
+	if config != nil && config.Type == models.SortingTypeKeys {
+		ranking.SortByKeys(torrents, config.Keys, func(t *qbt.Torrent) []ranking.Value {
+			return torrentKeyValues(*t, config.Keys, evalCtx)
+		}, func(t *qbt.Torrent) string { return t.Hash })
+		return nil
 	}
 
 	// Optimization: Pre-calculate scores if using score mode to avoid re-evaluating in sort loop
@@ -1341,6 +1362,43 @@ func SortTorrents(torrents []*qbt.Torrent, config *models.SortingConfig, evalCtx
 	})
 
 	return nil
+}
+
+// torrentKeyValues returns one ranking value per key, in the same order as keys.
+func torrentKeyValues(t qbt.Torrent, keys []models.KeyRule, evalCtx *EvalContext) []ranking.Value {
+	values := make([]ranking.Value, len(keys))
+	for i, key := range keys {
+		// The field table owns the readers, so a key reads the same value that a
+		// simple sort by the field reads. GROUP_SIZE and PRIVATE are sortable keys
+		// without a reader of their own.
+		spec := ConditionFields[key.Field]
+		switch {
+		case key.Field == models.FieldGroupSize:
+			values[i] = ranking.Value{Number: float64(activeGroupSize(evalCtx, t.Hash))}
+		case key.Field == models.FieldPrivate:
+			values[i] = ranking.Value{Number: boolValue(t.Private)}
+		case spec.Sort.Text != nil:
+			values[i] = ranking.Value{Text: spec.Sort.Text(t), IsText: true}
+		case spec.Sort.Number != nil:
+			values[i] = ranking.Value{Number: spec.Sort.Number(t, evalCtx)}
+		}
+	}
+	return values
+}
+
+// activeGroupSize returns the member count of the active group for the torrent, or 0.
+func activeGroupSize(evalCtx *EvalContext, hash string) int {
+	if evalCtx == nil || evalCtx.activeGroupIndex == nil {
+		return 0
+	}
+	return evalCtx.activeGroupIndex.SizeForHash(hash)
+}
+
+func boolValue(value bool) float64 {
+	if value {
+		return 1
+	}
+	return 0
 }
 
 // compareTorrents is a helper function that returns true if t1 should sort before t2.
