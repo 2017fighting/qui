@@ -40,7 +40,7 @@ qui must work on Windows and Unix-like hosts.
 - When lint output is unclear or needs a policy judgment, or before you use a `make` lint target other than `precommit`, read `docs/linting.md`.
 - Before you act on a Dependabot alert, or edit the Docker, compose, or release files at the repo root, read `docs/agents/maintenance.md`.
 - To read a `bin.getqui.com` link in a pull request, a Paste (`/p/`) or an Evidence (`/e/`), run `brrbin fetch <link>`. `docs/agents/issue-tracker.md` describes the sign-in and the files that the command writes.
-- Issue tracker: bug reports and feature requests are GitHub Discussions; a confirmed bug becomes a linked issue. See `docs/agents/issue-tracker.md`.
+- Issue tracker: bug reports and feature requests are GitHub Discussions; a confirmed bug becomes a linked issue. This clone is a fork, so skills publish to its own issues. See `docs/agents/issue-tracker.md`.
 - Triage: labels equal the six role names in `docs/agents/triage-labels.md`. Both the workflow and a local `/triage` session obey `docs/agents/triage.md`; its outcomes override the skill's own outcomes. Domain docs: `GLOSSARY.md` at the root, ADRs in `docs/adr/`. See `docs/agents/domain.md`.
 
 ## Code Review Rules
