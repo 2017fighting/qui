@@ -81,11 +81,12 @@ import type {
   RegexValidationError,
   RuleCondition,
   ScoreRule,
+  KeyRule,
   ConditionField,
   SortingConfig
 } from "@/types"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { ArrowDown, ArrowUp, Folder, Info, Loader2, Plus, X } from "lucide-react"
+import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Folder, Info, Loader2, Plus, X } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { useTranslation } from "react-i18next"
@@ -346,11 +347,26 @@ const SCORE_MULTIPLIER_FIELD_SET = new Set<ConditionField>([
 const SIMPLE_SORT_DISABLED_FIELDS = Object.keys(CONDITION_FIELDS)
   .filter(field => !SIMPLE_SORT_FIELD_SET.has(field as ConditionField))
 
+// Ranking keys accept the sortable fields plus the two the sorter reads as a
+// number: the active group's member count and the private flag.
+const KEY_FIELD_SET = new Set<ConditionField>([
+  ...SIMPLE_SORT_FIELD_SET,
+  "GROUP_SIZE",
+  "PRIVATE",
+])
+
+const KEY_DISABLED_FIELDS = Object.keys(CONDITION_FIELDS)
+  .filter(field => !KEY_FIELD_SET.has(field as ConditionField))
+
 const SCORE_MULTIPLIER_DISABLED_FIELDS = Object.keys(CONDITION_FIELDS)
   .filter(field => !SCORE_MULTIPLIER_FIELD_SET.has(field as ConditionField))
 
 function isSupportedSimpleSortField(field: string): field is ConditionField {
   return SIMPLE_SORT_FIELD_SET.has(field as ConditionField)
+}
+
+function isSupportedKeyField(field: string): field is ConditionField {
+  return KEY_FIELD_SET.has(field as ConditionField)
 }
 
 function isSupportedScoreMultiplierField(field: string): field is ConditionField {
@@ -447,6 +463,28 @@ interface FormScoreRule {
   conditional?: FormConditionalScoreRule
 }
 
+interface FormKeyRule {
+  id: number
+  field: ConditionField
+  enabled: boolean
+  direction: "ASC" | "DESC"
+}
+
+function updateKeyRule(keyRules: FormKeyRule[], index: number, patch: Partial<FormKeyRule>): FormKeyRule[] {
+  return keyRules.map((key, i) => (i === index ? { ...key, ...patch } : key))
+}
+
+function moveKeyRule(keyRules: FormKeyRule[], index: number, delta: number): FormKeyRule[] {
+  const target = index + delta
+  if (target < 0 || target >= keyRules.length) {
+    return keyRules
+  }
+  const next = [...keyRules]
+  const [moved] = next.splice(index, 1)
+  next.splice(target, 0, moved)
+  return next
+}
+
 type TagActionForm = {
   tags: string[]
   mode: "full" | "add" | "remove"
@@ -526,10 +564,11 @@ type FormState = {
   exprCategoryGroupId: string
   exprBlockIfCrossSeedInCategories: string[]
   // Sorting/Scoring
-  sortingType: "default" | "simple" | "score"
+  sortingType: "default" | "simple" | "score" | "keys"
   simpleSortField: ConditionField
   sortDirection: "ASC" | "DESC"
   scoreRules: FormScoreRule[]
+  keyRules: FormKeyRule[]
   // Move action settings
   exprMovePath: string
   exprMoveBlockIfCrossSeed: boolean
@@ -602,6 +641,7 @@ const emptyFormState: FormState = {
   simpleSortField: "ADDED_ON",
   sortDirection: "ASC",
   scoreRules: [],
+  keyRules: [],
   exprMovePath: "",
   exprMoveBlockIfCrossSeed: false,
   exprMoveGroupId: "",
@@ -728,6 +768,10 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
   const scoreMultiplierDisabledFields = useMemo(() => {
     const reason = t("preferences.workflowDialog.priority.notSupportedForScoreMultiplier")
     return SCORE_MULTIPLIER_DISABLED_FIELDS.map(field => ({ field, reason }))
+  }, [t])
+  const keyDisabledFields = useMemo(() => {
+    const reason = t("preferences.workflowDialog.priority.notSupportedForKey")
+    return KEY_DISABLED_FIELDS.map(field => ({ field, reason }))
   }, [t])
   const [formState, setFormState] = useState<FormState>(emptyFormState)
   const [previewResult, setPreviewResult] = useState<AutomationPreviewResult | null>(null)
@@ -1100,6 +1144,7 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
         let simpleSortField: ConditionField = "ADDED_ON"
         let sortDirection: "ASC" | "DESC" = "ASC"
         let scoreRules: FormScoreRule[] = []
+        let keyRules: FormKeyRule[] = []
         let exprMovePath = ""
         let exprMoveBlockIfCrossSeed = false
         let exprExternalProgramId: number | null = null
@@ -1135,6 +1180,10 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
               }
               return []
             })
+          } else if (rule.sortingConfig.type === "keys") {
+            sortingType = "keys"
+            if (rule.sortingConfig.direction) sortDirection = rule.sortingConfig.direction
+            keyRules = (rule.sortingConfig.keys || []).map(key => ({ id: ++ruleIdCounter, ...key }))
           }
         }
 
@@ -1316,6 +1365,7 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
           simpleSortField,
           sortDirection,
           scoreRules,
+          keyRules,
           exprMoveGroupId,
           exprMoveAtomic,
           exprExternalProgramId,
@@ -1697,6 +1747,21 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
             }
           }
           return []
+        }),
+      }
+    } else if (input.sortingType === "keys") {
+      if (input.keyRules.length === 0) {
+        throw new Error("Add at least one ranking key")
+      }
+      sortingConfig = {
+        schemaVersion: "1",
+        type: "keys",
+        direction: input.sortDirection!,
+        keys: input.keyRules.flatMap((key): KeyRule[] => {
+          if (!isSupportedKeyField(key.field)) {
+            throw new Error("Invalid ranking key: field is not supported")
+          }
+          return [{ field: key.field, enabled: key.enabled, direction: key.direction }]
         }),
       }
     }
@@ -2238,6 +2303,12 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
       }
     }
 
+    // Validate keys sorting configuration
+    if (submitState.sortingType === "keys" && submitState.keyRules.length === 0) {
+      toast.error(t("preferences.workflowDialog.toast.addRankingKey"))
+      return
+    }
+
     // Action-specific validation for enabled actions
     if (submitState.speedLimitsEnabled) {
       // At least one field must be set to something other than "no_change"
@@ -2450,7 +2521,7 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
                   </div>
                   <Select
                     value={formState.sortingType}
-                    onValueChange={(val: "default" | "simple" | "score") => setFormState(prev => ({ ...prev, sortingType: val }))}
+                    onValueChange={(val: "default" | "simple" | "score" | "keys") => setFormState(prev => ({ ...prev, sortingType: val }))}
                   >
                     <SelectTrigger className="w-[180px]">
                       <SelectValue />
@@ -2459,6 +2530,7 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
                       <SelectItem value="default">{t("preferences.workflowDialog.priority.types.default")}</SelectItem>
                       <SelectItem value="simple">{t("preferences.workflowDialog.priority.types.simple")}</SelectItem>
                       <SelectItem value="score">{t("preferences.workflowDialog.priority.types.score")}</SelectItem>
+                      <SelectItem value="keys">{t("preferences.workflowDialog.priority.types.keys")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -2662,6 +2734,92 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
                   </div>
                 )}
 
+                {formState.sortingType === "keys" && (
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground uppercase tracking-wider">{t("preferences.workflowDialog.priority.keys")}</Label>
+                    {formState.keyRules.map((key, idx) => (
+                      <div key={key.id} className="flex items-center gap-2 rounded-md border p-2">
+                        <Switch
+                          checked={key.enabled}
+                          onCheckedChange={(checked) => setFormState(prev => ({ ...prev, keyRules: updateKeyRule(prev.keyRules, idx, { enabled: checked }) }))}
+                          aria-label={t("preferences.workflowDialog.priority.enableKey")}
+                        />
+                        <FieldCombobox
+                          value={key.field}
+                          onChange={(val) => setFormState(prev => ({ ...prev, keyRules: updateKeyRule(prev.keyRules, idx, { field: val as ConditionField }) }))}
+                          disabledFields={keyDisabledFields}
+                        />
+                        <div className="flex items-center border rounded-md">
+                          <Button
+                            type="button"
+                            variant={key.direction === "ASC" ? "secondary" : "ghost"}
+                            size="sm"
+                            className="px-2 h-8 rounded-r-none"
+                            onClick={() => setFormState(prev => ({ ...prev, keyRules: updateKeyRule(prev.keyRules, idx, { direction: "ASC" }) }))}
+                          >
+                            <ArrowUp className="h-3.5 w-3.5 mr-1" />
+                            {t("preferences.workflowDialog.priority.asc")}
+                          </Button>
+                          <div className="w-[1px] bg-border h-4" />
+                          <Button
+                            type="button"
+                            variant={key.direction === "DESC" ? "secondary" : "ghost"}
+                            size="sm"
+                            className="px-2 h-8 rounded-l-none"
+                            onClick={() => setFormState(prev => ({ ...prev, keyRules: updateKeyRule(prev.keyRules, idx, { direction: "DESC" }) }))}
+                          >
+                            <ArrowDown className="h-3.5 w-3.5 mr-1" />
+                            {t("preferences.workflowDialog.priority.desc")}
+                          </Button>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          disabled={idx === 0}
+                          aria-label={t("preferences.workflowDialog.priority.moveKeyUp")}
+                          onClick={() => setFormState(prev => ({ ...prev, keyRules: moveKeyRule(prev.keyRules, idx, -1) }))}
+                        >
+                          <ChevronUp className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          disabled={idx === formState.keyRules.length - 1}
+                          aria-label={t("preferences.workflowDialog.priority.moveKeyDown")}
+                          onClick={() => setFormState(prev => ({ ...prev, keyRules: moveKeyRule(prev.keyRules, idx, 1) }))}
+                        >
+                          <ChevronDown className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 ml-auto"
+                          aria-label={t("preferences.workflowDialog.priority.removeKey")}
+                          onClick={() => setFormState(prev => ({ ...prev, keyRules: prev.keyRules.filter((_, i) => i !== idx) }))}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setFormState(prev => ({
+                        ...prev,
+                        keyRules: [...prev.keyRules, { id: ++ruleIdCounter, field: "SIZE", enabled: true, direction: "ASC" }],
+                      }))}
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" />
+                      {t("preferences.workflowDialog.priority.addKey")}
+                    </Button>
+                  </div>
+                )}
 
               </div>
 

@@ -18,6 +18,8 @@ import (
 	"github.com/autobrr/qui/internal/fsops"
 	"github.com/autobrr/qui/internal/models"
 	"github.com/autobrr/qui/internal/qbittorrent"
+	"github.com/autobrr/qui/internal/services/contentgroup"
+	"github.com/autobrr/qui/internal/services/ranking"
 	"github.com/autobrr/qui/pkg/pathutil"
 )
 
@@ -208,6 +210,7 @@ func processTorrents(
 	}
 
 	crossSeeds := buildCrossSeedGroups(torrents, evalCtx)
+	prepareNestedPathExclusion(evalCtx, torrents)
 	failedDeleteRules := make(map[int]struct{})
 	if evalCtx != nil && evalCtx.hardlinkIndex != nil && rulesNeedHardlinkSignatureMap(rules) {
 		evalCtx.torrentsByHash = make(map[string]qbt.Torrent, len(torrents))
@@ -925,12 +928,57 @@ func parseTorrentTags(tags string) map[string]struct{} {
 	return result
 }
 
+// nestedPathExcludedHashes returns the hashes whose Content Path nests with another
+// torrent's Content Path. ADR 0017: a delete that expands to a content group must not
+// remove files another torrent needs, and two nested paths never share a group, so the
+// file-overlap check cannot catch them.
+func nestedPathExcludedHashes(torrents []qbt.Torrent) map[string]struct{} {
+	idx := contentgroup.BuildIndex(torrents)
+	var excluded map[string]struct{}
+	for i := range torrents {
+		if idx.NestedPathExclusion(idx.Group(torrents[i])) == "" {
+			continue
+		}
+		if excluded == nil {
+			excluded = make(map[string]struct{})
+		}
+		excluded[torrents[i].Hash] = struct{}{}
+	}
+	return excluded
+}
+
+// prepareNestedPathExclusion records which torrents a group delete must not expand to.
+// It runs wherever an eval context meets the full torrent list.
+func prepareNestedPathExclusion(evalCtx *EvalContext, torrents []qbt.Torrent) {
+	if evalCtx == nil {
+		return
+	}
+	evalCtx.nestedPathExcluded = nestedPathExcludedHashes(torrents)
+}
+
+// nestedPathExcluded reports whether the torrent's Content Path nests with another
+// torrent's, so a group delete would remove files that other torrent needs.
+func nestedPathExcluded(evalCtx *EvalContext, hash string) bool {
+	if evalCtx == nil {
+		return false
+	}
+	_, excluded := evalCtx.nestedPathExcluded[hash]
+	return excluded
+}
+
 // updateCumulativeFreeSpaceCleared updates the cumulative free space cleared for the "free space" condition.
 // Only increments SpaceToClear when deleteFreesSpace returns true for the given mode/torrent.
 // This ensures keep-files and preserve-cross-seeds modes don't over-project freed disk space.
 // A file shared inside a group, through a path or a hardlink, counts once.
 func updateCumulativeFreeSpaceCleared(torrent qbt.Torrent, evalCtx *EvalContext, deleteMode string, crossSeeds crossSeedGroups, includeHardlinks bool) bool {
 	if evalCtx == nil || evalCtx.FilesToClear == nil {
+		return true
+	}
+
+	// ADR 0017: a group whose Content Path nests with another torrent's keeps its files,
+	// so its bytes are not reclaimed. A plain remove-with-files expands to no group.
+	if (deleteMode == DeleteModeWithFilesIncludeCrossSeeds || deleteMode == DeleteModeWithFilesPreserveCrossSeeds) &&
+		nestedPathExcluded(evalCtx, torrent.Hash) {
 		return true
 	}
 
@@ -1136,9 +1184,29 @@ func SortTorrents(torrents []qbt.Torrent, config *models.SortingConfig, evalCtx 
 					return fmt.Errorf("score rule %d: unknown type %s", i, r.Type)
 				}
 			}
+		case models.SortingTypeKeys:
+			if len(config.Keys) == 0 {
+				return errors.New("keys sort requires at least one key")
+			}
+			for i, k := range config.Keys {
+				if !k.Field.IsSortableKey() {
+					return fmt.Errorf("keys sort key %d: unsupported sort field: %s", i, k.Field)
+				}
+				if k.Direction != models.SortDirectionASC && k.Direction != models.SortDirectionDESC {
+					return fmt.Errorf("keys sort key %d: invalid direction: %s", i, k.Direction)
+				}
+			}
 		default:
 			return fmt.Errorf("unsupported sorting type: %s", config.Type)
 		}
+	}
+
+	// A key chain compares value lists, so it ranks with the shared sorter.
+	if config != nil && config.Type == models.SortingTypeKeys {
+		ranking.SortByKeys(torrents, config.Keys, func(t qbt.Torrent) []ranking.Value {
+			return torrentKeyValues(t, config.Keys, evalCtx)
+		}, func(t qbt.Torrent) string { return t.Hash })
+		return nil
 	}
 
 	// Optimization: Pre-calculate scores if using score mode to avoid re-evaluating in sort loop
@@ -1155,6 +1223,20 @@ func SortTorrents(torrents []qbt.Torrent, config *models.SortingConfig, evalCtx 
 	})
 
 	return nil
+}
+
+// torrentKeyValues returns one ranking value per key, in the same order as keys.
+func torrentKeyValues(t qbt.Torrent, keys []models.KeyRule, evalCtx *EvalContext) []ranking.Value {
+	values := make([]ranking.Value, len(keys))
+	for i, key := range keys {
+		if key.Field.IsString() {
+			text, _ := extractStringValue(t, key.Field)
+			values[i] = ranking.Value{Text: text, IsText: true}
+			continue
+		}
+		values[i] = ranking.Value{Number: getNumericFieldValue(t, key.Field, evalCtx)}
+	}
+	return values
 }
 
 // compareTorrents is a helper function that returns true if t1 should sort before t2.
@@ -1279,6 +1361,16 @@ func getNumericFieldValue(t qbt.Torrent, field models.ConditionField, evalCtx *E
 		return float64(t.NumIncomplete)
 	case models.FieldTrackersCount:
 		return float64(t.TrackersCount)
+	case models.FieldGroupSize:
+		if evalCtx != nil && evalCtx.activeGroupIndex != nil {
+			return float64(evalCtx.activeGroupIndex.SizeForHash(t.Hash))
+		}
+		return 0
+	case models.FieldPrivate:
+		if t.Private {
+			return 1
+		}
+		return 0
 	case models.FieldSystemHour:
 		return float64(evaluateTime(evalCtx).Hour())
 	case models.FieldSystemMinute:
