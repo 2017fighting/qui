@@ -323,4 +323,34 @@ describe("WorkflowDialog skip small files", () => {
     client.clear()
     mocks.capabilitiesQuery.data = undefined
   })
+
+  // Issue #12: Skip small files is the only action here, so the condition editor had no
+  // action to read the condition from and fell back to "No conditions".
+  it("shows the saved condition when the action is the rule's only action", () => {
+    mocks.instancesQuery.data = []
+    const client = renderDialog({
+      ...skipRule,
+      conditions: {
+        schemaVersion: "1",
+        skipSmallFiles: {
+          enabled: true,
+          maxSizeBytes: 500 * 1024 * 1024,
+          condition: {
+            operator: "AND",
+            conditions: [
+              { field: "STATE", operator: "EQUAL", value: "downloading" },
+              { field: "PRIVATE", operator: "EQUAL", value: "false" },
+              { field: "CATEGORY", operator: "EQUAL", value: "aaa" },
+            ],
+          },
+        },
+      },
+    })
+
+    expect(screen.queryByText("queryBuilder.noConditions")).toBeNull()
+    for (const field of ["STATE", "PRIVATE", "CATEGORY"]) {
+      expect(screen.getByText(`queryBuilder.fields.${field}`)).toBeTruthy()
+    }
+    client.clear()
+  })
 })
