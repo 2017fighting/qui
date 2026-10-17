@@ -353,4 +353,41 @@ describe("WorkflowDialog skip small files", () => {
     }
     client.clear()
   })
+
+  // The same gap made Save drop the condition: the form rebuilt skipSmallFiles from an empty
+  // actionCondition, so an edit that touched nothing else erased the condition from the rule.
+  it("keeps the saved condition when the rule is saved without touching it", async () => {
+    mocks.instancesQuery.data = []
+    mocks.save.mockResolvedValue(skipRule)
+    const client = renderDialog({
+      ...skipRule,
+      conditions: {
+        schemaVersion: "1",
+        skipSmallFiles: {
+          enabled: true,
+          maxSizeBytes: 500 * 1024 * 1024,
+          condition: {
+            operator: "AND",
+            conditions: [
+              { field: "STATE", operator: "EQUAL", value: "downloading" },
+              { field: "PRIVATE", operator: "EQUAL", value: "false" },
+              { field: "CATEGORY", operator: "EQUAL", value: "aaa" },
+            ],
+          },
+        },
+      },
+    })
+
+    fireEvent.click(screen.getByRole("button", { name: key("save") }))
+    await waitFor(() => expect(mocks.save).toHaveBeenCalled())
+    expect(mocks.save.mock.calls[0][2].conditions.skipSmallFiles.condition).toEqual({
+      operator: "AND",
+      conditions: [
+        { field: "STATE", operator: "EQUAL", value: "downloading" },
+        { field: "PRIVATE", operator: "EQUAL", value: "false" },
+        { field: "CATEGORY", operator: "EQUAL", value: "aaa" },
+      ],
+    })
+    client.clear()
+  })
 })

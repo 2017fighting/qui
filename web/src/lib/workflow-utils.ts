@@ -61,8 +61,8 @@ export function toExportFormat(workflow: Automation): WorkflowExport {
   return exported
 }
 
-/** Every action that can carry its own `condition`. The overview badge and the rule form both
- * read the condition from this set, so a new action has to be added here. */
+/** Every action that can carry its own `condition`. The overview badge reads this list; a new
+ * action has to be added here or its condition is invisible on the rule card. */
 const CONDITION_ACTIONS = [
   "speedLimits",
   "shareLimits",
