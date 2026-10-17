@@ -8,6 +8,7 @@ import {
   generateUniqueName,
   getTrackerMatchMode,
   getTrackerTokens,
+  hasAnyCondition,
   parseImportJSON,
   toDuplicateInput,
   toEditInput,
@@ -16,7 +17,7 @@ import {
   type WorkflowExport,
   type WorkflowImport
 } from "@/lib/workflow-utils"
-import type { ActionConditions, Automation } from "@/types"
+import type { ActionConditions, Automation, RuleCondition } from "@/types"
 import { describe, expect, it } from "vitest"
 
 const conditions: ActionConditions = { schemaVersion: "1" }
@@ -309,6 +310,47 @@ describe("parseImportJSON", () => {
       notify: false,
     }))
     expect(withNotify.data?.notify).toBe(false)
+  })
+})
+
+// Intent: the overview shows an "All torrents" badge when no action carries a
+// condition. A new action must join this table, or its condition is hidden.
+describe("hasAnyCondition", () => {
+  const condition: RuleCondition = {
+    operator: "AND",
+    conditions: [{ field: "STATE", operator: "EQUAL", value: "downloading" }],
+  }
+
+  it.each([
+    "speedLimits",
+    "shareLimits",
+    "pause",
+    "resume",
+    "recheck",
+    "reannounce",
+    "autoManagement",
+    "delete",
+    "tag",
+    "category",
+    "move",
+    "externalProgram",
+    "exportToInstance",
+    "skipSmallFiles",
+  ] as const)("finds the condition on a %s-only rule", (action) => {
+    expect(hasAnyCondition({ schemaVersion: "1", [action]: { enabled: true, condition } })).toBe(true)
+  })
+
+  it("finds a condition on any entry of the tags array", () => {
+    expect(hasAnyCondition({
+      schemaVersion: "1",
+      tags: [{ enabled: true, tags: ["a"], mode: "full" }, { enabled: true, tags: ["b"], mode: "full", condition }],
+    })).toBe(true)
+  })
+
+  it("reports no condition when every action is disabled or carries none", () => {
+    expect(hasAnyCondition({ schemaVersion: "1" })).toBe(false)
+    expect(hasAnyCondition({ schemaVersion: "1", pause: { enabled: true } })).toBe(false)
+    expect(hasAnyCondition({ schemaVersion: "1", skipSmallFiles: { enabled: false, maxSizeBytes: 1, condition } })).toBe(false)
   })
 })
 
