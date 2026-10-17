@@ -1212,6 +1212,7 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
             ?? conditions.move?.condition
             ?? conditions.externalProgram?.condition
             ?? conditions.exportToInstance?.condition
+            ?? conditions.skipSmallFiles?.condition
             ?? null
 
           if (conditions.speedLimits?.enabled) {

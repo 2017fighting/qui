@@ -56,6 +56,7 @@ import { formatSpeedWithUnit } from "@/lib/speedUnits"
 import { cn, copyTextToClipboard, formatBytes, parseTrackerDomains } from "@/lib/utils"
 import {
   fromImportFormat,
+  hasAnyCondition,
   parseImportJSON,
   toDuplicateInput,
   toExportFormat,
@@ -1814,19 +1815,7 @@ function RulePreview({
   const trackers = parseTrackerDomains(rule)
   const isAllTrackers = rule.trackerPattern === "*"
   const tagActions = getRuleTagActions(rule)
-  const hasAnyCondition = Boolean(
-    (rule.conditions?.speedLimits?.enabled && rule.conditions.speedLimits.condition) ||
-    (rule.conditions?.shareLimits?.enabled && rule.conditions.shareLimits.condition) ||
-    (rule.conditions?.pause?.enabled && rule.conditions.pause.condition) ||
-    (rule.conditions?.resume?.enabled && rule.conditions.resume.condition) ||
-    (rule.conditions?.recheck?.enabled && rule.conditions.recheck.condition) ||
-    (rule.conditions?.reannounce?.enabled && rule.conditions.reannounce.condition) ||
-    (rule.conditions?.delete?.enabled && rule.conditions.delete.condition) ||
-    tagActions.some((action) => action.enabled && action.condition) ||
-    (rule.conditions?.category?.enabled && rule.conditions.category.condition) ||
-    (rule.conditions?.move?.enabled && rule.conditions.move.condition) ||
-    (rule.conditions?.externalProgram?.enabled && rule.conditions.externalProgram.condition)
-  )
+  const hasCondition = hasAnyCondition(rule.conditions)
 
   return (
     <div className={cn(
@@ -1865,7 +1854,7 @@ function RulePreview({
             </TooltipContent>
           </Tooltip>
         )}
-        {!hasAnyCondition && (
+        {!hasCondition && (
           <Badge variant="outline" className="text-[10px] px-1.5 h-5 cursor-default">
             {t("preferences.workflowsOverview.allTorrents")}
           </Badge>
