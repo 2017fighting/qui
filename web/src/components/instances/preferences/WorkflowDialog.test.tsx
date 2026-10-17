@@ -323,4 +323,71 @@ describe("WorkflowDialog skip small files", () => {
     client.clear()
     mocks.capabilitiesQuery.data = undefined
   })
+
+  // Issue #12: Skip small files is the only action here, so the condition editor had no
+  // action to read the condition from and fell back to "No conditions".
+  it("shows the saved condition when the action is the rule's only action", () => {
+    mocks.instancesQuery.data = []
+    const client = renderDialog({
+      ...skipRule,
+      conditions: {
+        schemaVersion: "1",
+        skipSmallFiles: {
+          enabled: true,
+          maxSizeBytes: 500 * 1024 * 1024,
+          condition: {
+            operator: "AND",
+            conditions: [
+              { field: "STATE", operator: "EQUAL", value: "downloading" },
+              { field: "PRIVATE", operator: "EQUAL", value: "false" },
+              { field: "CATEGORY", operator: "EQUAL", value: "aaa" },
+            ],
+          },
+        },
+      },
+    })
+
+    expect(screen.queryByText("queryBuilder.noConditions")).toBeNull()
+    for (const field of ["STATE", "PRIVATE", "CATEGORY"]) {
+      expect(screen.getByText(`queryBuilder.fields.${field}`)).toBeTruthy()
+    }
+    client.clear()
+  })
+
+  // The same gap made Save drop the condition: the form rebuilt skipSmallFiles from an empty
+  // actionCondition, so an edit that touched nothing else erased the condition from the rule.
+  it("keeps the saved condition when the rule is saved without touching it", async () => {
+    mocks.instancesQuery.data = []
+    mocks.save.mockResolvedValue(skipRule)
+    const client = renderDialog({
+      ...skipRule,
+      conditions: {
+        schemaVersion: "1",
+        skipSmallFiles: {
+          enabled: true,
+          maxSizeBytes: 500 * 1024 * 1024,
+          condition: {
+            operator: "AND",
+            conditions: [
+              { field: "STATE", operator: "EQUAL", value: "downloading" },
+              { field: "PRIVATE", operator: "EQUAL", value: "false" },
+              { field: "CATEGORY", operator: "EQUAL", value: "aaa" },
+            ],
+          },
+        },
+      },
+    })
+
+    fireEvent.click(screen.getByRole("button", { name: key("save") }))
+    await waitFor(() => expect(mocks.save).toHaveBeenCalled())
+    expect(mocks.save.mock.calls[0][2].conditions.skipSmallFiles.condition).toEqual({
+      operator: "AND",
+      conditions: [
+        { field: "STATE", operator: "EQUAL", value: "downloading" },
+        { field: "PRIVATE", operator: "EQUAL", value: "false" },
+        { field: "CATEGORY", operator: "EQUAL", value: "aaa" },
+      ],
+    })
+    client.clear()
+  })
 })

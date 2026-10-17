@@ -61,6 +61,36 @@ export function toExportFormat(workflow: Automation): WorkflowExport {
   return exported
 }
 
+/** Every action that can carry its own `condition`. The overview badge reads this list; a new
+ * action has to be added here or its condition is invisible on the rule card. */
+const CONDITION_ACTIONS = [
+  "speedLimits",
+  "shareLimits",
+  "pause",
+  "resume",
+  "recheck",
+  "reannounce",
+  "autoManagement",
+  "delete",
+  "tag",
+  "category",
+  "move",
+  "externalProgram",
+  "exportToInstance",
+  "skipSmallFiles",
+] as const satisfies readonly (keyof ActionConditions)[]
+
+/** True when any action in the rule is enabled and carries a condition. */
+export function hasAnyCondition(conditions: ActionConditions | null | undefined): boolean {
+  if (!conditions) return false
+  // `tags` is the only action that repeats, and each entry has its own condition.
+  if (conditions.tags?.some((action) => action?.enabled && action.condition)) return true
+  return CONDITION_ACTIONS.some((action) => {
+    const value = conditions[action]
+    return Boolean(value?.enabled && value.condition)
+  })
+}
+
 export function getTrackerTokens(source: { trackerPattern?: string }): string[] {
   const tokens: string[] = []
   const seen = new Set<string>()
