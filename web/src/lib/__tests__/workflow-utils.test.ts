@@ -16,6 +16,7 @@ import {
   getTrackerTokens,
   firstActionCondition,
   hasMixedActionConditions,
+  hasAnyCondition,
   loadWorkflowNames,
   parseImportJSON,
   toCopyInput,
@@ -50,6 +51,47 @@ function makeAutomation(overrides: Partial<Automation> = {}): Automation {
     ...overrides,
   }
 }
+
+// Intent: the overview shows an "All torrents" badge when no action carries a
+// condition. A new action must join this table, or its condition is hidden.
+describe("hasAnyCondition", () => {
+  const condition: RuleCondition = {
+    operator: "AND",
+    conditions: [{ field: "STATE", operator: "EQUAL", value: "downloading" }],
+  }
+
+  it.each([
+    "speedLimits",
+    "shareLimits",
+    "pause",
+    "resume",
+    "recheck",
+    "reannounce",
+    "autoManagement",
+    "delete",
+    "tag",
+    "category",
+    "move",
+    "externalProgram",
+    "exportToInstance",
+    "skipSmallFiles",
+  ] as const)("finds the condition on a %s-only rule", (action) => {
+    expect(hasAnyCondition({ schemaVersion: "1", [action]: { enabled: true, condition } })).toBe(true)
+  })
+
+  it("finds a condition on any entry of the tags array", () => {
+    expect(hasAnyCondition({
+      schemaVersion: "1",
+      tags: [{ enabled: true, tags: ["a"], mode: "full" }, { enabled: true, tags: ["b"], mode: "full", condition }],
+    })).toBe(true)
+  })
+
+  it("reports no condition when every action is disabled or carries none", () => {
+    expect(hasAnyCondition({ schemaVersion: "1" })).toBe(false)
+    expect(hasAnyCondition({ schemaVersion: "1", pause: { enabled: true } })).toBe(false)
+    expect(hasAnyCondition({ schemaVersion: "1", skipSmallFiles: { enabled: false, maxSizeBytes: 1, condition } })).toBe(false)
+  })
+})
 
 // Intent: turn an internal Automation row into the clipboard JSON shape.
 // Strips id/instanceId/sortOrder/enabled (internal state that shouldn't
@@ -368,6 +410,47 @@ describe("parseImportJSON", () => {
     expect(result.data).not.toHaveProperty("trackerPattern")
   })
 
+})
+
+// Intent: the overview shows an "All torrents" badge when no action carries a
+// condition. A new action must join this table, or its condition is hidden.
+describe("hasAnyCondition", () => {
+  const condition: RuleCondition = {
+    operator: "AND",
+    conditions: [{ field: "STATE", operator: "EQUAL", value: "downloading" }],
+  }
+
+  it.each([
+    "speedLimits",
+    "shareLimits",
+    "pause",
+    "resume",
+    "recheck",
+    "reannounce",
+    "autoManagement",
+    "delete",
+    "tag",
+    "category",
+    "move",
+    "externalProgram",
+    "exportToInstance",
+    "skipSmallFiles",
+  ] as const)("finds the condition on a %s-only rule", (action) => {
+    expect(hasAnyCondition({ schemaVersion: "1", [action]: { enabled: true, condition } })).toBe(true)
+  })
+
+  it("finds a condition on any entry of the tags array", () => {
+    expect(hasAnyCondition({
+      schemaVersion: "1",
+      tags: [{ enabled: true, tags: ["a"], mode: "full" }, { enabled: true, tags: ["b"], mode: "full", condition }],
+    })).toBe(true)
+  })
+
+  it("reports no condition when every action is disabled or carries none", () => {
+    expect(hasAnyCondition({ schemaVersion: "1" })).toBe(false)
+    expect(hasAnyCondition({ schemaVersion: "1", pause: { enabled: true } })).toBe(false)
+    expect(hasAnyCondition({ schemaVersion: "1", skipSmallFiles: { enabled: false, maxSizeBytes: 1, condition } })).toBe(false)
+  })
 })
 
 // Intent: thin pretty-print wrapper. Pinning the indent so future readers
