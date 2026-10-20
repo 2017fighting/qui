@@ -22,3 +22,9 @@ Release metadata never creates a group. Cross-seed search reads release names an
 - The nested-path guard is part of the contract, not a plan-only extra. An automation delete action inherits it and stops expanding to such a group. That is a behaviour change to automations, and it is a safety improvement, so `documentation/docs/features/automations.md` states it.
 - A file list that cannot be read drops the group instead of reading as "no cross-seeds", the same way the delete dialogs already fail closed.
 - `internal/services/crossseed/match_corpus_test.go` keeps its scope: it covers release matching. The grouping has its own table of scenarios.
+
+## Amendment (2026-10-20)
+
+Upstream v1.33.0 rewrote the automations side of this decision. An automation delete now expands to the cross-seed matcher's shared-file groups (`SameInstanceContentByHash`), which the matcher decides per file, instead of the Content Path index this ADR was written against. The grouping therefore no longer lives in one package that both callers use: the delete plan keeps `internal/services/contentgroup`, and automations keeps its own membership check over the matcher's groups. The two can disagree about a pair again.
+
+The nested-path guard is unaffected. It still reads `internal/services/contentgroup`, and an automation delete action still stops expanding to a group whose Content Path nests with another torrent's.
