@@ -16,6 +16,7 @@ vi.mock("react-i18next", async (importOriginal) => ({
 vi.mock("@/hooks/useInstances", () => ({ useInstances: () => instances }))
 vi.mock("@/components/instances/preferences/WorkflowsOverview", () => ({ WorkflowsOverview: () => <div data-testid="section-workflows" /> }))
 vi.mock("@/components/instances/preferences/ReannounceOverview", () => ({ ReannounceOverview: () => <div data-testid="section-reannounce" /> }))
+vi.mock("@/components/instances/preferences/DeletePlanOverview", () => ({ DeletePlanOverview: () => <div data-testid="section-delete-plan" /> }))
 vi.mock("@/components/instances/preferences/OrphanScanOverview", () => ({ OrphanScanOverview: () => <div data-testid="section-orphan-scan" /> }))
 vi.mock("@/components/instances/preferences/ReannounceSettingsDialog", () => ({ ReannounceSettingsDialog: () => null }))
 vi.mock("@/components/instances/preferences/OrphanScanSettingsDialog", () => ({ OrphanScanSettingsDialog: () => null }))
