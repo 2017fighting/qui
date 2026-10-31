@@ -143,27 +143,9 @@ const MIN_SKIP_SMALL_FILES_BYTES = MIB
 const DEFAULT_SKIP_SMALL_FILES_BYTES = 500 * MIB
 const DEFAULT_SKIP_SMALL_FILES_SIZE = 500
 
-type ActionType = "speedLimits" | "shareLimits" | "pause" | "resume" | "recheck" | "reannounce" | "autoManagement" | "delete" | "tag" | "category" | "move" | "externalProgram" | "exportToInstance" | "skipSmallFiles"
-
 // Actions that can be combined (Delete must be standalone)
 const COMBINABLE_ACTIONS: ActionType[] = ["speedLimits", "shareLimits", "pause", "resume", "recheck", "reannounce", "autoManagement", "tag", "category", "move", "externalProgram", "exportToInstance", "skipSmallFiles"]
 
-const ACTION_LABEL_KEYS: Record<ActionType, string> = {
-  speedLimits: "preferences.workflowDialog.actions.speedLimits",
-  shareLimits: "preferences.workflowDialog.actions.shareLimits",
-  pause: "preferences.workflowDialog.actions.pause",
-  resume: "preferences.workflowDialog.actions.resume",
-  recheck: "preferences.workflowDialog.actions.recheck",
-  reannounce: "preferences.workflowDialog.actions.reannounce",
-  autoManagement: "preferences.workflowDialog.actions.autoManagement",
-  delete: "preferences.workflowDialog.actions.delete",
-  tag: "preferences.workflowDialog.actions.tag",
-  category: "preferences.workflowDialog.actions.category",
-  move: "preferences.workflowDialog.actions.move",
-  externalProgram: "preferences.workflowDialog.actions.externalProgram",
-  exportToInstance: "preferences.workflowDialog.actions.exportToInstance",
-  skipSmallFiles: "preferences.workflowDialog.actions.skipSmallFiles",
-}
 
 const DRY_RUN_ACTION_LABEL_KEYS: Record<AutomationActivity["action"], string> = {
   deleted_ratio: "preferences.workflowDialog.dryRun.actions.deletedRatio",
@@ -292,7 +274,7 @@ const SIMPLE_SORT_DISABLED_FIELDS = Object.keys(CONDITION_FIELDS)
 // Ranking keys accept the sortable fields plus the two the sorter reads as a
 // number: the active group's member count and the private flag.
 const KEY_FIELD_SET = new Set<ConditionField>([
-  ...SIMPLE_SORT_FIELD_SET,
+  ...SORT_FIELDS,
   "GROUP_SIZE",
   "PRIVATE",
 ])

@@ -9,7 +9,7 @@ import type { Automation, AutomationInput, ActionConditions, FreeSpaceSource, So
 
 export type TrackerMatchMode = "include" | "exclude" | "mixed"
 
-export type ActionType = "speedLimits" | "shareLimits" | "pause" | "resume" | "recheck" | "reannounce" | "autoManagement" | "delete" | "tag" | "category" | "move" | "externalProgram" | "exportToInstance"
+export type ActionType = "speedLimits" | "shareLimits" | "pause" | "resume" | "recheck" | "reannounce" | "autoManagement" | "delete" | "tag" | "category" | "move" | "externalProgram" | "exportToInstance" | "skipSmallFiles"
 
 export const ACTION_LABEL_KEYS: Record<ActionType, string> = {
   speedLimits: "preferences.workflowDialog.actions.speedLimits",
@@ -25,6 +25,7 @@ export const ACTION_LABEL_KEYS: Record<ActionType, string> = {
   move: "preferences.workflowDialog.actions.move",
   externalProgram: "preferences.workflowDialog.actions.externalProgram",
   exportToInstance: "preferences.workflowDialog.actions.exportToInstance",
+  skipSmallFiles: "preferences.workflowDialog.actions.skipSmallFiles",
 }
 
 // The backend reads the same way: the tags list wins over the legacy single tag.
