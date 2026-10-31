@@ -273,7 +273,7 @@ const SIMPLE_SORT_DISABLED_FIELDS = Object.keys(CONDITION_FIELDS)
 // Ranking keys accept the sortable fields plus the two the sorter reads as a
 // number: the active group's member count and the private flag.
 const KEY_FIELD_SET = new Set<ConditionField>([
-  ...SIMPLE_SORT_FIELD_SET,
+  ...SORT_FIELDS,
   "GROUP_SIZE",
   "PRIVATE",
 ])
