@@ -201,15 +201,20 @@ var sqliteMigrationFilenameRenames = []migrationFilenameRename{
 		from: "091_drop_unused_timestamp_indexes.sql",
 		to:   "093_drop_unused_timestamp_indexes.sql",
 	},
-	// The delete plan shipped as 106 in v1.32.0 and as 107 from v1.33.0. Upstream's
-	// v1.34.0 took 106 and 107, so the plan moved to 108.
+	// The delete plan shipped as 106 in v1.32.0, as 107 from v1.33.0 and as 108 from
+	// v1.34.0. Upstream's v1.34.0 took 106 and 107, and v1.35.0 took 108 to 110, so
+	// the plan moved to 111.
 	{
 		from: "106_add_delete_plan.sql",
-		to:   "108_add_delete_plan.sql",
+		to:   "111_add_delete_plan.sql",
 	},
 	{
 		from: "107_add_delete_plan.sql",
-		to:   "108_add_delete_plan.sql",
+		to:   "111_add_delete_plan.sql",
+	},
+	{
+		from: "108_add_delete_plan.sql",
+		to:   "111_add_delete_plan.sql",
 	},
 }
 
@@ -274,15 +279,20 @@ var postgresMigrationFilenameRenames = []migrationFilenameRename{
 		from: "093_drop_unused_timestamp_indexes.sql",
 		to:   "094_drop_unused_timestamp_indexes.sql",
 	},
-	// The delete plan shipped as 107 in v1.32.0 and as 108 from v1.33.0. Upstream's
-	// v1.34.0 took 107 and 108, so the plan moved to 109.
+	// The delete plan shipped as 107 in v1.32.0, as 108 from v1.33.0 and as 109 from
+	// v1.34.0. Upstream's v1.34.0 took 107 and 108, and v1.35.0 took 109 to 111, so
+	// the plan moved to 112.
 	{
 		from: "107_add_delete_plan.sql",
-		to:   "109_add_delete_plan.sql",
+		to:   "112_add_delete_plan.sql",
 	},
 	{
 		from: "108_add_delete_plan.sql",
-		to:   "109_add_delete_plan.sql",
+		to:   "112_add_delete_plan.sql",
+	},
+	{
+		from: "109_add_delete_plan.sql",
+		to:   "112_add_delete_plan.sql",
 	},
 }
 
