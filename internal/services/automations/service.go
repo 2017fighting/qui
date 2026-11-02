@@ -2673,7 +2673,11 @@ func (s *Service) applyRulesForInstance(ctx context.Context, instanceID int, for
 
 		// Record aggregated skip small files activity
 		if len(successHashes) > 0 {
-			detailsJSON, _ := json.Marshal(map[string]any{"count": len(successHashes), "files": successFiles, "bytes": successBytes})
+			detailsJSON, _ := json.Marshal(map[string]int64{ //nolint:errchkjson // int values cannot fail to marshal
+				"count": int64(len(successHashes)),
+				"files": int64(successFiles),
+				"bytes": successBytes,
+			})
 			activity := &models.AutomationActivity{
 				InstanceID: instanceID,
 				Hash:       "",

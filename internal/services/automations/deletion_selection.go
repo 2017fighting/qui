@@ -285,41 +285,11 @@ func (s *Service) expandDeleteTrigger(
 
 	switch deleteMode {
 	case DeleteModeWithFilesIncludeCrossSeeds:
-		// ADR 0017: a nested Content Path outside the group means the expansion would
-		// remove files another torrent needs.
-		if nestedPathExcluded(in.evalCtx, trigger.Hash) {
-			log.Warn().Int("instanceID", instanceID).Str("hash", trigger.Hash).
-				Msg("automations: skipping delete, nested content path could remove another torrent's files")
-			return
-		}
-		var hardlinks *HardlinkIndex
-		if deleteAction.IncludeHardlinks {
-			hardlinks = in.evalCtx.hardlinkIndex
-		}
-		included := includedCrossSeeds[deleteAction.IncludeHardlinks]
-		expanded, ok := deleteCrossSeedGroup(trigger, in.evalCtx.torrentsByHash, in.crossSeeds, hardlinks,
-			included, cachedTorrentFilesFetcher(in.evalCtx.CrossSeedFilesByHash))
+		hashes, batchMode, logMsg, hardlinkCopies, ok := includeCrossSeedDeletion(instanceID, in, trigger, deleteAction, includedCrossSeeds)
 		if !ok {
 			return
 		}
-		for hash := range expanded.expandedSet {
-			if hash != trigger.Hash {
-				included[hash] = struct{}{}
-			}
-		}
-		logMsg := logMsgRemoveTorrentWithFiles
-		if len(expanded.expandedSet) > 1 {
-			logMsg = "automations: removing torrent with files (include cross-seeds - verified)"
-		}
-		if len(expanded.hardlinkCopySet) > 0 {
-			logMsg = "automations: removing torrent with files (include cross-seeds + hardlinks)"
-		}
-		hashes := slices.Sorted(maps.Keys(expanded.expandedSet))
-		if keepMsg, keep := groupKeepsFilesForOtherInstances(in.evalCtx, hashes); keep {
-			addAll(hashes, DeleteModeKeepFiles, keepMsg, expanded.hardlinkCopySet)
-			return
-		}
-		addAll(hashes, DeleteModeWithFiles, logMsg, expanded.hardlinkCopySet)
+		addAll(hashes, batchMode, logMsg, hardlinkCopies)
 	case DeleteModeWithFilesPreserveCrossSeeds:
 		batchMode, logMsg := preserveCrossSeedsDelete(trigger, in)
 		addAll([]string{trigger.Hash}, batchMode, logMsg, nil)
@@ -352,6 +322,51 @@ func (s *Service) expandDeleteTrigger(
 	default:
 		addAll([]string{trigger.Hash}, deleteMode, logMsgRemoveTorrentWithFiles, nil)
 	}
+}
+
+// includeCrossSeedDeletion expands a delete with files over the trigger's cross-seed group.
+// ok is false when the expansion would remove files another torrent or instance needs.
+func includeCrossSeedDeletion(
+	instanceID int,
+	in deletionSelectionInput,
+	trigger qbt.Torrent,
+	deleteAction *models.DeleteAction,
+	includedCrossSeeds map[bool]map[string]struct{},
+) (hashes []string, batchMode, logMsg string, hardlinkCopies map[string]struct{}, ok bool) {
+	// ADR 0017: a nested Content Path outside the group means the expansion would
+	// remove files another torrent needs.
+	if nestedPathExcluded(in.evalCtx, trigger.Hash) {
+		log.Warn().Int("instanceID", instanceID).Str("hash", trigger.Hash).
+			Msg("automations: skipping delete, nested content path could remove another torrent's files")
+		return nil, "", "", nil, false
+	}
+	var hardlinks *HardlinkIndex
+	if deleteAction.IncludeHardlinks {
+		hardlinks = in.evalCtx.hardlinkIndex
+	}
+	included := includedCrossSeeds[deleteAction.IncludeHardlinks]
+	expanded, ok := deleteCrossSeedGroup(trigger, in.evalCtx.torrentsByHash, in.crossSeeds, hardlinks,
+		included, cachedTorrentFilesFetcher(in.evalCtx.CrossSeedFilesByHash))
+	if !ok {
+		return nil, "", "", nil, false
+	}
+	for hash := range expanded.expandedSet {
+		if hash != trigger.Hash {
+			included[hash] = struct{}{}
+		}
+	}
+	logMsg = logMsgRemoveTorrentWithFiles
+	if len(expanded.expandedSet) > 1 {
+		logMsg = "automations: removing torrent with files (include cross-seeds - verified)"
+	}
+	if len(expanded.hardlinkCopySet) > 0 {
+		logMsg = "automations: removing torrent with files (include cross-seeds + hardlinks)"
+	}
+	hashes = slices.Sorted(maps.Keys(expanded.expandedSet))
+	if keepMsg, keep := groupKeepsFilesForOtherInstances(in.evalCtx, hashes); keep {
+		return hashes, DeleteModeKeepFiles, keepMsg, expanded.hardlinkCopySet, true
+	}
+	return hashes, DeleteModeWithFiles, logMsg, expanded.hardlinkCopySet, true
 }
 
 // groupKeepsFilesForOtherInstances runs otherInstanceKeepsFiles for each member

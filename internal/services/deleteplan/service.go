@@ -159,7 +159,9 @@ func (s *Service) TriggerPlan(ctx context.Context, instanceID int, req PlanReque
 		return 0, err
 	}
 
-	runCtx, cancel := context.WithCancel(context.Background())
+	// The run outlives the request that triggered it, so it keeps the request's values
+	// without its cancellation; CancelRun cancels it through cancelFuncs.
+	runCtx, cancel := context.WithCancel(context.WithoutCancel(ctx))
 	s.cancelMu.Lock()
 	s.cancelFuncs[runID] = cancel
 	s.cancelMu.Unlock()
