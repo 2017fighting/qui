@@ -786,7 +786,6 @@ const (
 	FieldHardlinkScopeCross ConditionField = "HARDLINK_SCOPE_CROSS"
 )
 
-//nolint:exhaustive // Only sortable numeric fields belong here.
 func (f ConditionField) IsNumeric() bool {
 	switch f {
 	case FieldSize, FieldTotalSize, FieldDownloaded, FieldUploaded, FieldAmountLeft, FieldFreeSpace,
@@ -801,8 +800,6 @@ func (f ConditionField) IsNumeric() bool {
 		return false
 	}
 }
-
-//nolint:exhaustive // Only fields with a sort value belong here.
 func (f ConditionField) IsSortableKey() bool {
 	switch f {
 	case FieldGroupSize, FieldPrivate:
@@ -811,8 +808,6 @@ func (f ConditionField) IsSortableKey() bool {
 		return f.IsNumeric() || f.IsString()
 	}
 }
-
-//nolint:exhaustive // Only sortable string fields belong here.
 func (f ConditionField) IsString() bool {
 	switch f {
 	case FieldName, FieldCategory, FieldTags, FieldTracker, FieldState, FieldSavePath, FieldContentPath, FieldComment:
@@ -827,8 +822,6 @@ func (f ConditionField) IsString() bool {
 // hour means the night that crosses midnight. A wrapped range stops before its
 // maximum, see matchesBetween. SYSTEM_DAY and SYSTEM_YEAR do not wrap: a month
 // boundary depends on the month length, and years do not cycle.
-//
-//nolint:exhaustive // Only cyclic clock fields belong here.
 func (f ConditionField) WrapsBetween() bool {
 	switch f {
 	case FieldSystemHour, FieldSystemMinute, FieldSystemDayOfWeek, FieldSystemMonth:

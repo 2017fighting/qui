@@ -351,11 +351,6 @@ func groupKeyValue(group PlanGroup, representative qbt.Torrent, field models.Con
 	return ranking.Value{Number: numericFieldValue(representative, field)}
 }
 
-// numericFieldValue mirrors automations.getNumericFieldValue for the pure
-// per-torrent fields. Time-relative keys (FREE_SPACE, the age aliases, the
-// system clock) read as 0: the plan builder has no clock, so those keys tie.
-//
-//nolint:exhaustive // Only the pure per-torrent fields are ranked here.
 func numericFieldValue(torrent qbt.Torrent, field models.ConditionField) float64 {
 	switch field {
 	case models.FieldSize:
@@ -403,9 +398,6 @@ func numericFieldValue(torrent qbt.Torrent, field models.ConditionField) float64
 	}
 }
 
-// stringFieldValue mirrors automations.extractStringValue.
-//
-//nolint:exhaustive // Only the sortable string fields are ranked here.
 func stringFieldValue(torrent qbt.Torrent, field models.ConditionField) string {
 	switch field {
 	case models.FieldName:
