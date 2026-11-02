@@ -207,7 +207,7 @@ async function optionLabels(trigger: HTMLElement) {
 }
 
 // Labels in actionRunOrder, without delete.
-const combinableLabels = ["speedLimits", "shareLimits", "pause", "resume", "recheck", "reannounce", "autoManagement", "tag", "category", "move", "externalProgram", "exportToInstance"]
+const combinableLabels = ["speedLimits", "shareLimits", "pause", "resume", "recheck", "reannounce", "autoManagement", "tag", "category", "move", "skipSmallFiles", "externalProgram", "exportToInstance"]
   .map(action => key(`actions.${action}`))
 
 describe("WorkflowDialog action order", () => {
@@ -343,7 +343,9 @@ describe("WorkflowDialog ranking keys", () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
     render(
       <QueryClientProvider client={client}>
-        <WorkflowDialog open onOpenChange={() => {}} instanceId={1} rule={keysRule} />
+        <TooltipProvider>
+          <WorkflowDialog open onOpenChange={() => {}} instanceId={1} rule={keysRule} />
+        </TooltipProvider>
       </QueryClientProvider>
     )
 
