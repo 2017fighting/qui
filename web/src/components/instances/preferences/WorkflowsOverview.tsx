@@ -170,6 +170,8 @@ function formatAction(action: AutomationActivity["action"]): string {
     moved: "move",
     external_program: "externalProgram",
     exported_to_instance: "exportToInstance",
+    skipped_small_files: "skipSmallFiles",
+    skip_small_files_failed: "skipSmallFiles",
     transferred_to_instance: "transferToInstance",
     dry_run_no_match: "dryRun",
     rule_skipped: "ruleSkipped",
@@ -185,6 +187,7 @@ function getOutcomeBadgeText(event: AutomationActivity): string {
   if (event.outcome === "skipped") return i18n.t(`${s}.skipped`, { ns })
   if (event.action === "external_program") return i18n.t(`${s}.${event.outcome === "success" ? "executed" : "outcomeFailed"}`, { ns })
   if (event.action === "exported_to_instance") return i18n.t(`${s}.${event.outcome === "success" ? "exported" : "outcomeFailed"}`, { ns })
+  if (event.action === "skipped_small_files") return i18n.t(`${s}.${event.outcome === "success" ? "removed" : "outcomeFailed"}`, { ns })
   if (event.action === "transferred_to_instance") return i18n.t(`${s}.${event.outcome === "success" ? "transferStarted" : "outcomeFailed"}`, { ns })
   return i18n.t(`${s}.${event.outcome === "success" ? "removed" : "outcomeFailed"}`, { ns })
 }
@@ -279,6 +282,14 @@ function formatExportedToInstanceSummary(details: AutomationActivity["details"],
   return i18n.t(outcome === "dry-run" ? `${s}.exportedDryRun` : `${s}.exported`, { ns, count })
 }
 
+function formatSkippedSmallFilesSummary(details: AutomationActivity["details"], outcome?: AutomationActivity["outcome"]): string {
+  const count = details?.count ?? 0
+  const files = details?.files ?? 0
+  const s = "preferences.workflowsOverview.summary"
+  const ns = "instances"
+  return i18n.t(outcome === "dry-run" ? `${s}.skippedSmallFilesDryRun` : `${s}.skippedSmallFiles`, { ns, count, files })
+}
+
 function formatDeleteDryRunSummary(details: AutomationActivity["details"], action: AutomationActivity["action"]): string {
   const count = details?.count ?? 0
   const s = "preferences.workflowsOverview.summary"
@@ -304,6 +315,7 @@ const runSummaryActions = new Set<AutomationActivity["action"]>([
   "auto_managed",
   "moved",
   "exported_to_instance",
+  "skipped_small_files",
 ])
 
 function isRunSummary(event: AutomationActivity): boolean {
@@ -815,6 +827,8 @@ export function WorkflowsOverview() {
     external_program: "bg-teal-500/10 text-teal-500 border-teal-500/20",
     auto_managed: "bg-rose-500/10 text-rose-500 border-rose-500/20",
     exported_to_instance: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+    skipped_small_files: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+    skip_small_files_failed: "bg-destructive/10 text-destructive border-destructive/30",
     transferred_to_instance: "bg-indigo-500/10 text-indigo-500 border-indigo-500/20",
     dry_run_no_match: "bg-slate-500/10 text-slate-500 border-slate-500/20",
     rule_skipped: "bg-warning/10 text-warning border-warning/20",
@@ -1240,6 +1254,10 @@ export function WorkflowsOverview() {
                                         ) : event.action === "exported_to_instance" ? (
                                           <span className="font-medium text-sm block">
                                             {formatExportedToInstanceSummary(event.details, event.outcome)}
+                                          </span>
+                                        ) : event.action === "skipped_small_files" ? (
+                                          <span className="font-medium text-sm block">
+                                            {formatSkippedSmallFilesSummary(event.details, event.outcome)}
                                           </span>
                                         ) : event.action === "transferred_to_instance" && event.hash === "" ? (
                                           <span className="font-medium text-sm block">

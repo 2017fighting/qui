@@ -3,17 +3,30 @@
   "card": {
     "status": {
       "disabled": "Disabled",
+      "enabled": "Enabled",
       "connected": "Connected",
       "disconnected": "Disconnected"
     },
     "tooltips": {
       "moveUp": "Move up",
-      "moveDown": "Move down"
+      "moveDown": "Move down",
+      "disableInstance": "Disable instance",
+      "enableInstance": "Enable instance"
     },
     "actions": {
       "testConnection": "Test connection",
       "delete": "Delete",
-      "changeIcon": "Change icon"
+      "changeIcon": "Change icon",
+      "edit": "Edit"
+    },
+    "labels": {
+      "username": "Username:",
+      "basicAuth": "Basic Auth:",
+      "tlsVerification": "TLS Verification:",
+      "tlsSkipped": "Skipped",
+      "tlsStrict": "Strict",
+      "localFileAccess": "Local File Access:",
+      "testingConnection": "Testing connection..."
     },
     "deleteDialog": {
       "title": "Delete instance",
@@ -23,6 +36,7 @@
     },
     "toast": {
       "instanceDisabledTitle": "Instance disabled",
+      "testDisabledDescription": "Enable the instance before testing the connection.",
       "testSuccessTitle": "Connection test passed",
       "testSuccessDescription": "Successfully connected to qBittorrent instance",
       "testFailedTitle": "Connection test failed",
@@ -88,15 +102,20 @@
     },
     "buttons": {
       "updateInstance": "Update instance",
-      "addInstance": "Add instance"
+      "addInstance": "Add instance",
+      "cancel": "Cancel",
+      "saving": "Saving..."
     },
     "toast": {
       "instanceUpdatedTitle": "Instance updated",
       "instanceUpdatedDescription": "Instance updated successfully. Connection testing in background...",
+      "updateFailedTitle": "Update Failed",
       "updateFailedDescription": "Failed to update instance",
       "instanceCreatedTitle": "Instance created",
       "instanceCreatedDescription": "Instance created successfully. Connection testing in background...",
-      "createFailedDescription": "Failed to create instance"
+      "createFailedTitle": "Create Failed",
+      "createFailedDescription": "Failed to create instance",
+      "missingCredentialsTitle": "Missing Credentials"
     },
     "authType": {
       "none": "None",
@@ -557,6 +576,7 @@
         "externalProgram": "External program",
         "dryRun": "Dry-run",
         "exportToInstance": "Export to instance",
+        "skipSmallFiles": "Skip small files",
         "transferToInstance": "Transfer to instance",
         "ruleSkipped": "Rule not run"
       },
@@ -612,6 +632,10 @@
         "exportedDryRun_other": "{{count}} torrents would be exported",
         "exportFailed_one": "{{count}} torrent failed to export",
         "exportFailed_other": "{{count}} torrents failed to export",
+        "skippedSmallFiles_one": "{{count}} torrent: {{files}} files set to do not download",
+        "skippedSmallFiles_other": "{{count}} torrents: {{files}} files set to do not download",
+        "skippedSmallFilesDryRun_one": "{{count}} torrent would have {{files}} files set to do not download",
+        "skippedSmallFilesDryRun_other": "{{count}} torrents would have {{files}} files set to do not download",
         "transferredDryRun_one": "{{count}} torrent would be transferred",
         "transferredDryRun_other": "{{count}} torrents would be transferred"
       },
@@ -737,6 +761,8 @@
       "noInstancesDescription": "No instances configured. Add one in Settings to use this service.",
       "tooltip": "Finds files on disk that are not associated with any torrent in qBittorrent.\nNeeds access to each instance's files. Enable Local Filesystem Access, or set up SSH access, in instance settings.",
       "description": "Scans download directories and identifies orphan files for cleanup.",
+      "noLocalAccess": "No Local Access",
+      "noLocalAccessTooltip": "qui and qBittorrent must run on the same machine. Enable \"Local Filesystem Access\" in instance settings to use orphan scanning.",
       "remoteLimits": "Deletion and auto-cleanup on a remote instance need file identity, which qui reads only when the server lets it run GNU find and stat.",
       "remoteNoIdentity": "This remote instance does not let qui run them, so qui cannot tell when two paths are the same file, and a file reachable at a second path, such as through a bind mount, can be listed even when a torrent uses it. Scans here can be previewed and exported, but not deleted.",
       "on": "On",
@@ -832,6 +858,125 @@
         "exportFailed": "Failed to export"
       },
       "directory": "Directory"
+    },
+    "deletePlan": {
+      "cancel": "Cancel",
+      "back": "Back",
+      "close": "Close",
+      "statusLabels": {
+        "pending": "Waiting for sync",
+        "planning": "Planning",
+        "preview_ready": "Ready for review",
+        "deleting": "Deleting",
+        "completed": "Completed",
+        "failed": "Failed",
+        "canceled": "Canceled",
+        "unknown": "Unknown"
+      },
+      "excludeReasons": {
+        "incomplete": "A member is still downloading",
+        "no_delete_tag": "A member carries the no_delete tag",
+        "partial_overlap": "Shares only part of its files with another torrent",
+        "unreadable_files": "Its file list cannot be read",
+        "nested_path": "Its content path nests with another torrent's",
+        "unknown": "Excluded by a delete protection",
+        "members_changed": "Its members changed since the plan was built"
+      }
+    },
+    "deletePlanHistory": {
+      "title": "Plan history",
+      "description": "The plan this run built, read-only.",
+      "view": "View",
+      "viewRun": "View run {{id}}",
+      "removed": "Removed",
+      "noKeys": "No ranking keys recorded",
+      "disabledKey": "{{key}} (off)",
+      "enabled": "Yes",
+      "disabled": "No"
+    },
+    "deletePlanOverview": {
+      "history": "History",
+      "title": "Delete Plan",
+      "tooltip": "Builds a one-shot plan that removes whole content groups until it reaches the target size. Nothing is removed until you confirm.",
+      "description": "Reclaim a chosen amount of space from one instance.",
+      "noInstancesDescription": "No instances configured. Add one in Settings to use this service.",
+      "newPlan": "New Plan",
+      "viewPlan": "View Plan",
+      "activePlan": "Plan in progress",
+      "noPlanYet": "No plan built yet.",
+      "progress": "Removed {{removed}} of {{planned}}",
+      "deleting": "Deleting the plan...",
+      "completedResult": "Removed {{removed}}.",
+      "failedResult": "The plan failed.",
+      "canceledResult": "Canceled before deletion started.",
+      "toast": {
+        "planStartFailed": "Failed to create the delete plan",
+        "planCanceled": "Delete plan canceled",
+        "cancelFailed": "Failed to cancel the delete plan"
+      }
+    },
+    "deletePlanWizard": {
+      "title": "New Delete Plan",
+      "description": "The plan is built for one instance and frozen for review. Nothing is removed until you confirm.",
+      "instance": "Instance",
+      "targetLabel": "Target size",
+      "targetPlaceholder": "10",
+      "buildPlan": "Build Plan",
+      "reviewAndConfirm": "Review and Confirm",
+      "conflict": "A plan is already active for this instance. Cancel it before you build a new one.",
+      "targetRequired": "Enter a target size greater than zero.",
+      "waitingTitle": "Waiting for fresh sync data",
+      "waitingDescription": "The plan starts once the instance's torrent list is no longer than two minutes old.",
+      "planning": "Building the plan...",
+      "loadFailed": "Failed to load the plan.",
+      "keysTitle": "Ranking keys",
+      "keysDescription": "Groups leave in this order. Switch a key off to stop it deciding the order.",
+      "enableKey": "Enable key",
+      "moveKeyUp": "Move key up",
+      "moveKeyDown": "Move key down",
+      "directionAsc": "Asc",
+      "directionDesc": "Desc",
+      "notSortableField": "Not a ranking key",
+      "removeDeadGroups": "Remove dead groups first",
+      "removeDeadGroupsDescription": "Groups with no seeding member leave whatever the target is. Their bytes do not count toward the target."
+    },
+    "deletePlanPreview": {
+      "target": "Target",
+      "planned": "Planned reclaim",
+      "overshoot": "Overshoot",
+      "targetNotReached": "The target cannot be reached: every available group is already included.",
+      "belowTarget": "The plan is below the target by {{shortfall}}.",
+      "refill": "Refill",
+      "refilled": "Plan refilled. New overshoot: {{overshoot}}.",
+      "refillFailed": "Failed to refill the plan",
+      "untickGroup": "Untick this group",
+      "untickFailed": "Failed to update the plan",
+      "includedGroups": "Planned groups: {{count}}",
+      "excludedGroups": "Excluded groups: {{count}}",
+      "contentPath": "Content path",
+      "size": "Size",
+      "membersColumn": "Members",
+      "memberName": "Name",
+      "memberState": "State",
+      "memberProgress": "Progress",
+      "reason": "Reason",
+      "noGroups": "The plan has no groups.",
+      "loading": "Loading the plan...",
+      "exportCSV": "Export CSV",
+      "exported": "Exported the plan as CSV",
+      "exportFailed": "Failed to export the plan",
+      "ranking": "Ranking",
+      "decidingKey": "Deciding key",
+      "deadGroups": "Dead groups: {{count}}",
+      "deadTotal": "Dead total: {{total}}"
+    },
+    "deletePlanConfirm": {
+      "title": "Confirm the Delete Plan",
+      "description": "Review what the plan removes before it starts.",
+      "otherInstances": "Only this instance is checked. Other instances are not checked.",
+      "confirm": "Confirm and Delete",
+      "deadTotal": "Dead groups: {{dead}}",
+      "startFailed": "Failed to start the deletion"
     },
     "orphanScanSettings": {
       "settingsTitle": "Settings",
@@ -973,9 +1118,14 @@
         "auto_managed": "Auto managed",
         "dry_run_no_match": "Dry-run (no match)",
         "exported_to_instance": "Export to instance",
+        "skipped_small_files": "Skip small files",
+        "skip_small_files_failed": "Skip small files failed",
         "transferred_to_instance": "Transfer to instance",
         "rule_skipped": "Rule not run"
-      }
+      },
+      "skippedFiles": "Do not download",
+      "skippedFilesMore": "+{{more}} more",
+      "skippedAllBelow": "Left alone: every file is under the size"
     },
     "reannounceOverview": {
       "title": "Reannounce",
@@ -1162,12 +1312,19 @@
         "types": {
           "default": "Oldest First (Default)",
           "simple": "Simple Sort",
-          "score": "Custom Score"
+          "score": "Custom Score",
+          "keys": "Ranking Keys"
         },
         "sortBy": "Sort by",
         "asc": "Asc",
         "desc": "Desc",
         "scoreRules": "Score Rules",
+        "keys": "Ranking Keys",
+        "addKey": "Add Key",
+        "enableKey": "Enable key",
+        "moveKeyUp": "Move key up",
+        "moveKeyDown": "Move key down",
+        "removeKey": "Remove key",
         "lowToHigh": "Low to High",
         "highToLow": "High to Low",
         "fieldMultiplier": "Field Multiplier",
@@ -1176,7 +1333,8 @@
         "addFieldMultiplier": "Add Field Multiplier",
         "addBonus": "Add Bonus",
         "notSupportedForSimpleSort": "Not supported for simple sorting",
-        "notSupportedForScoreMultiplier": "Not supported for score multipliers"
+        "notSupportedForScoreMultiplier": "Not supported for score multipliers",
+        "notSupportedForKey": "Not supported for ranking keys"
       },
       "conditionsLabel": "Conditions (optional)",
       "mixedActionConditions": "Each action in this workflow has its own condition. qui now uses one condition per workflow. If you save, every action gets the condition above. To keep the others, make one workflow for each condition first.",
@@ -1199,6 +1357,7 @@
         "move": "Move",
         "externalProgram": "Run external program",
         "exportToInstance": "Export to instance",
+        "skipSmallFiles": "Skip small files",
         "transferToInstance": "Transfer to instance"
       },
       "option": {
@@ -1286,6 +1445,12 @@
           "mustBeAbsolute": "Must be an absolute path, for example /data/archive or D:\\Archive."
         }
       },
+      "skipSmallFiles": {
+        "maxSize": "Maximum file size",
+        "description": "Files under this size are set to \"Do not download\". They stay in the file list, already downloaded files are not deleted, and a torrent whose every file is under this size is left alone.",
+        "missingFilesNote": "Skipped files count as missing for the \"Has missing files\" condition, and an exported torrent downloads them in full on the target instance.",
+        "unsupported": "This instance's qBittorrent does not support file priorities; Web API 2.2.0 or newer is required."
+      },
       "templateHelp": {
         "absolutePath": "Must be an absolute path. Values go inside it, for example",
         "intro": "Supports Go templates.",
@@ -1299,6 +1464,7 @@
         "defaultSource": "Default (qBittorrent)",
         "pathSource": "Path on server",
         "pathSourceWindowsUnsupported": "Path on server (not supported on Windows)",
+        "pathSourceLocalAccessRequired": "Path on server (requires Local Access)",
         "qbitPathSource": "Path on the qBittorrent host",
         "qbitPathSourceUnsupported": "Path on the qBittorrent host (needs qBittorrent 5.3)",
         "pathPlaceholder": "/mnt/downloads",
@@ -1306,6 +1472,7 @@
         "qbitPathHelp": "Enter a path on the qBittorrent host. qBittorrent measures the free space, so qui needs no access to that disk.",
         "errors": {
           "unsupportedWindows": "Path-based free space source is not supported on Windows.",
+          "localAccessRequired": "Path-based free space source requires Local Filesystem Access.",
           "qbitPathUnsupported": "This instance is older than qBittorrent 5.3 and cannot report free space at a path.",
           "pathRequired": "Path is required when using \"Path on server\".",
           "filesystemAccessRequired": "Path-based free space source requires local or SSH filesystem access.",
@@ -1420,6 +1587,8 @@
       "enableDryRunPrompt": {
         "title": "Enable dry run?",
         "description": "Dry run simulates all actions without changing anything. You can review affected torrents in the activity log.",
+        "enableWithout": "Enable without dry run",
+        "enableWith": "Enable with dry run",
         "saveAndEnable": "Save and enable"
       },
       "customGroup": {
@@ -1470,6 +1639,8 @@
           "externalProgram": "External program",
           "noMatches": "No matches",
           "exportedToInstance": "Export to instance",
+          "skippedSmallFiles": "Skip small files",
+          "skipSmallFilesFailed": "Skip small files failed",
           "transferredToInstance": "Transfer to instance",
           "ruleSkipped": "Rule not run"
         },
@@ -1490,7 +1661,11 @@
           "noMatches": "No torrents matched this dry-run",
           "impacted": "{{count}} torrent impacted",
           "impacted_other": "{{count}} torrents impacted",
-          "completed": "Dry-run completed"
+          "completed": "Dry-run completed",
+          "skippedSmallFiles_one": "{{count}} torrent would have files set to do not download ({{files}} files)",
+          "skippedSmallFilesAllBelow_one": "{{count}} torrent left alone, every file is under the size",
+          "skippedSmallFiles_other": "{{count}} torrents would have files set to do not download ({{files}} files)",
+          "skippedSmallFilesAllBelow_other": "{{count}} torrents left alone, every file is under the size"
         }
       },
       "toast": {
@@ -1518,8 +1693,10 @@
         "pathSourceUnsupportedWindows": "Path-based free space source is not supported on Windows. Switched to qBittorrent default.",
         "qbitPathSourceUnsupported": "This instance cannot report free space at a path. Switched to the default source.",
         "switchFreeSpaceSourceDefault": "Switch Free space source to Default (qBittorrent)",
+        "enableLocalAccessOrDefault": "Enable Local Filesystem Access in instance settings, or use Default (qBittorrent)",
         "enterPathOrDefault": "Enter a path or switch Free space source back to Default (qBittorrent)",
         "addScoreRule": "Add at least one score rule for Score sorting",
+        "addRankingKey": "Add at least one ranking key for Keys sorting",
         "fieldMultiplierInvalid": "Field multiplier must be a valid number",
         "conditionalScoreInvalid": "Conditional score must be a valid number",
         "setSpeedLimit": "Set at least one speed limit",
@@ -1535,6 +1712,7 @@
         "selectGroupKey": "Select at least one key",
         "groupExists": "A group with this ID already exists",
         "customGroupAdded": "Custom group added",
+        "setSkipSmallFilesSize": "Enter a file size of at least 1 MiB for Skip small files",
         "setUpFilesystemAccessOrDefault": "Set up local or SSH filesystem access in instance settings, or use Default (qBittorrent)"
       },
       "trackerMatchInclude": "Include",

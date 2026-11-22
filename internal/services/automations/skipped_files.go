@@ -11,7 +11,7 @@ import (
 	qbt "github.com/autobrr/go-qbittorrent"
 )
 
-func (s *Service) detectSkippedFiles(ctx context.Context, instanceID int, torrents []*qbt.Torrent) (map[string]bool, error) {
+func (s *Service) loadTorrentFiles(ctx context.Context, instanceID int, torrents []*qbt.Torrent) (map[string]qbt.TorrentFiles, error) {
 	hashes := make([]string, 0, len(torrents))
 	for _, t := range torrents {
 		hashes = append(hashes, t.Hash)
@@ -20,7 +20,7 @@ func (s *Service) detectSkippedFiles(ctx context.Context, instanceID int, torren
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch torrent files: %w", err)
 	}
-	return buildSkippedFilesResult(filesByHash), nil
+	return filesByHash, nil
 }
 
 func buildSkippedFilesResult(filesByHash map[string]qbt.TorrentFiles) map[string]bool {

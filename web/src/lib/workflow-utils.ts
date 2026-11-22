@@ -12,7 +12,7 @@ import type { QueryClient } from "@tanstack/react-query"
 
 export type TrackerMatchMode = "include" | "exclude" | "mixed"
 
-export type ActionType = "speedLimits" | "shareLimits" | "pause" | "resume" | "recheck" | "reannounce" | "autoManagement" | "delete" | "tag" | "category" | "move" | "externalProgram" | "exportToInstance" | "transferToInstance"
+export type ActionType = "speedLimits" | "shareLimits" | "pause" | "resume" | "recheck" | "reannounce" | "autoManagement" | "delete" | "tag" | "category" | "move" | "skipSmallFiles" | "externalProgram" | "exportToInstance" | "transferToInstance"
 
 export const ACTION_LABEL_KEYS: Record<ActionType, string> = {
   speedLimits: "preferences.workflowDialog.actions.speedLimits",
@@ -28,6 +28,7 @@ export const ACTION_LABEL_KEYS: Record<ActionType, string> = {
   move: "preferences.workflowDialog.actions.move",
   externalProgram: "preferences.workflowDialog.actions.externalProgram",
   exportToInstance: "preferences.workflowDialog.actions.exportToInstance",
+  skipSmallFiles: "preferences.workflowDialog.actions.skipSmallFiles",
   transferToInstance: "preferences.workflowDialog.actions.transferToInstance",
 }
 
@@ -108,6 +109,7 @@ export const ACTION_RUN_ORDER = [
   "tag",
   "category",
   "move",
+  "skipSmallFiles",
   "externalProgram",
   "exportToInstance",
   "delete",

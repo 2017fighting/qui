@@ -127,6 +127,21 @@ const CONTENT_LAYOUT_OPTIONS = [
 
 const CONTENT_LAYOUT_VALUES = CONTENT_LAYOUT_OPTIONS.map(o => o.value)
 
+type SkipSmallFilesUnit = "MiB" | "GiB"
+
+const SIZE_UNIT_VALUES: SkipSmallFilesUnit[] = ["MiB", "GiB"]
+
+const SIZE_UNIT_BYTES: Record<SkipSmallFilesUnit, number> = {
+  MiB: 1024 * 1024,
+  GiB: 1024 * 1024 * 1024,
+}
+
+const MIB = SIZE_UNIT_BYTES.MiB
+const GIB = SIZE_UNIT_BYTES.GiB
+const MIN_SKIP_SMALL_FILES_BYTES = MIB
+const DEFAULT_SKIP_SMALL_FILES_BYTES = 500 * MIB
+const DEFAULT_SKIP_SMALL_FILES_SIZE = 500
+
 const COMBINABLE_ACTIONS: ActionType[] = ACTION_RUN_ORDER.filter(action => action !== "delete")
 
 const DRY_RUN_ACTION_LABEL_KEYS: Record<AutomationActivity["action"], string> = {
@@ -148,6 +163,8 @@ const DRY_RUN_ACTION_LABEL_KEYS: Record<AutomationActivity["action"], string> = 
   moved: "preferences.workflowDialog.dryRun.actions.moved",
   external_program: "preferences.workflowDialog.dryRun.actions.externalProgram",
   exported_to_instance: "preferences.workflowDialog.dryRun.actions.exportedToInstance",
+  skipped_small_files: "preferences.workflowDialog.dryRun.actions.skippedSmallFiles",
+  skip_small_files_failed: "preferences.workflowDialog.dryRun.actions.skipSmallFilesFailed",
   transferred_to_instance: "preferences.workflowDialog.dryRun.actions.transferredToInstance",
   dry_run_no_match: "preferences.workflowDialog.dryRun.actions.noMatches",
   rule_skipped: "preferences.workflowDialog.dryRun.actions.ruleSkipped",
@@ -207,6 +224,13 @@ function formatDryRunEventSummary(
     case "moved": {
       const moved = sumDetailsRecord(details?.paths)
       return t("preferences.workflowDialog.dryRun.summary.moved", { count: moved })
+    }
+    case "skipped_small_files": {
+      const torrents = typeof details?.count === "number" ? details.count : 0
+      const files = typeof details?.files === "number" ? details.files : 0
+      const guarded = typeof details?.guarded === "number" ? details.guarded : 0
+      if (torrents === 0 && guarded > 0) return t("preferences.workflowDialog.dryRun.summary.skippedSmallFilesAllBelow", { count: guarded })
+      return t("preferences.workflowDialog.dryRun.summary.skippedSmallFiles", { count: torrents, files })
     }
     case "dry_run_no_match":
       return t("preferences.workflowDialog.dryRun.summary.noMatches")
@@ -436,6 +460,9 @@ type FormState = {
   exprExportPaused: boolean
   exprExportSkipChecking: boolean
   exprExportContentLayout: "" | "Original" | "Subfolder" | "NoSubfolder"
+  skipSmallFilesEnabled: boolean
+  exprSkipSmallFilesSize?: number
+  exprSkipSmallFilesUnit: SkipSmallFilesUnit
   transferToInstanceEnabled: boolean
   exprTransfer: TransferFormValue
 }
@@ -506,6 +533,9 @@ const emptyFormState: FormState = {
   exprExportPaused: false,
   exprExportSkipChecking: true,
   exprExportContentLayout: "",
+  skipSmallFilesEnabled: false,
+  exprSkipSmallFilesSize: DEFAULT_SKIP_SMALL_FILES_SIZE,
+  exprSkipSmallFilesUnit: "MiB",
   transferToInstanceEnabled: false,
   exprTransfer: emptyTransferForm,
 }
@@ -560,6 +590,21 @@ function hydrateSpeedLimit(storedValue: number | undefined): SpeedLimitHydration
 type ShareLimitHydration = {
   mode: "no_change" | "global" | "unlimited" | "custom"
   value?: number
+}
+
+// hydrateSkipSmallFilesSize picks the unit that keeps the stored byte value exact:
+// a whole number of GiB shows as GiB, everything else as MiB.
+type SkipSmallFilesSizeHydration = {
+  size: number
+  unit: SkipSmallFilesUnit
+}
+
+function hydrateSkipSmallFilesSize(maxSizeBytes: number | undefined): SkipSmallFilesSizeHydration {
+  const bytes = maxSizeBytes ?? DEFAULT_SKIP_SMALL_FILES_BYTES
+  if (bytes >= GIB && bytes % GIB === 0) {
+    return { size: bytes / GIB, unit: "GiB" }
+  }
+  return { size: bytes / MIB, unit: "MiB" }
 }
 
 function hydrateShareLimit(storedValue: number | undefined): ShareLimitHydration {
@@ -903,6 +948,9 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
         let categoryEnabled = false
         let moveEnabled = false
         let externalProgramEnabled = false
+        let skipSmallFilesEnabled = false
+        let exprSkipSmallFilesSize: number | undefined = DEFAULT_SKIP_SMALL_FILES_SIZE
+        let exprSkipSmallFilesUnit: SkipSmallFilesUnit = "MiB"
         let exprUploadMode: SpeedLimitMode = "no_change"
         let exprUploadValue: number | undefined
         let exprDownloadMode: SpeedLimitMode = "no_change"
@@ -1087,6 +1135,12 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
               way: transfer.way ?? "auto",
             }
           }
+          if (conditions.skipSmallFiles?.enabled) {
+            skipSmallFilesEnabled = true
+            const hydrated = hydrateSkipSmallFilesSize(conditions.skipSmallFiles.maxSizeBytes)
+            exprSkipSmallFilesSize = hydrated.size
+            exprSkipSmallFilesUnit = hydrated.unit
+          }
         }
 
         const newState: FormState = {
@@ -1156,6 +1210,9 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
           exprExportPaused,
           exprExportSkipChecking,
           exprExportContentLayout,
+          skipSmallFilesEnabled,
+          exprSkipSmallFilesSize,
+          exprSkipSmallFilesUnit,
           transferToInstanceEnabled,
           exprTransfer,
         }
@@ -1501,6 +1558,18 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
       }
     }
 
+    if (input.skipSmallFilesEnabled) {
+      const size = input.exprSkipSmallFilesSize
+      if (size === undefined || !Number.isFinite(size) || size * SIZE_UNIT_BYTES[input.exprSkipSmallFilesUnit] < MIN_SKIP_SMALL_FILES_BYTES) {
+        throw new Error("Skip small files requires a size of at least 1 MiB")
+      }
+      conditions.skipSmallFiles = {
+        enabled: true,
+        maxSizeBytes: Math.round(size * SIZE_UNIT_BYTES[input.exprSkipSmallFilesUnit]),
+        condition: input.actionCondition ?? undefined,
+      }
+    }
+
     const freeSpaceSource = formFreeSpaceSource(input)
 
     let sortingConfig: SortingConfig | undefined
@@ -1611,6 +1680,7 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
     formState.moveEnabled,
     formState.externalProgramEnabled,
     formState.exportToInstanceEnabled,
+    formState.skipSmallFilesEnabled,
     formState.transferToInstanceEnabled,
   ].filter(Boolean).length
 
@@ -1855,6 +1925,9 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
       return
     }
     if (!validateTags(dryRunInput)) return
+    if (!validateSkipSmallFilesSize(dryRunInput)) {
+      return
+    }
 
     setLatestDryRunStartedAt(new Date().toISOString())
     setLatestDryRunEvents([])
@@ -1862,6 +1935,16 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
     setActivityRunDialog(null)
     dryRunNowMutation.mutate(dryRunInput)
   }
+
+  const validateSkipSmallFilesSize = useCallback((state: FormState): boolean => {
+    if (!state.skipSmallFilesEnabled) return true
+    const size = state.exprSkipSmallFilesSize
+    if (size === undefined || !Number.isFinite(size) || size * SIZE_UNIT_BYTES[state.exprSkipSmallFilesUnit] < MIN_SKIP_SMALL_FILES_BYTES) {
+      toast.error(t("preferences.workflowDialog.toast.setSkipSmallFilesSize"))
+      return false
+    }
+    return true
+  }, [t])
 
   const validateExportTarget = useCallback((state: FormState): boolean => {
     if (state.transferToInstanceEnabled) {
@@ -2074,6 +2157,9 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
       }
     }
     if (!validateExportTarget(submitState)) {
+      return
+    }
+    if (!validateSkipSmallFilesSize(submitState)) {
       return
     }
     if (submitState.deleteEnabled && !submitState.actionCondition) {
@@ -2650,6 +2736,7 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
                             moveEnabled: false,
                             externalProgramEnabled: false,
                             exportToInstanceEnabled: false,
+                            skipSmallFilesEnabled: false,
                             transferToInstanceEnabled: false,
                             enabled: !rule ? false : prev.enabled,
                           }))
@@ -3675,6 +3762,65 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
                           onChange={exprTransfer => setFormState(prev => ({ ...prev, exprTransfer }))}
                           targets={nonSelfInstances}
                         />
+                      </div>
+                    )}
+
+                    {formState.skipSmallFilesEnabled && (
+                      <div className="rounded-lg border p-3 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-medium">{t("preferences.workflowDialog.actions.skipSmallFiles")}</Label>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => setFormState(prev => ({ ...prev, skipSmallFilesEnabled: false }))}
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label size="sm" className="gap-1" htmlFor="skip-small-files-size">
+                            {t("preferences.workflowDialog.skipSmallFiles.maxSize")}
+                            <FieldHelp>{t("preferences.workflowDialog.skipSmallFiles.description")}</FieldHelp>
+                          </Label>
+                          <div className="flex gap-2">
+                            <Input
+                              id="skip-small-files-size"
+                              type="number"
+                              min={0}
+                              step="any"
+                              inputMode="decimal"
+                              className="flex-1"
+                              value={formState.exprSkipSmallFilesSize ?? ""}
+                              onChange={(e) => {
+                                const raw = e.target.value
+                                setFormState(prev => ({ ...prev, exprSkipSmallFilesSize: raw === "" ? undefined : Number(raw) }))
+                              }}
+                            />
+                            <Select
+                              value={formState.exprSkipSmallFilesUnit}
+                              onValueChange={(value: SkipSmallFilesUnit) => setFormState(prev => ({ ...prev, exprSkipSmallFilesUnit: value }))}
+                            >
+                              <SelectTrigger className="w-[110px]">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {SIZE_UNIT_VALUES.map(unit => (
+                                  <SelectItem key={unit} value={unit}>{unit}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            {t("preferences.workflowDialog.skipSmallFiles.missingFilesNote")}
+                          </p>
+                          {capabilities && !capabilities.supportsFilePriority && (
+                            <p className="text-xs text-warning">
+                              {t("preferences.workflowDialog.skipSmallFiles.unsupported")}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     )}
 

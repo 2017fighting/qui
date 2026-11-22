@@ -12,30 +12,36 @@ import (
 	"github.com/autobrr/qui/internal/dbinterface"
 )
 
+// Activity action types
 const (
-	ActivityActionDeletedRatio        = "deleted_ratio"
-	ActivityActionDeletedSeeding      = "deleted_seeding"
-	ActivityActionDeletedUnregistered = "deleted_unregistered"
-	ActivityActionDeletedCondition    = "deleted_condition"
-	ActivityActionDeleteFailed        = "delete_failed"
-	ActivityActionLimitFailed         = "limit_failed"
-	ActivityActionTagsChanged         = "tags_changed"
-	ActivityActionCategoryChanged     = "category_changed"
-	ActivityActionSpeedLimitsChanged  = "speed_limits_changed"
-	ActivityActionShareLimitsChanged  = "share_limits_changed"
-	ActivityActionPaused              = "paused"
-	ActivityActionResumed             = "resumed"
-	ActivityActionRechecked           = "rechecked"
-	ActivityActionReannounced         = "reannounced"
-	ActivityActionMoved               = "moved"
-	ActivityActionAutoManaged         = "auto_managed"
-	ActivityActionExportedToInstance  = "exported_to_instance"
-	ActivityActionDryRunNoMatch       = "dry_run_no_match"
-	ActivityActionRuleSkipped         = "rule_skipped"
+	ActivityActionDeletedRatio         = "deleted_ratio"
+	ActivityActionDeletedSeeding       = "deleted_seeding"
+	ActivityActionDeletedUnregistered  = "deleted_unregistered"
+	ActivityActionDeletedCondition     = "deleted_condition" // Expression-based deletion
+	ActivityActionDeleteFailed         = "delete_failed"
+	ActivityActionLimitFailed          = "limit_failed"
+	ActivityActionTagsChanged          = "tags_changed"         // Batch tag operation
+	ActivityActionCategoryChanged      = "category_changed"     // Batch category operation
+	ActivityActionSpeedLimitsChanged   = "speed_limits_changed" // Batch speed limit operation
+	ActivityActionShareLimitsChanged   = "share_limits_changed" // Batch share limit operation
+	ActivityActionPaused               = "paused"               // Batch pause operation
+	ActivityActionResumed              = "resumed"              // Batch resume operation
+	ActivityActionRechecked            = "rechecked"            // Batch force recheck operation
+	ActivityActionReannounced          = "reannounced"          // Batch force reannounce operation
+	ActivityActionMoved                = "moved"                // Batch move operation
+	ActivityActionAutoManaged          = "auto_managed"         // Batch auto management operation
+	ActivityActionExportedToInstance   = "exported_to_instance" // Export torrent to another instance
+	ActivityActionSkippedSmallFiles    = "skipped_small_files"
+	ActivityActionSkipSmallFilesFailed = "skip_small_files_failed"
+	ActivityActionDryRunNoMatch        = "dry_run_no_match" // Manual dry-run completed with no matching actions
+	ActivityActionRuleSkipped          = "rule_skipped"     // Rule reads a field that the instance does not send
 )
 
+// ActivityActionTransferredToInstance is the start of a Transfer of a
+// torrent to another instance.
 const ActivityActionTransferredToInstance = "transferred_to_instance"
 
+// Activity outcome types
 const (
 	ActivityOutcomeSuccess = "success"
 	ActivityOutcomeFailed  = "failed"
@@ -209,6 +215,7 @@ func (s *AutomationActivityStore) ListByInstance(ctx context.Context, instanceID
 }
 
 func (s *AutomationActivityStore) DeleteOlderThan(ctx context.Context, instanceID int, days int) (int64, error) {
+	// days == 0 means delete ALL activity for this instance
 	if days == 0 {
 		res, err := s.db.ExecContext(ctx, `DELETE FROM automation_activity WHERE instance_id = ?`, instanceID)
 		if err != nil {
