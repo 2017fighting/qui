@@ -3,17 +3,30 @@
   "card": {
     "status": {
       "disabled": "已禁用",
+      "enabled": "已启用",
       "connected": "已连接",
       "disconnected": "已断开"
     },
     "tooltips": {
       "moveUp": "上移",
-      "moveDown": "下移"
+      "moveDown": "下移",
+      "disableInstance": "禁用实例",
+      "enableInstance": "启用实例"
     },
     "actions": {
       "testConnection": "测试连接",
       "delete": "删除",
-      "changeIcon": "更改图标"
+      "changeIcon": "更改图标",
+      "edit": "编辑"
+    },
+    "labels": {
+      "username": "用户名：",
+      "basicAuth": "基本认证：",
+      "tlsVerification": "TLS 验证：",
+      "tlsSkipped": "已跳过",
+      "tlsStrict": "严格",
+      "localFileAccess": "本地文件系统访问：",
+      "testingConnection": "正在测试连接..."
     },
     "deleteDialog": {
       "title": "删除实例",
@@ -23,6 +36,7 @@
     },
     "toast": {
       "instanceDisabledTitle": "实例已禁用",
+      "testDisabledDescription": "请先启用实例，再测试连接。",
       "testSuccessTitle": "连接测试成功",
       "testSuccessDescription": "已成功连接到 qBittorrent 实例",
       "testFailedTitle": "连接测试失败",
@@ -88,15 +102,20 @@
     },
     "buttons": {
       "updateInstance": "更新实例",
-      "addInstance": "添加实例"
+      "addInstance": "添加实例",
+      "cancel": "取消",
+      "saving": "保存中..."
     },
     "toast": {
       "instanceUpdatedTitle": "实例已更新",
       "instanceUpdatedDescription": "实例更新成功。正在后台测试连接...",
+      "updateFailedTitle": "更新失败",
       "updateFailedDescription": "无法更新实例",
       "instanceCreatedTitle": "实例已创建",
       "instanceCreatedDescription": "实例创建成功。正在后台测试连接...",
-      "createFailedDescription": "无法创建实例"
+      "createFailedTitle": "创建失败",
+      "createFailedDescription": "无法创建实例",
+      "missingCredentialsTitle": "缺少凭据"
     },
     "authType": {
       "none": "无",
@@ -555,6 +574,7 @@
         "externalProgram": "外部程序",
         "dryRun": "模拟运行",
         "exportToInstance": "导出到实例",
+        "skipSmallFiles": "跳过小文件",
         "transferToInstance": "传输到实例",
         "ruleSkipped": "规则未运行"
       },
@@ -593,6 +613,8 @@
         "exported_other": "已导出 {{count}} 个种子",
         "exportedDryRun_other": "将导出 {{count}} 个种子",
         "exportFailed_other": "{{count}} 个种子导出失败",
+        "skippedSmallFiles_other": "{{count}} 个种子：{{files}} 个文件已设为不下载",
+        "skippedSmallFilesDryRun_other": "{{count}} 个种子会有 {{files}} 个文件被设为不下载",
         "transferredDryRun_other": "将传输 {{count}} 个种子"
       },
       "deleteDialog": {
@@ -717,6 +739,8 @@
       "noInstancesDescription": "未配置实例。请在设置中添加实例以使用此服务。",
       "tooltip": "查找磁盘上与 qBittorrent 中任何种子都不关联的文件。\n需要访问每个实例的文件。请在实例设置中启用“本地文件系统访问”或设置 SSH 访问。",
       "description": "扫描下载目录并识别孤立文件以进行清理。",
+      "noLocalAccess": "无本地访问权限",
+      "noLocalAccessTooltip": "qui 和 qBittorrent 必须运行在同一台机器上。在实例设置中启用\"本地文件系统访问\"以使用孤立项目扫描。",
       "remoteLimits": "在远程实例上删除和自动清理需要文件标识，只有服务器允许 qui 运行 GNU find 和 stat 时才能读取。",
       "remoteNoIdentity": "此远程实例不允许这样做，因此 qui 无法判断两个路径是否指向同一文件，可通过第二个路径访问的文件（例如通过 bind mount）即使正被种子使用，也可能出现在列表中。此处的扫描只能预览和导出，不能删除。",
       "on": "开",
@@ -805,6 +829,125 @@
         "exportFailed": "导出失败"
       },
       "directory": "目录"
+    },
+    "deletePlan": {
+      "cancel": "取消",
+      "back": "返回",
+      "close": "关闭",
+      "statusLabels": {
+        "pending": "等待同步",
+        "planning": "规划中",
+        "preview_ready": "可查看",
+        "deleting": "删除中",
+        "completed": "已完成",
+        "failed": "失败",
+        "canceled": "已取消",
+        "unknown": "未知"
+      },
+      "excludeReasons": {
+        "incomplete": "有成员仍在下载",
+        "no_delete_tag": "有成员带有 no_delete 标签",
+        "partial_overlap": "与其他种子仅共享部分文件",
+        "unreadable_files": "无法读取其文件列表",
+        "nested_path": "其内容路径与其他种子嵌套",
+        "unknown": "被删除保护排除",
+        "members_changed": "自计划创建以来其成员已更改"
+      }
+    },
+    "deletePlanHistory": {
+      "title": "计划历史",
+      "description": "此运行创建的计划，只读。",
+      "view": "查看",
+      "viewRun": "查看运行 {{id}}",
+      "removed": "已删除",
+      "noKeys": "未记录排序键",
+      "disabledKey": "{{key}}（已关闭）",
+      "enabled": "是",
+      "disabled": "否"
+    },
+    "deletePlanOverview": {
+      "history": "历史",
+      "title": "删除计划",
+      "tooltip": "生成一次性计划，逐个删除完整内容组，直到达到目标大小。确认之前不会删除任何内容。",
+      "description": "从单个实例回收指定大小的空间。",
+      "noInstancesDescription": "未配置实例。请在设置中添加实例后使用此服务。",
+      "newPlan": "新建计划",
+      "viewPlan": "查看计划",
+      "activePlan": "计划进行中",
+      "noPlanYet": "尚未创建计划。",
+      "progress": "已删除 {{removed}}，共 {{planned}}",
+      "deleting": "正在删除计划...",
+      "completedResult": "已删除 {{removed}}。",
+      "failedResult": "计划失败。",
+      "canceledResult": "在删除开始前已取消。",
+      "toast": {
+        "planStartFailed": "创建删除计划失败",
+        "planCanceled": "删除计划已取消",
+        "cancelFailed": "取消删除计划失败"
+      }
+    },
+    "deletePlanWizard": {
+      "title": "新建删除计划",
+      "description": "计划针对单个实例生成并冻结以供查看。确认之前不会删除任何内容。",
+      "instance": "实例",
+      "targetLabel": "目标大小",
+      "targetPlaceholder": "10",
+      "buildPlan": "生成计划",
+      "reviewAndConfirm": "查看并确认",
+      "conflict": "此实例已有活动计划。请先取消它，再新建计划。",
+      "targetRequired": "请输入大于零的目标大小。",
+      "waitingTitle": "正在等待最新的同步数据",
+      "waitingDescription": "当实例的种子列表不超过两分钟时，计划就会开始。",
+      "planning": "正在生成计划...",
+      "loadFailed": "加载计划失败。",
+      "keysTitle": "排序键",
+      "keysDescription": "分组按此顺序离开。关闭某个键后它不再决定顺序。",
+      "enableKey": "启用排序键",
+      "moveKeyUp": "上移排序键",
+      "moveKeyDown": "下移排序键",
+      "directionAsc": "升序",
+      "directionDesc": "降序",
+      "notSortableField": "不是排序键",
+      "removeDeadGroups": "先移除失效分组",
+      "removeDeadGroupsDescription": "没有做种成员的分组无论目标如何都会被移除，其字节不计入目标。"
+    },
+    "deletePlanPreview": {
+      "target": "目标",
+      "planned": "计划回收",
+      "overshoot": "超出量",
+      "targetNotReached": "无法达到目标：所有可用的组都已包含在内。",
+      "belowTarget": "计划比目标少 {{shortfall}}。",
+      "refill": "补充",
+      "refilled": "计划已补充。新的超出量：{{overshoot}}。",
+      "refillFailed": "补充计划失败",
+      "untickGroup": "取消勾选此组",
+      "untickFailed": "更新计划失败",
+      "includedGroups": "计划组：{{count}}",
+      "excludedGroups": "排除组：{{count}}",
+      "contentPath": "内容路径",
+      "size": "大小",
+      "membersColumn": "成员",
+      "memberName": "名称",
+      "memberState": "状态",
+      "memberProgress": "进度",
+      "reason": "原因",
+      "noGroups": "计划中没有组。",
+      "loading": "正在加载计划...",
+      "exportCSV": "导出 CSV",
+      "exported": "计划已导出为 CSV",
+      "exportFailed": "导出计划失败",
+      "ranking": "排序",
+      "decidingKey": "决定键",
+      "deadGroups": "失效分组：{{count}}",
+      "deadTotal": "失效总量：{{total}}"
+    },
+    "deletePlanConfirm": {
+      "title": "确认删除计划",
+      "description": "开始前请检查计划将删除的内容。",
+      "otherInstances": "仅检查此实例，不检查其他实例。",
+      "confirm": "确认并删除",
+      "deadTotal": "死种组：{{dead}}",
+      "startFailed": "无法开始删除"
     },
     "orphanScanSettings": {
       "settingsTitle": "设置",
@@ -943,9 +1086,14 @@
         "auto_managed": "自动管理",
         "dry_run_no_match": "模拟运行（无匹配）",
         "exported_to_instance": "导出到实例",
+        "skipped_small_files": "跳过小文件",
+        "skip_small_files_failed": "跳过小文件失败",
         "transferred_to_instance": "传输到实例",
         "rule_skipped": "规则未运行"
-      }
+      },
+      "skippedFiles": "不下载",
+      "skippedFilesMore": "另有 {{more}} 个",
+      "skippedAllBelow": "未改动：所有文件都小于该大小"
     },
     "reannounceOverview": {
       "title": "重新汇报",
@@ -1131,12 +1279,19 @@
         "types": {
           "default": "最早优先（默认）",
           "simple": "简单排序",
-          "score": "自定义得分"
+          "score": "自定义得分",
+          "keys": "排序键"
         },
         "sortBy": "排序方式",
         "asc": "升序",
         "desc": "降序",
         "scoreRules": "得分规则",
+        "keys": "排序键",
+        "addKey": "添加排序键",
+        "enableKey": "启用排序键",
+        "moveKeyUp": "上移排序键",
+        "moveKeyDown": "下移排序键",
+        "removeKey": "移除排序键",
         "lowToHigh": "从低到高",
         "highToLow": "从高到低",
         "fieldMultiplier": "字段乘数",
@@ -1145,7 +1300,8 @@
         "addFieldMultiplier": "添加字段乘数",
         "addBonus": "添加奖励分",
         "notSupportedForSimpleSort": "不支持简单排序",
-        "notSupportedForScoreMultiplier": "不支持得分乘数"
+        "notSupportedForScoreMultiplier": "不支持得分乘数",
+        "notSupportedForKey": "不支持排序键"
       },
       "conditionsLabel": "条件（可选）",
       "mixedActionConditions": "此工作流中的每个操作都有各自的条件。qui 现在每个工作流只使用一个条件。保存后，所有操作都将使用上方的条件。要保留其他条件，请先为每个条件创建一个工作流。",
@@ -1168,6 +1324,7 @@
         "move": "移动",
         "externalProgram": "执行外部程序",
         "exportToInstance": "导出到实例",
+        "skipSmallFiles": "跳过小文件",
         "transferToInstance": "传输到实例"
       },
       "option": {
@@ -1255,6 +1412,12 @@
           "mustBeAbsolute": "必须是绝对路径，例如 /data/archive 或 D:\\Archive。"
         }
       },
+      "skipSmallFiles": {
+        "maxSize": "最大文件大小",
+        "description": "小于此大小的文件会被设为“不下载”。它们仍留在文件列表中，已下载的文件不会被删除，而所有文件都小于此大小的种子不会被改动。",
+        "missingFilesNote": "被跳过的文件会被“有缺失文件”条件视为缺失，导出的种子在目标实例上会完整下载它们。",
+        "unsupported": "该实例的 qBittorrent 不支持文件优先级；需要 Web API 2.2.0 或更高版本。"
+      },
       "templateHelp": {
         "absolutePath": "必须是绝对路径。值要写在路径中，例如",
         "intro": "支持 Go 模板。",
@@ -1268,6 +1431,7 @@
         "defaultSource": "默认（qBittorrent）",
         "pathSource": "服务器路径",
         "pathSourceWindowsUnsupported": "服务器路径（Windows 不支持）",
+        "pathSourceLocalAccessRequired": "服务器路径（需要本地访问权限）",
         "qbitPathSource": "qBittorrent 主机上的路径",
         "qbitPathSourceUnsupported": "qBittorrent 主机上的路径（需要 qBittorrent 5.3）",
         "pathPlaceholder": "/mnt/downloads",
@@ -1275,6 +1439,7 @@
         "qbitPathHelp": "输入 qBittorrent 主机上的路径。可用空间由 qBittorrent 测量，qui 无需访问该磁盘。",
         "errors": {
           "unsupportedWindows": "Windows 不支持基于路径的可用空间来源。",
+          "localAccessRequired": "基于路径的可用空间来源需要本地文件系统访问权限。",
           "qbitPathUnsupported": "此实例的版本早于 qBittorrent 5.3，无法报告某个路径的可用空间。",
           "pathRequired": "使用\"服务器路径\"时，路径为必填项。",
           "filesystemAccessRequired": "基于路径的可用空间来源需要本地或 SSH 文件系统访问权限。",
@@ -1389,6 +1554,8 @@
       "enableDryRunPrompt": {
         "title": "启用模拟运行？",
         "description": "模拟运行会模拟所有操作而不做任何实际更改。你可以在活动日志中查看受影响的种子。",
+        "enableWithout": "不启用模拟运行",
+        "enableWith": "启用模拟运行",
         "saveAndEnable": "保存并启用"
       },
       "customGroup": {
@@ -1439,6 +1606,8 @@
           "externalProgram": "外部程序",
           "noMatches": "无匹配",
           "exportedToInstance": "导出到实例",
+          "skippedSmallFiles": "跳过小文件",
+          "skipSmallFilesFailed": "跳过小文件失败",
           "transferredToInstance": "传输到实例",
           "ruleSkipped": "规则未运行"
         },
@@ -1459,7 +1628,9 @@
           "noMatches": "此次模拟运行没有种子匹配",
           "impacted": "{{count}} 个种子受影响",
           "impacted_other": "{{count}} 个种子受影响",
-          "completed": "模拟运行完成"
+          "completed": "模拟运行完成",
+          "skippedSmallFiles_other": "{{count}} 个种子会有文件被设为不下载（{{files}} 个文件）",
+          "skippedSmallFilesAllBelow_other": "{{count}} 个种子因所有文件都小于该大小而未改动"
         }
       },
       "toast": {
@@ -1487,8 +1658,10 @@
         "pathSourceUnsupportedWindows": "Windows 不支持基于路径的可用空间来源。已切换到 qBittorrent 默认值。",
         "qbitPathSourceUnsupported": "此实例无法报告某个路径的可用空间，已切换到默认来源。",
         "switchFreeSpaceSourceDefault": "将可用空间来源切换为默认（qBittorrent）",
+        "enableLocalAccessOrDefault": "请在实例设置中启用本地文件系统访问，或使用默认（qBittorrent）",
         "enterPathOrDefault": "请输入路径或将可用空间来源切换回默认（qBittorrent）",
         "addScoreRule": "得分排序至少需要一条得分规则",
+        "addRankingKey": "请为排序键排序添加至少一个排序键",
         "fieldMultiplierInvalid": "字段乘数必须是有效数字",
         "conditionalScoreInvalid": "条件得分必须是有效数字",
         "setSpeedLimit": "请至少设置一个速度限制",
@@ -1504,6 +1677,7 @@
         "selectGroupKey": "请至少选择一个键",
         "groupExists": "已存在具有此 ID 的分组",
         "customGroupAdded": "已添加自定义分组",
+        "setSkipSmallFilesSize": "请为“跳过小文件”填入至少 1 MiB 的文件大小",
         "setUpFilesystemAccessOrDefault": "请在实例设置中设置本地或 SSH 文件系统访问，或使用默认（qBittorrent）"
       },
       "trackerMatchInclude": "包含",

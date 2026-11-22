@@ -38,6 +38,9 @@ type runPlan struct {
 	exports        []pendingExportToInstance
 	transfers      []pendingTransfer
 	deletions      *deletionSelection
+	skipSmallFiles map[string]skipSmallFilesPlan
+	// skipSmallFilesRules holds the rule that chose each torrent of skipSmallFiles.
+	skipSmallFilesRules map[string]ruleRef
 }
 
 // RuleSkip says why a rule gets no Action on an instance: it reads a field that the instance
@@ -317,6 +320,13 @@ func (s *Service) buildRunPlan(ctx context.Context, in runPlanInput) runPlan {
 	}
 	plan.category = s.planCategories(ctx, in, categoryTriggers)
 	plan.move = s.planMoves(ctx, in, moveTriggers)
+	plan.skipSmallFiles = skipSmallFilesPlansFor(states, evalCtx, deletions)
+	plan.skipSmallFilesRules = make(map[string]ruleRef, len(plan.skipSmallFiles))
+	for hash := range plan.skipSmallFiles {
+		if state := states[hash]; state != nil {
+			plan.skipSmallFilesRules[hash] = state.skipSmallFilesRule
+		}
+	}
 	plan.transfers = transfersAfterExports(transfersAfterMoves(plan.transfers, plan.move.rules), plan.exports)
 	var waitingExports []pendingExportToInstance
 	plan.exports, waitingExports = exportsAfterMoves(plan.exports, plan.move.rules)

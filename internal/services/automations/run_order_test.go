@@ -44,6 +44,7 @@ var writeActionKeys = map[string]string{
 	"torrents/setCategory":       "category",
 	"torrents/createCategory":    "category",
 	"torrents/setLocation":       "move",
+	"torrents/filePrio":          "skipSmallFiles",
 	"torrents/delete":            "delete",
 }
 
@@ -58,6 +59,7 @@ var activityActionKeys = map[string]string{
 	models.ActivityActionTagsChanged:               "tag",
 	models.ActivityActionCategoryChanged:           "category",
 	models.ActivityActionMoved:                     "move",
+	models.ActivityActionSkippedSmallFiles:         "skipSmallFiles",
 	externalprograms.ActivityActionExternalProgram: "externalProgram",
 	models.ActivityActionExportedToInstance:        "exportToInstance",
 	models.ActivityActionDeletedCondition:          "delete",
@@ -77,6 +79,16 @@ func everyActionTorrents() string {
 	return `{"` + runningHash + `":` + torrent("running", "stalledUP") +
 		`,"` + stoppedHash + `":` + torrent("stopped", "stoppedUP") +
 		`,"` + doomedHash + `":` + torrent("doomed", "stalledUP") + `}`
+}
+
+// everyActionFiles gives each torrent one file under the skip threshold and one over it, so the
+// Skip small files action has something to set and does not leave the torrent alone.
+func everyActionFiles(stub *stubQbt) {
+	files := `[{"index":0,"name":"small.bin","size":1024,"priority":1,"progress":1},{"index":1,"name":"large.bin","size":2147483648,"priority":1,"progress":1}]`
+	stub.files = make(map[string]string, 3)
+	for _, hash := range []string{runningHash, stoppedHash, doomedHash} {
+		stub.files[hash] = files
+	}
 }
 
 func nameIs(name string) *models.RuleCondition {
@@ -104,6 +116,7 @@ func everyActionRules() []*models.Automation {
 				Tags:             []*models.TagAction{{Enabled: true, Tags: []string{"ordered"}, Mode: models.TagModeAdd}},
 				Category:         &models.CategoryAction{Enabled: true, Category: "sorted"},
 				Move:             &models.MoveAction{Enabled: true, Path: "/moved", Condition: nameIs("running")},
+				SkipSmallFiles:   &models.SkipSmallFilesAction{Enabled: true, MaxSizeBytes: 500 * 1024 * 1024},
 				ExternalProgram:  &models.ExternalProgramAction{Enabled: true, ProgramID: 1},
 				ExportToInstance: &models.ExportToInstanceAction{Enabled: true, TargetInstanceID: missingTargetInstanceID},
 			},
@@ -148,6 +161,7 @@ func activityKeysByID(t *testing.T, db *database.DB, instanceID int) []string {
 // and the steps it dispatches to the background by the rows they record at dispatch.
 func TestApplyRules_SendsActionsInRunOrder(t *testing.T) {
 	stub := newStubQbt(t, everyActionTorrents())
+	everyActionFiles(stub)
 	svc, db, instanceIDs := newStubService(t, nil, stub)
 	runner := &transfers{}
 	svc.SetTransferRunner(runner)
@@ -174,6 +188,7 @@ func TestApplyRules_SendsActionsInRunOrder(t *testing.T) {
 // A dry run reports its actions in actionRunOrder.
 func TestApplyRulesDryRun_ReportsActionsInRunOrder(t *testing.T) {
 	stub := newStubQbt(t, everyActionTorrents())
+	everyActionFiles(stub)
 	svc, _, instanceIDs := newStubService(t, nil, stub)
 	runner := &transfers{}
 	svc.SetTransferRunner(runner)

@@ -63,6 +63,7 @@ var planSteps = []planStep{
 	{fields: []string{"tags"}, run: (*stepRun).tags},
 	{fields: []string{"category"}, run: (*stepRun).category},
 	{fields: []string{"move"}, run: (*stepRun).move},
+	{fields: []string{"skipSmallFiles", "skipSmallFilesRules"}, run: (*stepRun).skipSmallFiles},
 }
 
 func (r *stepRun) runSteps(ctx context.Context, plan *runPlan) {
@@ -437,6 +438,91 @@ func (r *stepRun) move(ctx context.Context, plan *runPlan) {
 			hashes:  hashes,
 		})
 	}
+}
+
+// skipSmallFiles sets every file under the threshold to "Do not download". The plan holds
+// only the torrents with something to change; an entry with allBelow is a torrent that the
+// run leaves alone, because skipping every file would leave it with nothing to download.
+func (r *stepRun) skipSmallFiles(ctx context.Context, plan *runPlan) {
+	plans := plan.skipSmallFiles
+	if len(plans) == 0 {
+		return
+	}
+	accepted := make([]string, 0, len(plans))
+	rules := make(map[ruleRef]int)
+	files := 0
+	var bytes int64
+	guarded := 0
+	for _, hash := range slices.Sorted(maps.Keys(plans)) {
+		skipPlan := plans[hash]
+		if skipPlan.allBelow {
+			guarded++
+			continue
+		}
+		ok := r.write([]string{hash}, func(batch []string) error {
+			err := r.s.syncManager.SetTorrentFilePriority(ctx, r.instanceID, hash, skipPlan.indices, filePriorityDoNotDownload)
+			if err != nil {
+				log.Warn().Err(err).Int("instanceID", r.instanceID).Str("hash", hash).Int("files", len(skipPlan.indices)).
+					Msg("automations: skip small files failed")
+				ref, _ := plan.skipSmallFilesRules[hash]
+				r.record(ctx, stepActivity{
+					action:  models.ActivityActionSkipSmallFilesFailed,
+					outcome: models.ActivityOutcomeFailed,
+					hash:    hash,
+					reason:  "skip small files failed: " + err.Error(),
+					details: map[string]any{"count": 1, "files": len(skipPlan.indices)},
+					count:   1,
+					rules:   buildRuleCountsFromHashes(batch, plan.skipSmallFilesRules),
+					hashes:  batch,
+				})
+				_ = ref
+			} else {
+				log.Info().Int("instanceID", r.instanceID).Str("hash", hash).Int("files", len(skipPlan.indices)).
+					Msg("automations: set files to do not download")
+			}
+			return err
+		})
+		if len(ok) == 0 {
+			continue
+		}
+		accepted = append(accepted, hash)
+		files += len(skipPlan.indices)
+		bytes += skipPlan.bytes
+		if ref, ok := plan.skipSmallFilesRules[hash]; ok {
+			rules[ref]++
+		}
+	}
+	if r.dryRun {
+		// The dry run sends nothing, so it shows every planned torrent, the ones it leaves
+		// alone included.
+		r.record(ctx, stepActivity{
+			action: models.ActivityActionSkippedSmallFiles,
+			details: map[string]any{
+				"count":   len(accepted),
+				"files":   files,
+				"bytes":   bytes,
+				"guarded": guarded,
+			},
+			count: len(accepted),
+			items: func() []ActivityRunTorrent {
+				return buildSkipSmallFilesRunItems(slices.Sorted(maps.Keys(plans)), plans, r.torrentByHash, r.scope)
+			},
+		})
+		return
+	}
+	if len(accepted) == 0 {
+		return
+	}
+	r.record(ctx, stepActivity{
+		action:  models.ActivityActionSkippedSmallFiles,
+		details: map[string]any{"count": len(accepted), "files": files, "bytes": bytes},
+		count:   len(accepted),
+		rules:   rules,
+		hashes:  accepted,
+		items: func() []ActivityRunTorrent {
+			return buildSkipSmallFilesRunItems(accepted, plans, r.torrentByHash, r.scope)
+		},
+	})
 }
 
 // flattenHashes returns each torrent of the targets once, and the number of writes. A

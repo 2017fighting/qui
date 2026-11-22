@@ -54,23 +54,25 @@ const freeSpaceDeleteCooldown = 5 * time.Minute
 const logMsgRemoveTorrentWithFiles = "automations: removing torrent with files"
 
 var automationActionLabels = map[string]string{
-	models.ActivityActionDeletedRatio:        "Deleted torrent (ratio rule)",
-	models.ActivityActionDeletedSeeding:      "Deleted torrent (seeding rule)",
-	models.ActivityActionDeletedUnregistered: "Deleted torrent (unregistered)",
-	models.ActivityActionDeletedCondition:    "Deleted torrent (rule)",
-	models.ActivityActionDeleteFailed:        "Delete failed",
-	models.ActivityActionLimitFailed:         "Speed/share limit failed",
-	models.ActivityActionTagsChanged:         "Tags updated",
-	models.ActivityActionCategoryChanged:     "Category updated",
-	models.ActivityActionSpeedLimitsChanged:  "Speed limits updated",
-	models.ActivityActionShareLimitsChanged:  "Share limits updated",
-	models.ActivityActionPaused:              "Paused torrents",
-	models.ActivityActionResumed:             "Resumed torrents",
-	models.ActivityActionRechecked:           "Rechecked torrents",
-	models.ActivityActionReannounced:         "Reannounced torrents",
-	models.ActivityActionMoved:               "Moved torrents",
-	models.ActivityActionExportedToInstance:  "Export to instance",
-	models.ActivityActionDryRunNoMatch:       "Dry-run: no matches",
+	models.ActivityActionDeletedRatio:         "Deleted torrent (ratio rule)",
+	models.ActivityActionDeletedSeeding:       "Deleted torrent (seeding rule)",
+	models.ActivityActionDeletedUnregistered:  "Deleted torrent (unregistered)",
+	models.ActivityActionDeletedCondition:     "Deleted torrent (rule)",
+	models.ActivityActionDeleteFailed:         "Delete failed",
+	models.ActivityActionLimitFailed:          "Speed/share limit failed",
+	models.ActivityActionTagsChanged:          "Tags updated",
+	models.ActivityActionCategoryChanged:      "Category updated",
+	models.ActivityActionSpeedLimitsChanged:   "Speed limits updated",
+	models.ActivityActionShareLimitsChanged:   "Share limits updated",
+	models.ActivityActionPaused:               "Paused torrents",
+	models.ActivityActionResumed:              "Resumed torrents",
+	models.ActivityActionRechecked:            "Rechecked torrents",
+	models.ActivityActionReannounced:          "Reannounced torrents",
+	models.ActivityActionMoved:                "Moved torrents",
+	models.ActivityActionExportedToInstance:   "Export to instance",
+	models.ActivityActionSkippedSmallFiles:    "Files set to do not download",
+	models.ActivityActionSkipSmallFilesFailed: "Skip small files failed",
+	models.ActivityActionDryRunNoMatch:        "Dry-run: no matches",
 
 	models.ActivityActionTransferredToInstance: "Transfer to instance",
 }
@@ -1114,12 +1116,18 @@ func (s *Service) buildEvalContext(ctx context.Context, instanceID int, instance
 		}
 	}
 
-	if needs.SkippedFiles {
-		skipped, err := s.detectSkippedFiles(ctx, instanceID, torrents)
+	// File lists feed HAS_SKIPPED_FILES and the Skip small files action, so one fetch serves both.
+	if needs.SkippedFiles || needs.TorrentFiles {
+		filesByHash, err := s.loadTorrentFiles(ctx, instanceID, torrents)
 		if err != nil {
-			log.Warn().Err(err).Int("instanceID", instanceID).Msg("automations: skipped files detection failed")
+			log.Warn().Err(err).Int("instanceID", instanceID).Msg("automations: failed to fetch torrent files")
 		} else {
-			evalCtx.HasSkippedFilesByHash = skipped
+			if needs.TorrentFiles {
+				evalCtx.TorrentFilesByHash = filesByHash
+			}
+			if needs.SkippedFiles {
+				evalCtx.HasSkippedFilesByHash = buildSkippedFilesResult(filesByHash)
+			}
 		}
 	}
 
@@ -1678,6 +1686,7 @@ var actionRunOrder = []string{
 	"tag",
 	"category",
 	"move",
+	"skipSmallFiles",
 	"externalProgram",
 	"exportToInstance",
 	"delete",

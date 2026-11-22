@@ -3,17 +3,30 @@
   "card": {
     "status": {
       "disabled": "Desativado",
+      "enabled": "Ativado",
       "connected": "Conectado",
       "disconnected": "Desconectado"
     },
     "tooltips": {
       "moveUp": "Mover para cima",
-      "moveDown": "Mover para baixo"
+      "moveDown": "Mover para baixo",
+      "disableInstance": "Desativar instância",
+      "enableInstance": "Ativar instância"
     },
     "actions": {
       "testConnection": "Testar Conexão",
       "delete": "Excluir",
-      "changeIcon": "Alterar ícone"
+      "changeIcon": "Alterar ícone",
+      "edit": "Editar"
+    },
+    "labels": {
+      "username": "Usuário:",
+      "basicAuth": "Basic Auth:",
+      "tlsVerification": "Verificação TLS:",
+      "tlsSkipped": "Ignorada",
+      "tlsStrict": "Rigorosa",
+      "localFileAccess": "Acesso a Arquivo Local:",
+      "testingConnection": "Testando conexão..."
     },
     "deleteDialog": {
       "title": "Excluir Instância",
@@ -23,6 +36,7 @@
     },
     "toast": {
       "instanceDisabledTitle": "Instância Desativada",
+      "testDisabledDescription": "Ative a instância antes de testar a conexão.",
       "testSuccessTitle": "Conexão Bem-Sucedida",
       "testSuccessDescription": "Conectado com sucesso à instância do qBittorrent",
       "testFailedTitle": "Falha na Conexão",
@@ -88,15 +102,20 @@
     },
     "buttons": {
       "updateInstance": "Atualizar Instância",
-      "addInstance": "Adicionar Instância"
+      "addInstance": "Adicionar Instância",
+      "cancel": "Cancelar",
+      "saving": "Salvando..."
     },
     "toast": {
       "instanceUpdatedTitle": "Instância Atualizada",
       "instanceUpdatedDescription": "Instância atualizada com sucesso. Testando conexão em segundo plano...",
+      "updateFailedTitle": "Falha ao Atualizar",
       "updateFailedDescription": "Falha ao atualizar a instância",
       "instanceCreatedTitle": "Instância Criada",
       "instanceCreatedDescription": "Instância criada com sucesso. Testando conexão em segundo plano...",
-      "createFailedDescription": "Falha ao criar a instância"
+      "createFailedTitle": "Falha ao Criar",
+      "createFailedDescription": "Falha ao criar a instância",
+      "missingCredentialsTitle": "Credenciais Ausentes"
     },
     "authType": {
       "none": "Nenhuma",
@@ -556,6 +575,7 @@
         "externalProgram": "Programa externo",
         "dryRun": "Simulação (Dry-run)",
         "exportToInstance": "Exportar",
+        "skipSmallFiles": "Ignorar arquivos pequenos",
         "transferToInstance": "Transferir para instância",
         "ruleSkipped": "Regra não executada"
       },
@@ -611,6 +631,10 @@
         "exportedDryRun_other": "{{count}} torrents seriam exportados",
         "exportFailed_one": "{{count}} falha ao exportar",
         "exportFailed_other": "{{count}} falhas ao exportar",
+        "skippedSmallFiles_one": "{{count}} torrent: {{files}} arquivos definidos como não baixar",
+        "skippedSmallFiles_other": "{{count}} torrents: {{files}} arquivos definidos como não baixar",
+        "skippedSmallFilesDryRun_one": "{{count}} torrent teria {{files}} arquivos definidos como não baixar",
+        "skippedSmallFilesDryRun_other": "{{count}} torrents teriam {{files}} arquivos definidos como não baixar",
         "transferredDryRun_one": "{{count}} torrent seria transferido",
         "transferredDryRun_other": "{{count}} torrents seriam transferidos"
       },
@@ -673,7 +697,7 @@
       },
       "exported": "Exportado",
       "transferStarted": "Iniciado",
-      "skipped": "Ignorada"
+      "skipped": "Ignorados"
     },
     "runWorkflowNow": {
       "action": "Executar agora",
@@ -736,6 +760,8 @@
       "noInstancesDescription": "Nenhuma instância configurada.",
       "tooltip": "Busca arquivos no disco que não estão associados a nenhum torrent no qBittorrent.\nPrecisa de acesso aos arquivos de cada instância. Ative \"Acesso ao Sistema de Arquivos Local\" ou configure o acesso SSH nas configurações da instância.",
       "description": "Analise seus diretórios e ache arquivos não associados a torrents para limpar o disco.",
+      "noLocalAccess": "Acesso Local Ausente",
+      "noLocalAccessTooltip": "Você precisa ativar o 'Acesso ao Sistema de Arquivos Local' na configuração da instância.",
       "remoteLimits": "A exclusão e a auto-limpeza em uma instância remota precisam da identidade dos arquivos, que o qui só consegue ler quando o servidor permite executar GNU find e stat.",
       "remoteNoIdentity": "Esta instância remota não permite isso, então o qui não consegue saber quando dois caminhos são o mesmo arquivo, e um arquivo acessível por um segundo caminho, como um bind mount, pode aparecer na lista mesmo que um torrent o utilize. As varreduras aqui podem ser visualizadas e exportadas, mas não excluídas.",
       "on": "Ligado",
@@ -831,6 +857,125 @@
         "exportFailed": "Falha ao exportar"
       },
       "directory": "Diretório"
+    },
+    "deletePlan": {
+      "cancel": "Cancelar",
+      "back": "Voltar",
+      "close": "Fechar",
+      "statusLabels": {
+        "pending": "Aguardando sincronização",
+        "planning": "Planejando",
+        "preview_ready": "Pronto para revisão",
+        "deleting": "Excluindo",
+        "completed": "Concluído",
+        "failed": "Falhou",
+        "canceled": "Cancelado",
+        "unknown": "Desconhecido"
+      },
+      "excludeReasons": {
+        "incomplete": "Um membro ainda está baixando",
+        "no_delete_tag": "Um membro tem a tag no_delete",
+        "partial_overlap": "Compartilha apenas parte dos arquivos com outro torrent",
+        "unreadable_files": "A lista de arquivos não pode ser lida",
+        "nested_path": "O caminho de conteúdo está aninhado com o de outro torrent",
+        "unknown": "Excluído por uma proteção de exclusão",
+        "members_changed": "Seus membros mudaram desde que o plano foi criado"
+      }
+    },
+    "deletePlanHistory": {
+      "title": "Histórico de planos",
+      "description": "O plano que esta execução criou, somente leitura.",
+      "view": "Ver",
+      "viewRun": "Ver execução {{id}}",
+      "removed": "Removido",
+      "noKeys": "Nenhuma chave de classificação registrada",
+      "disabledKey": "{{key}} (desativada)",
+      "enabled": "Sim",
+      "disabled": "Não"
+    },
+    "deletePlanOverview": {
+      "history": "Histórico",
+      "title": "Plano de exclusão",
+      "tooltip": "Cria um plano único que remove grupos de conteúdo inteiros até atingir o tamanho alvo. Nada é removido antes da confirmação.",
+      "description": "Recupere uma quantidade de espaço escolhida de uma instância.",
+      "noInstancesDescription": "Nenhuma instância configurada. Adicione uma nas configurações para usar este serviço.",
+      "newPlan": "Novo plano",
+      "viewPlan": "Ver plano",
+      "activePlan": "Plano em andamento",
+      "noPlanYet": "Nenhum plano criado ainda.",
+      "progress": "{{removed}} de {{planned}} removidos",
+      "deleting": "Excluindo o plano...",
+      "completedResult": "{{removed}} removidos.",
+      "failedResult": "O plano falhou.",
+      "canceledResult": "Cancelado antes do início da exclusão.",
+      "toast": {
+        "planStartFailed": "Falha ao criar o plano de exclusão",
+        "planCanceled": "Plano de exclusão cancelado",
+        "cancelFailed": "Falha ao cancelar o plano de exclusão"
+      }
+    },
+    "deletePlanWizard": {
+      "title": "Novo plano de exclusão",
+      "description": "O plano é criado para uma instância e congelado para revisão. Nada é removido antes da confirmação.",
+      "instance": "Instância",
+      "targetLabel": "Tamanho alvo",
+      "targetPlaceholder": "10",
+      "buildPlan": "Criar plano",
+      "reviewAndConfirm": "Revisar e confirmar",
+      "conflict": "Já existe um plano ativo para esta instância. Cancele-o antes de criar um novo.",
+      "targetRequired": "Informe um tamanho alvo maior que zero.",
+      "waitingTitle": "Aguardando dados de sincronização recentes",
+      "waitingDescription": "O plano começa quando a lista de torrents da instância tem no máximo dois minutos.",
+      "planning": "Criando o plano...",
+      "loadFailed": "Falha ao carregar o plano.",
+      "keysTitle": "Chaves de classificação",
+      "keysDescription": "Os grupos saem nesta ordem. Desative uma chave para que ela deixe de decidir a ordem.",
+      "enableKey": "Ativar chave",
+      "moveKeyUp": "Mover chave para cima",
+      "moveKeyDown": "Mover chave para baixo",
+      "directionAsc": "Ascendente",
+      "directionDesc": "Descendente",
+      "notSortableField": "Não é uma chave de classificação",
+      "removeDeadGroups": "Remover grupos mortos primeiro",
+      "removeDeadGroupsDescription": "Grupos sem membro semeando saem independentemente da meta. Seus bytes não contam para a meta."
+    },
+    "deletePlanPreview": {
+      "target": "Alvo",
+      "planned": "Recuperação planejada",
+      "overshoot": "Excedente",
+      "targetNotReached": "O alvo não pode ser atingido: todos os grupos disponíveis já estão incluídos.",
+      "belowTarget": "O plano está {{shortfall}} abaixo do alvo.",
+      "refill": "Completar",
+      "refilled": "Plano completado. Novo excedente: {{overshoot}}.",
+      "refillFailed": "Falha ao completar o plano",
+      "untickGroup": "Desmarcar este grupo",
+      "untickFailed": "Falha ao atualizar o plano",
+      "includedGroups": "Grupos planejados: {{count}}",
+      "excludedGroups": "Grupos excluídos: {{count}}",
+      "contentPath": "Caminho do conteúdo",
+      "size": "Tamanho",
+      "membersColumn": "Membros",
+      "memberName": "Nome",
+      "memberState": "Estado",
+      "memberProgress": "Progresso",
+      "reason": "Motivo",
+      "noGroups": "O plano não tem grupos.",
+      "loading": "Carregando o plano...",
+      "exportCSV": "Exportar CSV",
+      "exported": "Plano exportado como CSV",
+      "exportFailed": "Falha ao exportar o plano",
+      "ranking": "Classificação",
+      "decidingKey": "Chave decisiva",
+      "deadGroups": "Grupos mortos: {{count}}",
+      "deadTotal": "Total morto: {{total}}"
+    },
+    "deletePlanConfirm": {
+      "title": "Confirmar o plano de exclusão",
+      "description": "Revise o que o plano remove antes de iniciar.",
+      "otherInstances": "Somente esta instância é verificada. As outras instâncias não são verificadas.",
+      "confirm": "Confirmar e excluir",
+      "deadTotal": "Grupos mortos: {{dead}}",
+      "startFailed": "Falha ao iniciar a exclusão"
     },
     "orphanScanSettings": {
       "settingsTitle": "Configurações",
@@ -972,9 +1117,14 @@
         "auto_managed": "Gerenciamento Automático",
         "dry_run_no_match": "Simulação (Sem correspondência)",
         "exported_to_instance": "Exportado",
+        "skipped_small_files": "Ignorar arquivos pequenos",
+        "skip_small_files_failed": "Falha ao ignorar arquivos pequenos",
         "transferred_to_instance": "Transferir para instância",
         "rule_skipped": "Regra não executada"
-      }
+      },
+      "skippedFiles": "Não baixar",
+      "skippedFilesMore": "+{{more}} mais",
+      "skippedAllBelow": "Não alterado: todos os arquivos estão abaixo do tamanho"
     },
     "reannounceOverview": {
       "title": "Reanúncio Automático",
@@ -1161,12 +1311,19 @@
         "types": {
           "default": "Padrão (Mais antigos primeiro)",
           "simple": "Ordenação Simples",
-          "score": "Métricas Baseadas em Pontos (Score)"
+          "score": "Métricas Baseadas em Pontos (Score)",
+          "keys": "Chaves de Classificação"
         },
         "sortBy": "Ordenar por",
         "asc": "Ascendente",
         "desc": "Descendente",
         "scoreRules": "Regras de Pontuação",
+        "keys": "Chaves de Classificação",
+        "addKey": "Adicionar Chave",
+        "enableKey": "Ativar chave",
+        "moveKeyUp": "Mover chave para cima",
+        "moveKeyDown": "Mover chave para baixo",
+        "removeKey": "Remover chave",
         "lowToHigh": "Mais fraco ao mais forte",
         "highToLow": "Mais forte ao mais fraco",
         "fieldMultiplier": "Multiplicadores",
@@ -1175,7 +1332,8 @@
         "addFieldMultiplier": "Campo P/ Multiplicar",
         "addBonus": "Adicionar Bônus",
         "notSupportedForSimpleSort": "Não suportado na ordenação simples",
-        "notSupportedForScoreMultiplier": "Não suportado nos multiplicadores de pontuação"
+        "notSupportedForScoreMultiplier": "Não suportado nos multiplicadores de pontuação",
+        "notSupportedForKey": "Não suportado nas chaves de classificação"
       },
       "conditionsLabel": "Condições (Quando a regra vai agir?)",
       "mixedActionConditions": "Cada ação deste workflow tem sua própria condição. O qui agora usa uma condição por workflow. Se você salvar, todas as ações recebem a condição acima. Para manter as outras, crie antes um workflow para cada condição.",
@@ -1198,6 +1356,7 @@
         "move": "Mover",
         "externalProgram": "Acionar Programa Script Externo",
         "exportToInstance": "Migrar (Exportar a outra instância)",
+        "skipSmallFiles": "Ignorar arquivos pequenos",
         "transferToInstance": "Transferir para instância"
       },
       "option": {
@@ -1285,6 +1444,12 @@
           "mustBeAbsolute": "Precisa ser um caminho absoluto, por exemplo /data/archive ou D:\\Archive."
         }
       },
+      "skipSmallFiles": {
+        "maxSize": "Tamanho máximo do arquivo",
+        "description": "Arquivos abaixo deste tamanho são definidos como \"Não baixar\". Eles permanecem na lista de arquivos, arquivos já baixados não são excluídos, e um torrent cujos arquivos estão todos abaixo deste tamanho não é alterado.",
+        "missingFilesNote": "Arquivos ignorados contam como ausentes para a condição \"Arquivos ausentes\", e um torrent exportado os baixa por completo na instância de destino.",
+        "unsupported": "O qBittorrent desta instância não oferece suporte a prioridades de arquivos; é necessário Web API 2.2.0 ou superior."
+      },
       "templateHelp": {
         "absolutePath": "Deve ser um caminho absoluto. Os valores vão dentro dele, por exemplo",
         "intro": "Suporta modelos Go.",
@@ -1298,6 +1463,7 @@
         "defaultSource": "Pegar pelo próprio qBittorrent",
         "pathSource": "Localização Manual Exata",
         "pathSourceWindowsUnsupported": "Indisponível (Em Windows você deve usar pelo qBittorrent)",
+        "pathSourceLocalAccessRequired": "Localização Manual (Requer que o Acesso Local esteja ativado)",
         "qbitPathSource": "Caminho no host do qBittorrent",
         "qbitPathSourceUnsupported": "Caminho no host do qBittorrent (requer qBittorrent 5.3)",
         "pathPlaceholder": "/mnt/hd1",
@@ -1305,6 +1471,7 @@
         "qbitPathHelp": "Informe um caminho no host do qBittorrent. O qBittorrent mede o espaço livre, então o qui não precisa de acesso a esse disco.",
         "errors": {
           "unsupportedWindows": "Função não existe se instalada em Windows.",
+          "localAccessRequired": "A origem de espaço livre por caminho requer o \"Acesso ao Sistema de Arquivos Local\".",
           "qbitPathUnsupported": "Esta instância é anterior ao qBittorrent 5.3 e não informa o espaço livre de um caminho.",
           "pathRequired": "Você escolheu modo Manual, portanto escreva o caminho do HD.",
           "filesystemAccessRequired": "A origem de espaço livre por caminho requer acesso ao sistema de arquivos local ou via SSH.",
@@ -1419,6 +1586,8 @@
       "enableDryRunPrompt": {
         "title": "Ativar simulação?",
         "description": "A simulação executa todas as ações sem alterar nada. Você pode revisar os torrents afetados no histórico.",
+        "enableWithout": "Não, Ativar Direto",
+        "enableWith": "Sim, Modo Simulação (Recomendado)",
         "saveAndEnable": "Salvar e ativar"
       },
       "customGroup": {
@@ -1469,6 +1638,8 @@
           "externalProgram": "Programa externo",
           "noMatches": "Nenhuma correspondência",
           "exportedToInstance": "Exportar",
+          "skippedSmallFiles": "Ignorar arquivos pequenos",
+          "skipSmallFilesFailed": "Falha ao ignorar arquivos pequenos",
           "transferredToInstance": "Transferir para instância",
           "ruleSkipped": "Regra não executada"
         },
@@ -1489,7 +1660,11 @@
           "noMatches": "0 resultados afetados.",
           "impacted": "{{count}} sofreu impacto",
           "impacted_other": "{{count}} sofreram impacto",
-          "completed": "Simulação Pronta"
+          "completed": "Simulação Pronta",
+          "skippedSmallFiles_one": "{{count}} torrent teria arquivos definidos como não baixar ({{files}} arquivos)",
+          "skippedSmallFilesAllBelow_one": "{{count}} torrent não alterado, todos os arquivos estão abaixo do tamanho",
+          "skippedSmallFiles_other": "{{count}} torrents teriam arquivos definidos como não baixar ({{files}} arquivos)",
+          "skippedSmallFilesAllBelow_other": "{{count}} torrents não alterados, todos os arquivos estão abaixo do tamanho"
         }
       },
       "toast": {
@@ -1517,8 +1692,10 @@
         "pathSourceUnsupportedWindows": "Voltamos a opção de Verificação de HD para (Pegar pelo próprio qB). Windows é incompatível.",
         "qbitPathSourceUnsupported": "Esta instância não informa o espaço livre de um caminho. Alterado para a origem padrão.",
         "switchFreeSpaceSourceDefault": "Ajustado ao original (qB).",
+        "enableLocalAccessOrDefault": "Ative o Acesso ao Sistema de Arquivos Local nas configurações da instância, ou use \"Pegar pelo próprio qBittorrent\"",
         "enterPathOrDefault": "Você precisa de um caminho na caixa para usar esta opção.",
         "addScoreRule": "Adicione as regras da sua prioridade.",
+        "addRankingKey": "Adicione pelo menos uma chave de classificação para a ordenação por chaves",
         "fieldMultiplierInvalid": "O multiplicador de campo deve ser um número válido.",
         "conditionalScoreInvalid": "A pontuação condicional deve ser um número válido.",
         "setSpeedLimit": "Coloque velocidades válidas para o corte.",
@@ -1534,6 +1711,7 @@
         "selectGroupKey": "Requer chaves.",
         "groupExists": "O nome já está sendo usado por outro grupamento.",
         "customGroupAdded": "Grupo personalizado adicionado",
+        "setSkipSmallFilesSize": "Informe um tamanho de pelo menos 1 MiB para \"Ignorar arquivos pequenos\"",
         "setUpFilesystemAccessOrDefault": "Configure o acesso ao sistema de arquivos local ou via SSH nas configurações da instância, ou use \"Pegar pelo próprio qBittorrent\""
       },
       "trackerMatchInclude": "Vai Pegar (Incluir)",

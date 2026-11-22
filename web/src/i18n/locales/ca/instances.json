@@ -3,17 +3,30 @@
   "card": {
     "status": {
       "disabled": "Desactivada",
+      "enabled": "Activada",
       "connected": "Connectada",
       "disconnected": "Desconnectada"
     },
     "tooltips": {
       "moveUp": "Mou cap amunt",
-      "moveDown": "Mou cap avall"
+      "moveDown": "Mou cap avall",
+      "disableInstance": "Desactiva la instància",
+      "enableInstance": "Activa la instància"
     },
     "actions": {
       "testConnection": "Prova la connexió",
       "delete": "Elimina",
-      "changeIcon": "Canvia la icona"
+      "changeIcon": "Canvia la icona",
+      "edit": "Edita"
+    },
+    "labels": {
+      "username": "Nom d'usuari:",
+      "basicAuth": "Autenticació bàsica:",
+      "tlsVerification": "Verificació TLS:",
+      "tlsSkipped": "Omesa",
+      "tlsStrict": "Estricta",
+      "localFileAccess": "Accés als fitxers locals:",
+      "testingConnection": "S'està provant la connexió..."
     },
     "deleteDialog": {
       "title": "Elimina la instància",
@@ -23,6 +36,7 @@
     },
     "toast": {
       "instanceDisabledTitle": "Instància desactivada",
+      "testDisabledDescription": "Activa la instància abans de provar la connexió.",
       "testSuccessTitle": "La prova de connexió ha anat bé",
       "testSuccessDescription": "S'ha connectat correctament a la instància de qBittorrent",
       "testFailedTitle": "Ha fallat la prova de connexió",
@@ -88,15 +102,20 @@
     },
     "buttons": {
       "updateInstance": "Actualitza la instància",
-      "addInstance": "Afegeix la instància"
+      "addInstance": "Afegeix la instància",
+      "cancel": "Cancel·la",
+      "saving": "S'està desant..."
     },
     "toast": {
       "instanceUpdatedTitle": "Instància actualitzada",
       "instanceUpdatedDescription": "S'ha actualitzat la instància correctament. S'està provant la connexió en segon pla...",
+      "updateFailedTitle": "No s'ha pogut actualitzar",
       "updateFailedDescription": "No s'ha pogut actualitzar la instància",
       "instanceCreatedTitle": "Instància creada",
       "instanceCreatedDescription": "S'ha creat la instància correctament. S'està provant la connexió en segon pla...",
-      "createFailedDescription": "No s'ha pogut crear la instància"
+      "createFailedTitle": "No s'ha pogut crear",
+      "createFailedDescription": "No s'ha pogut crear la instància",
+      "missingCredentialsTitle": "Falten credencials"
     },
     "authType": {
       "none": "Cap",
@@ -591,6 +610,7 @@
         "externalProgram": "Programa extern",
         "dryRun": "Execució de prova",
         "exportToInstance": "Exporta a una instància",
+        "skipSmallFiles": "Omet els fitxers petits",
         "transferToInstance": "Transfereix a una instància",
         "ruleSkipped": "Regla no executada"
       },
@@ -646,6 +666,10 @@
         "exportedDryRun_other": "{{count}} torrents s'exportarien",
         "exportFailed_one": "No s'ha pogut exportar {{count}} torrent",
         "exportFailed_other": "No s'han pogut exportar {{count}} torrents",
+        "skippedSmallFiles_one": "{{count}} torrent: {{files}} fitxers posats a no baixar",
+        "skippedSmallFiles_other": "{{count}} torrents: {{files}} fitxers posats a no baixar",
+        "skippedSmallFilesDryRun_one": "{{count}} torrent tindria {{files}} fitxers posats a no baixar",
+        "skippedSmallFilesDryRun_other": "{{count}} torrents tindrien {{files}} fitxers posats a no baixar",
         "transferredDryRun_one": "{{count}} torrent es transferiria",
         "transferredDryRun_other": "{{count}} torrents es transferirien"
       },
@@ -710,7 +734,7 @@
       "transferStarted": "Iniciat",
       "tagActions_one": "{{count}} acció d'etiqueta",
       "tagActions_other": "{{count}} accions d'etiqueta",
-      "skipped": "Omesa"
+      "skipped": "Omesos"
     },
     "runWorkflowNow": {
       "action": "Executa ara",
@@ -812,12 +836,19 @@
         "types": {
           "default": "Els més antics primer (predeterminat)",
           "simple": "Ordenació simple",
-          "score": "Puntuació personalitzada"
+          "score": "Puntuació personalitzada",
+          "keys": "Claus d'ordenació"
         },
         "sortBy": "Ordena per",
         "asc": "Asc.",
         "desc": "Desc.",
         "scoreRules": "Regles de puntuació",
+        "keys": "Claus d'ordenació",
+        "addKey": "Afegeix clau",
+        "enableKey": "Activa la clau",
+        "moveKeyUp": "Mou la clau cap amunt",
+        "moveKeyDown": "Mou la clau cap avall",
+        "removeKey": "Elimina la clau",
         "lowToHigh": "De menor a major",
         "highToLow": "De major a menor",
         "fieldMultiplier": "Multiplicador de camp",
@@ -826,7 +857,8 @@
         "addFieldMultiplier": "Afegeix un multiplicador de camp",
         "addBonus": "Afegeix una bonificació",
         "notSupportedForSimpleSort": "No compatible amb l'ordenació simple",
-        "notSupportedForScoreMultiplier": "No compatible amb els multiplicadors de puntuació"
+        "notSupportedForScoreMultiplier": "No compatible amb els multiplicadors de puntuació",
+        "notSupportedForKey": "No compatible amb les claus d'ordenació"
       },
       "conditionsLabel": "Condicions (opcional)",
       "mixedActionConditions": "Cada acció d'aquest workflow té la seva pròpia condició. Ara qui fa servir una sola condició per workflow. Si deses, totes les accions rebran la condició de dalt. Per conservar les altres, crea abans un workflow per a cada condició.",
@@ -849,6 +881,7 @@
         "move": "Mou",
         "externalProgram": "Executa un programa extern",
         "exportToInstance": "Exporta a una instància",
+        "skipSmallFiles": "Omet els fitxers petits",
         "transferToInstance": "Transfereix a una instància"
       },
       "option": {
@@ -936,6 +969,12 @@
           "mustBeAbsolute": "Ha de ser un camí absolut, per exemple /data/archive o D:\\Archive."
         }
       },
+      "skipSmallFiles": {
+        "maxSize": "Mida màxima del fitxer",
+        "description": "Els fitxers per sota d'aquesta mida passen a \"No baixar\". Es queden a la llista de fitxers, els fitxers ja baixats no s'esborren i un torrent amb tots els fitxers per sota d'aquesta mida no es toca.",
+        "missingFilesNote": "Els fitxers omesos compten com a absents per a la condició \"Fitxers absents\", i un torrent exportat els baixa sencers a la instància de destí.",
+        "unsupported": "El qBittorrent d'aquesta instància no admet prioritats de fitxers; cal Web API 2.2.0 o superior."
+      },
       "templateHelp": {
         "absolutePath": "Ha de ser un camí absolut. Els valors van dins del camí, per exemple",
         "intro": "Admet plantilles de Go.",
@@ -950,6 +989,8 @@
       "enableDryRunPrompt": {
         "title": "Vols activar l'execució de prova?",
         "description": "L'execució de prova simula totes les accions sense canviar res. Pots revisar els torrents afectats al registre d'activitat.",
+        "enableWithout": "Activa-ho sense execució de prova",
+        "enableWith": "Activa-ho amb execució de prova",
         "saveAndEnable": "Desa i activa"
       },
       "freeSpace": {
@@ -960,6 +1001,7 @@
         "defaultSource": "Predeterminat (qBittorrent)",
         "pathSource": "Camí al servidor",
         "pathSourceWindowsUnsupported": "Camí al servidor (no compatible amb Windows)",
+        "pathSourceLocalAccessRequired": "Camí al servidor (cal accés local)",
         "qbitPathSource": "Camí a l'amfitrió de qBittorrent",
         "qbitPathSourceUnsupported": "Camí a l'amfitrió de qBittorrent (necessita qBittorrent 5.3)",
         "pathPlaceholder": "/mnt/downloads",
@@ -967,6 +1009,7 @@
         "qbitPathHelp": "Introdueix un camí a l'amfitrió de qBittorrent. qBittorrent mesura l'espai lliure, de manera que qui no necessita accés a aquest disc.",
         "errors": {
           "unsupportedWindows": "L'origen d'espai lliure basat en un camí no és compatible amb Windows.",
+          "localAccessRequired": "L'origen d'espai lliure basat en un camí necessita accés al sistema de fitxers local.",
           "qbitPathUnsupported": "Aquesta instància és anterior a qBittorrent 5.3 i no pot informar de l'espai lliure d'un camí.",
           "pathRequired": "El camí és obligatori quan es fa servir «Camí al servidor».",
           "filesystemAccessRequired": "L'origen d'espai lliure basat en un camí necessita accés al sistema de fitxers local o per SSH.",
@@ -1120,6 +1163,8 @@
           "externalProgram": "Programa extern",
           "noMatches": "Cap coincidència",
           "exportedToInstance": "Exporta a una instància",
+          "skippedSmallFiles": "Omet els fitxers petits",
+          "skipSmallFilesFailed": "No s'han pogut ometre els fitxers petits",
           "transferredToInstance": "Transfereix a una instància",
           "ruleSkipped": "Regla no executada"
         },
@@ -1140,7 +1185,11 @@
           "noMatches": "Cap torrent no ha coincidit amb aquesta execució de prova",
           "impacted": "{{count}} torrent afectat",
           "impacted_other": "{{count}} torrents afectats",
-          "completed": "S'ha completat l'execució de prova"
+          "completed": "S'ha completat l'execució de prova",
+          "skippedSmallFiles_one": "{{count}} torrent tindria fitxers posats a no baixar ({{files}} fitxers)",
+          "skippedSmallFilesAllBelow_one": "{{count}} torrent no tocat, tots els fitxers són per sota de la mida",
+          "skippedSmallFiles_other": "{{count}} torrents tindrien fitxers posats a no baixar ({{files}} fitxers)",
+          "skippedSmallFilesAllBelow_other": "{{count}} torrents no tocats, tots els fitxers són per sota de la mida"
         }
       },
       "toast": {
@@ -1168,8 +1217,10 @@
         "pathSourceUnsupportedWindows": "L'origen d'espai lliure basat en un camí no és compatible amb Windows. S'ha canviat al valor predeterminat de qBittorrent.",
         "qbitPathSourceUnsupported": "Aquesta instància no pot informar de l'espai lliure d'un camí. S'ha canviat a l'origen predeterminat.",
         "switchFreeSpaceSourceDefault": "Canvia l'origen de l'espai lliure a Predeterminat (qBittorrent)",
+        "enableLocalAccessOrDefault": "Activa l'accés al sistema de fitxers local a la configuració de la instància, o fes servir Predeterminat (qBittorrent)",
         "enterPathOrDefault": "Introdueix un camí o torna a posar l'origen de l'espai lliure a Predeterminat (qBittorrent)",
         "addScoreRule": "Afegeix com a mínim una regla de puntuació per ordenar per puntuació",
+        "addRankingKey": "Afegeix almenys una clau d'ordenació per a l'ordenació per claus",
         "fieldMultiplierInvalid": "El multiplicador de camp ha de ser un número vàlid",
         "conditionalScoreInvalid": "La puntuació condicional ha de ser un número vàlid",
         "setSpeedLimit": "Defineix com a mínim un límit de velocitat",
@@ -1185,6 +1236,7 @@
         "selectGroupKey": "Selecciona com a mínim una clau",
         "groupExists": "Ja hi ha un grup amb aquest ID",
         "customGroupAdded": "S'ha afegit el grup personalitzat",
+        "setSkipSmallFilesSize": "Introdueix una mida d'almenys 1 MiB per a \"Omet els fitxers petits\"",
         "setUpFilesystemAccessOrDefault": "Configura l'accés al sistema de fitxers local o per SSH a la configuració de la instància, o fes servir Predeterminat (qBittorrent)"
       },
       "trackerMatchInclude": "Inclou",
@@ -1381,15 +1433,22 @@
         "auto_managed": "Gestionat automàticament",
         "dry_run_no_match": "Execució de prova (cap coincidència)",
         "exported_to_instance": "Exporta a una instància",
+        "skipped_small_files": "Omet els fitxers petits",
+        "skip_small_files_failed": "No s'han pogut ometre els fitxers petits",
         "transferred_to_instance": "Transfereix a una instància",
         "rule_skipped": "Regla no executada"
-      }
+      },
+      "skippedFiles": "No baixar",
+      "skippedFilesMore": "+{{more}} més",
+      "skippedAllBelow": "No tocat: tots els fitxers són per sota de la mida"
     },
     "orphanScanOverview": {
       "title": "Exploració d'orfes",
       "noInstancesDescription": "No hi ha cap instància configurada. Afegeix-ne una a Configuració per fer servir aquest servei.",
       "tooltip": "Troba els fitxers del disc que no estan associats a cap torrent de qBittorrent.\nNecessita accés als fitxers de cada instància. Activa «Accés al sistema de fitxers local» o configura l'accés SSH a la configuració de la instància.",
       "description": "Explora els directoris de baixada i identifica els fitxers orfes per netejar-los.",
+      "noLocalAccess": "Sense accés local",
+      "noLocalAccessTooltip": "qui i qBittorrent s'han d'executar a la mateixa màquina. Activa «Accés al sistema de fitxers local» a la configuració de la instància per fer servir l'exploració d'orfes.",
       "remoteLimits": "La supressió i la neteja automàtica en una instància remota necessiten la identitat dels fitxers, que qui només pot llegir si el servidor li permet executar GNU find i stat.",
       "remoteNoIdentity": "Aquesta instància remota no li permet executar-los, de manera que qui no pot saber quan dos camins són el mateix fitxer, i un fitxer accessible per un segon camí, per exemple amb un muntatge bind, pot aparèixer a la llista encara que un torrent l'utilitzi. Les exploracions d'aquí es poden previsualitzar i exportar, però no suprimir.",
       "on": "Activada",
@@ -1485,6 +1544,125 @@
       "remoteDeleteUnavailable": "Aquesta exploració no pot suprimir, perquè la instància remota no informa de la identitat dels fitxers o l'exploració no l'ha pogut llegir per a tots els fitxers. Exporta la llista per suprimir tu mateix els fitxers al servidor.",
       "directory": "Directori",
       "noItems": "No hi ha res per mostrar."
+    },
+    "deletePlan": {
+      "cancel": "Cancel·la",
+      "back": "Enrere",
+      "close": "Tanca",
+      "statusLabels": {
+        "pending": "Esperant la sincronització",
+        "planning": "Planificant",
+        "preview_ready": "A punt per revisar",
+        "deleting": "Suprimint",
+        "completed": "Completat",
+        "failed": "Ha fallat",
+        "canceled": "Cancel·lat",
+        "unknown": "Desconegut"
+      },
+      "excludeReasons": {
+        "incomplete": "Un membre encara s'està baixant",
+        "no_delete_tag": "Un membre porta l'etiqueta no_delete",
+        "partial_overlap": "Comparteix només part dels seus fitxers amb un altre torrent",
+        "unreadable_files": "La seva llista de fitxers no es pot llegir",
+        "nested_path": "El seu camí de contingut s'imbrica amb el d'un altre torrent",
+        "unknown": "Exclòs per una protecció de supressió",
+        "members_changed": "Els seus membres han canviat des que es va crear el pla"
+      }
+    },
+    "deletePlanHistory": {
+      "title": "Historial de plans",
+      "description": "El pla que ha creat aquesta execució, només de lectura.",
+      "view": "Mostra",
+      "viewRun": "Mostra l'execució {{id}}",
+      "removed": "Eliminat",
+      "noKeys": "No s'ha registrat cap clau d'ordenació",
+      "disabledKey": "{{key}} (desactivada)",
+      "enabled": "Sí",
+      "disabled": "No"
+    },
+    "deletePlanOverview": {
+      "history": "Historial",
+      "title": "Pla de supressió",
+      "tooltip": "Crea un pla puntual que elimina grups de contingut sencers fins a arribar a la mida objectiu. No s'elimina res fins que ho confirmis.",
+      "description": "Recupera una quantitat d'espai triada d'una instància.",
+      "noInstancesDescription": "No hi ha cap instància configurada. Afegeix-ne una a la configuració per fer servir aquest servei.",
+      "newPlan": "Pla nou",
+      "viewPlan": "Mostra el pla",
+      "activePlan": "Pla en curs",
+      "noPlanYet": "Encara no s'ha creat cap pla.",
+      "progress": "{{removed}} de {{planned}} suprimits",
+      "deleting": "Eliminant el pla...",
+      "completedResult": "S'han eliminat {{removed}}.",
+      "failedResult": "El pla ha fallat.",
+      "canceledResult": "Cancel·lat abans d'iniciar l'eliminació.",
+      "toast": {
+        "planStartFailed": "No s'ha pogut crear el pla de supressió",
+        "planCanceled": "Pla de supressió cancel·lat",
+        "cancelFailed": "No s'ha pogut cancel·lar el pla de supressió"
+      }
+    },
+    "deletePlanWizard": {
+      "title": "Pla de supressió nou",
+      "description": "El pla es crea per a una instància i es congela per revisar-lo. No s'elimina res fins que ho confirmis.",
+      "instance": "Instància",
+      "targetLabel": "Mida objectiu",
+      "targetPlaceholder": "10",
+      "buildPlan": "Crea el pla",
+      "reviewAndConfirm": "Revisa i confirma",
+      "conflict": "Ja hi ha un pla actiu per a aquesta instància. Cancel·la'l abans de crear-ne un de nou.",
+      "targetRequired": "Introdueix una mida objectiu més gran que zero.",
+      "waitingTitle": "Esperant dades de sincronització recents",
+      "waitingDescription": "El pla comença quan la llista de torrents de la instància té com a màxim dos minuts.",
+      "planning": "S'està creant el pla...",
+      "loadFailed": "No s'ha pogut carregar el pla.",
+      "keysTitle": "Claus d'ordenació",
+      "keysDescription": "Els grups surten en aquest ordre. Desactiva una clau perquè deixi de decidir l'ordre.",
+      "enableKey": "Activa la clau",
+      "moveKeyUp": "Mou la clau cap amunt",
+      "moveKeyDown": "Mou la clau cap avall",
+      "directionAsc": "Asc.",
+      "directionDesc": "Desc.",
+      "notSortableField": "No és una clau d'ordenació",
+      "removeDeadGroups": "Treure primer els grups morts",
+      "removeDeadGroupsDescription": "Els grups sense cap membre sembrant surten sigui quin sigui l'objectiu. Els seus bytes no compten per a l'objectiu."
+    },
+    "deletePlanPreview": {
+      "target": "Objectiu",
+      "planned": "Recuperació prevista",
+      "overshoot": "Excés",
+      "targetNotReached": "No es pot assolir l'objectiu: tots els grups disponibles ja estan inclosos.",
+      "belowTarget": "El pla està {{shortfall}} per sota de l'objectiu.",
+      "refill": "Reomplir",
+      "refilled": "Pla reomplert. Nou excés: {{overshoot}}.",
+      "refillFailed": "No s'ha pogut reomplir el pla",
+      "untickGroup": "Desmarca aquest grup",
+      "untickFailed": "No s'ha pogut actualitzar el pla",
+      "includedGroups": "Grups planificats: {{count}}",
+      "excludedGroups": "Grups exclosos: {{count}}",
+      "contentPath": "Camí del contingut",
+      "size": "Mida",
+      "membersColumn": "Membres",
+      "memberName": "Nom",
+      "memberState": "Estat",
+      "memberProgress": "Progrés",
+      "reason": "Motiu",
+      "noGroups": "El pla no té cap grup.",
+      "loading": "S'està carregant el pla...",
+      "exportCSV": "Exporta CSV",
+      "exported": "Pla exportat com a CSV",
+      "exportFailed": "No s'ha pogut exportar el pla",
+      "ranking": "Ordenació",
+      "decidingKey": "Clau decisiva",
+      "deadGroups": "Grups morts: {{count}}",
+      "deadTotal": "Total mort: {{total}}"
+    },
+    "deletePlanConfirm": {
+      "title": "Confirma el pla de supressió",
+      "description": "Revisa què elimina el pla abans que comenci.",
+      "otherInstances": "Només es comprova aquesta instància. Les altres instàncies no es comproven.",
+      "confirm": "Confirma i suprimeix",
+      "deadTotal": "Grups morts: {{dead}}",
+      "startFailed": "No s'ha pogut iniciar l'eliminació"
     },
     "orphanScanSettings": {
       "settingsTitle": "Configuració",
