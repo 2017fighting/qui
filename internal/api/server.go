@@ -795,16 +795,17 @@ func (s *Server) Handler() (*chi.Mux, error) {
 						})
 					})
 
-					// Delete plans
+					// Delete plans. ADR 0040: the plan reads and edits under the
+					// Automations area, and only the run that deletes needs run.
 					r.Route("/delete-plan", func(r chi.Router) {
-						r.Post("/runs", deletePlanHandler.CreateRun)
-						r.Get("/runs", deletePlanHandler.ListRuns)
+						r.With(automations.Write).Post("/runs", deletePlanHandler.CreateRun)
+						r.With(automations.Read).Get("/runs", deletePlanHandler.ListRuns)
 						r.Route("/runs/{runID}", func(r chi.Router) {
-							r.Get("/", deletePlanHandler.GetRun)
-							r.Patch("/rows", deletePlanHandler.UpdateRows)
-							r.Post("/refill", deletePlanHandler.RefillRun)
-							r.Post("/confirm", deletePlanHandler.ConfirmRun)
-							r.Post("/cancel", deletePlanHandler.CancelRun)
+							r.With(automations.Read).Get("/", deletePlanHandler.GetRun)
+							r.With(automations.Write).Patch("/rows", deletePlanHandler.UpdateRows)
+							r.With(automations.Write).Post("/refill", deletePlanHandler.RefillRun)
+							r.With(automations.Run).Post("/confirm", deletePlanHandler.ConfirmRun)
+							r.With(automations.Run).Post("/cancel", deletePlanHandler.CancelRun)
 						})
 					})
 				})

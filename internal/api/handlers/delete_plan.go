@@ -45,10 +45,23 @@ type DeletePlanCreatePayload struct {
 	RemoveDeadGroups *bool            `json:"removeDeadGroups"`
 }
 
+// available answers 503 when the server was built without the delete plan store or
+// service, so a handler never dereferences a nil dependency.
+func (h *DeletePlanHandler) available(w http.ResponseWriter) bool {
+	if h.store == nil || h.service == nil {
+		RespondError(w, http.StatusServiceUnavailable, "Delete plan service not available")
+		return false
+	}
+	return true
+}
+
 // CreateRun creates a run and builds its plan.
 func (h *DeletePlanHandler) CreateRun(w http.ResponseWriter, r *http.Request) {
 	instanceID, err := parseInstanceID(w, r)
 	if err != nil {
+		return
+	}
+	if !h.available(w) {
 		return
 	}
 
@@ -64,11 +77,6 @@ func (h *DeletePlanHandler) CreateRun(w http.ResponseWriter, r *http.Request) {
 	removeDeadGroups := true
 	if payload.RemoveDeadGroups != nil {
 		removeDeadGroups = *payload.RemoveDeadGroups
-	}
-
-	if h.service == nil {
-		RespondError(w, http.StatusServiceUnavailable, "Delete plan service not available")
-		return
 	}
 
 	runID, err := h.service.TriggerPlan(r.Context(), instanceID, deleteplan.PlanRequest{
@@ -107,6 +115,9 @@ func (h *DeletePlanHandler) ListRuns(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+	if !h.available(w) {
+		return
+	}
 
 	limit := 20
 	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
@@ -134,6 +145,9 @@ func (h *DeletePlanHandler) GetRun(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+	if !h.available(w) {
+		return
+	}
 	runID, ok := parseDeletePlanRunID(w, r)
 	if !ok {
 		return
@@ -157,6 +171,9 @@ func (h *DeletePlanHandler) GetRun(w http.ResponseWriter, r *http.Request) {
 func (h *DeletePlanHandler) CancelRun(w http.ResponseWriter, r *http.Request) {
 	instanceID, err := parseInstanceID(w, r)
 	if err != nil {
+		return
+	}
+	if !h.available(w) {
 		return
 	}
 	runID, ok := parseDeletePlanRunID(w, r)
@@ -219,6 +236,9 @@ func (h *DeletePlanHandler) UpdateRows(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
+	if !h.available(w) {
+		return
+	}
 	runID, ok := parseDeletePlanRunID(w, r)
 	if !ok {
 		return
@@ -262,6 +282,9 @@ func (h *DeletePlanHandler) UpdateRows(w http.ResponseWriter, r *http.Request) {
 func (h *DeletePlanHandler) RefillRun(w http.ResponseWriter, r *http.Request) {
 	instanceID, err := parseInstanceID(w, r)
 	if err != nil {
+		return
+	}
+	if !h.available(w) {
 		return
 	}
 	runID, ok := parseDeletePlanRunID(w, r)
@@ -321,6 +344,9 @@ func (h *DeletePlanHandler) respondUpdatedRun(w http.ResponseWriter, r *http.Req
 func (h *DeletePlanHandler) ConfirmRun(w http.ResponseWriter, r *http.Request) {
 	instanceID, err := parseInstanceID(w, r)
 	if err != nil {
+		return
+	}
+	if !h.available(w) {
 		return
 	}
 	runID, ok := parseDeletePlanRunID(w, r)
