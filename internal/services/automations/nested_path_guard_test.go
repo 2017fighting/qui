@@ -77,7 +77,7 @@ func TestSelectDeletions_SkipsNestedContentPath(t *testing.T) {
 				scope:      noSkipWindow(rule),
 			})
 
-			assert.Equal(t, tc.wantTotal, len(selection.byHash))
+			assert.Len(t, selection.byHash, tc.wantTotal)
 		})
 	}
 }
