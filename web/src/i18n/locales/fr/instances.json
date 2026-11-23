@@ -3,30 +3,17 @@
   "card": {
     "status": {
       "disabled": "Désactivé",
-      "enabled": "Activé",
       "connected": "Connecté",
       "disconnected": "Déconnecté"
     },
     "tooltips": {
       "moveUp": "Monter",
-      "moveDown": "Descendre",
-      "disableInstance": "Désactiver l'instance",
-      "enableInstance": "Activer l'instance"
+      "moveDown": "Descendre"
     },
     "actions": {
       "testConnection": "Tester la connexion",
       "delete": "Supprimer",
-      "changeIcon": "Modifier l'icône",
-      "edit": "Edit"
-    },
-    "labels": {
-      "username": "Nom d'utilisateur :",
-      "basicAuth": "Auth Basic :",
-      "tlsVerification": "Vérification TLS :",
-      "tlsSkipped": "Ignorée",
-      "tlsStrict": "Stricte",
-      "localFileAccess": "Accès fichiers locaux :",
-      "testingConnection": "Test de connexion..."
+      "changeIcon": "Modifier l'icône"
     },
     "deleteDialog": {
       "title": "Supprimer l'instance",
@@ -36,7 +23,6 @@
     },
     "toast": {
       "instanceDisabledTitle": "Instance désactivée",
-      "testDisabledDescription": "Activez l'instance avant de tester la connexion.",
       "testSuccessTitle": "Test de connexion réussi",
       "testSuccessDescription": "Connexion réussie à l'instance qBittorrent",
       "testFailedTitle": "Échec du test de connexion",
@@ -102,20 +88,15 @@
     },
     "buttons": {
       "updateInstance": "Mettre à jour l'instance",
-      "addInstance": "Ajouter une instance",
-      "cancel": "Annuler",
-      "saving": "Enregistrement..."
+      "addInstance": "Ajouter une instance"
     },
     "toast": {
       "instanceUpdatedTitle": "Instance mise à jour",
       "instanceUpdatedDescription": "Instance mise à jour avec succès. Test de connexion en arrière-plan...",
-      "updateFailedTitle": "Échec de la mise à jour",
       "updateFailedDescription": "Échec de la mise à jour de l'instance",
       "instanceCreatedTitle": "Instance créée",
       "instanceCreatedDescription": "Instance créée avec succès. Test de connexion en arrière-plan...",
-      "createFailedTitle": "Échec de la création",
-      "createFailedDescription": "Échec de la création de l'instance",
-      "missingCredentialsTitle": "Identifiants manquants"
+      "createFailedDescription": "Échec de la création de l'instance"
     },
     "authType": {
       "none": "Aucun",
@@ -754,8 +735,6 @@
       "noInstancesDescription": "Aucune instance configurée. Ajoutez-en une dans les paramètres.",
       "tooltip": "Trouve les fichiers sur disque non associés à un torrent qBittorrent.\nNécessite l'accès aux fichiers de chaque instance. Activez « Accès au système de fichiers local » ou configurez l'accès SSH dans les paramètres de l'instance.",
       "description": "Analyse les dossiers de téléchargement et identifie les fichiers orphelins.",
-      "noLocalAccess": "Pas d'accès local",
-      "noLocalAccessTooltip": "qui et qBittorrent doivent s'exécuter sur la même machine. Activez l'accès au système de fichiers local.",
       "remoteLimits": "La suppression et le nettoyage automatique sur une instance distante nécessitent l'identité des fichiers, que l'application ne peut lire que si le serveur lui permet d'exécuter GNU find et stat.",
       "remoteNoIdentity": "Cette instance distante ne le permet pas : l'application ne sait donc pas reconnaître deux chemins menant au même fichier, et un fichier accessible par un second chemin, par exemple via un montage bind, peut être listé même si un torrent l'utilise. Les analyses ici peuvent être consultées et exportées, mais pas supprimées.",
       "on": "On",
@@ -1457,7 +1436,6 @@
         "defaultSource": "Par défaut (qBittorrent)",
         "pathSource": "Chemin sur le serveur",
         "pathSourceWindowsUnsupported": "Chemin sur le serveur (non supporté sur Windows)",
-        "pathSourceLocalAccessRequired": "Chemin sur le serveur (requiert Accès local)",
         "qbitPathSource": "Chemin sur l'hôte qBittorrent",
         "qbitPathSourceUnsupported": "Chemin sur l'hôte qBittorrent (nécessite qBittorrent 5.3)",
         "pathPlaceholder": "/mnt/downloads",
@@ -1465,7 +1443,6 @@
         "qbitPathHelp": "Indiquez un chemin sur l'hôte qBittorrent. qBittorrent mesure l'espace libre, donc qui n'a pas besoin d'accéder à ce disque.",
         "errors": {
           "unsupportedWindows": "Source d'espace basée sur un chemin non supportée sur Windows.",
-          "localAccessRequired": "Source d'espace basée sur un chemin requiert l'accès local.",
           "qbitPathUnsupported": "Cette instance est antérieure à qBittorrent 5.3 et ne peut pas indiquer l'espace libre d'un chemin.",
           "pathRequired": "Le chemin est requis avec 'Chemin sur le serveur'.",
           "filesystemAccessRequired": "La source d'espace libre basée sur un chemin nécessite un accès au système de fichiers local ou via SSH.",
@@ -1580,8 +1557,6 @@
       "enableDryRunPrompt": {
         "title": "Activer la simulation (dry run) ?",
         "description": "La simulation simule les actions sans rien modifier. Consultez l'historique d'activité.",
-        "enableWithout": "Activer sans simulation",
-        "enableWith": "Activer avec simulation",
         "saveAndEnable": "Enregistrer et activer"
       },
       "customGroup": {
@@ -1686,7 +1661,6 @@
         "pathSourceUnsupportedWindows": "Source basée sur un chemin non supportée sur Windows. Basculement sur qBittorrent par défaut.",
         "qbitPathSourceUnsupported": "Cette instance ne peut pas indiquer l'espace libre d'un chemin. Source par défaut sélectionnée.",
         "switchFreeSpaceSourceDefault": "Basculer la source d'espace libre sur Défaut (qBittorrent)",
-        "enableLocalAccessOrDefault": "Activer l'accès local dans les paramètres de l'instance, ou utiliser Défaut (qBittorrent)",
         "enterPathOrDefault": "Entrez un chemin ou basculez la source d'espace sur Défaut (qBittorrent)",
         "addScoreRule": "Ajouter au moins une règle pour le tri par Score",
         "addRankingKey": "Ajoutez au moins une clé de classement pour le tri par clés",

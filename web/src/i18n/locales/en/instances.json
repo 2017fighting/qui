@@ -3,30 +3,17 @@
   "card": {
     "status": {
       "disabled": "Disabled",
-      "enabled": "Enabled",
       "connected": "Connected",
       "disconnected": "Disconnected"
     },
     "tooltips": {
       "moveUp": "Move up",
-      "moveDown": "Move down",
-      "disableInstance": "Disable instance",
-      "enableInstance": "Enable instance"
+      "moveDown": "Move down"
     },
     "actions": {
       "testConnection": "Test connection",
       "delete": "Delete",
-      "changeIcon": "Change icon",
-      "edit": "Edit"
-    },
-    "labels": {
-      "username": "Username:",
-      "basicAuth": "Basic Auth:",
-      "tlsVerification": "TLS Verification:",
-      "tlsSkipped": "Skipped",
-      "tlsStrict": "Strict",
-      "localFileAccess": "Local File Access:",
-      "testingConnection": "Testing connection..."
+      "changeIcon": "Change icon"
     },
     "deleteDialog": {
       "title": "Delete instance",
@@ -36,7 +23,6 @@
     },
     "toast": {
       "instanceDisabledTitle": "Instance disabled",
-      "testDisabledDescription": "Enable the instance before testing the connection.",
       "testSuccessTitle": "Connection test passed",
       "testSuccessDescription": "Successfully connected to qBittorrent instance",
       "testFailedTitle": "Connection test failed",
@@ -102,20 +88,15 @@
     },
     "buttons": {
       "updateInstance": "Update instance",
-      "addInstance": "Add instance",
-      "cancel": "Cancel",
-      "saving": "Saving..."
+      "addInstance": "Add instance"
     },
     "toast": {
       "instanceUpdatedTitle": "Instance updated",
       "instanceUpdatedDescription": "Instance updated successfully. Connection testing in background...",
-      "updateFailedTitle": "Update Failed",
       "updateFailedDescription": "Failed to update instance",
       "instanceCreatedTitle": "Instance created",
       "instanceCreatedDescription": "Instance created successfully. Connection testing in background...",
-      "createFailedTitle": "Create Failed",
-      "createFailedDescription": "Failed to create instance",
-      "missingCredentialsTitle": "Missing Credentials"
+      "createFailedDescription": "Failed to create instance"
     },
     "authType": {
       "none": "None",
@@ -760,8 +741,6 @@
       "noInstancesDescription": "No instances configured. Add one in Settings to use this service.",
       "tooltip": "Finds files on disk that are not associated with any torrent in qBittorrent.\nNeeds access to each instance's files. Enable Local Filesystem Access, or set up SSH access, in instance settings.",
       "description": "Scans download directories and identifies orphan files for cleanup.",
-      "noLocalAccess": "No Local Access",
-      "noLocalAccessTooltip": "qui and qBittorrent must run on the same machine. Enable \"Local Filesystem Access\" in instance settings to use orphan scanning.",
       "remoteLimits": "Deletion and auto-cleanup on a remote instance need file identity, which qui reads only when the server lets it run GNU find and stat.",
       "remoteNoIdentity": "This remote instance does not let qui run them, so qui cannot tell when two paths are the same file, and a file reachable at a second path, such as through a bind mount, can be listed even when a torrent uses it. Scans here can be previewed and exported, but not deleted.",
       "on": "On",
@@ -1463,7 +1442,6 @@
         "defaultSource": "Default (qBittorrent)",
         "pathSource": "Path on server",
         "pathSourceWindowsUnsupported": "Path on server (not supported on Windows)",
-        "pathSourceLocalAccessRequired": "Path on server (requires Local Access)",
         "qbitPathSource": "Path on the qBittorrent host",
         "qbitPathSourceUnsupported": "Path on the qBittorrent host (needs qBittorrent 5.3)",
         "pathPlaceholder": "/mnt/downloads",
@@ -1471,7 +1449,6 @@
         "qbitPathHelp": "Enter a path on the qBittorrent host. qBittorrent measures the free space, so qui needs no access to that disk.",
         "errors": {
           "unsupportedWindows": "Path-based free space source is not supported on Windows.",
-          "localAccessRequired": "Path-based free space source requires Local Filesystem Access.",
           "qbitPathUnsupported": "This instance is older than qBittorrent 5.3 and cannot report free space at a path.",
           "pathRequired": "Path is required when using \"Path on server\".",
           "filesystemAccessRequired": "Path-based free space source requires local or SSH filesystem access.",
@@ -1586,8 +1563,6 @@
       "enableDryRunPrompt": {
         "title": "Enable dry run?",
         "description": "Dry run simulates all actions without changing anything. You can review affected torrents in the activity log.",
-        "enableWithout": "Enable without dry run",
-        "enableWith": "Enable with dry run",
         "saveAndEnable": "Save and enable"
       },
       "customGroup": {
@@ -1692,7 +1667,6 @@
         "pathSourceUnsupportedWindows": "Path-based free space source is not supported on Windows. Switched to qBittorrent default.",
         "qbitPathSourceUnsupported": "This instance cannot report free space at a path. Switched to the default source.",
         "switchFreeSpaceSourceDefault": "Switch Free space source to Default (qBittorrent)",
-        "enableLocalAccessOrDefault": "Enable Local Filesystem Access in instance settings, or use Default (qBittorrent)",
         "enterPathOrDefault": "Enter a path or switch Free space source back to Default (qBittorrent)",
         "addScoreRule": "Add at least one score rule for Score sorting",
         "addRankingKey": "Add at least one ranking key for Keys sorting",

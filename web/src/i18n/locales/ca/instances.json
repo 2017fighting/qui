@@ -3,30 +3,17 @@
   "card": {
     "status": {
       "disabled": "Desactivada",
-      "enabled": "Activada",
       "connected": "Connectada",
       "disconnected": "Desconnectada"
     },
     "tooltips": {
       "moveUp": "Mou cap amunt",
-      "moveDown": "Mou cap avall",
-      "disableInstance": "Desactiva la instància",
-      "enableInstance": "Activa la instància"
+      "moveDown": "Mou cap avall"
     },
     "actions": {
       "testConnection": "Prova la connexió",
       "delete": "Elimina",
-      "changeIcon": "Canvia la icona",
-      "edit": "Edita"
-    },
-    "labels": {
-      "username": "Nom d'usuari:",
-      "basicAuth": "Autenticació bàsica:",
-      "tlsVerification": "Verificació TLS:",
-      "tlsSkipped": "Omesa",
-      "tlsStrict": "Estricta",
-      "localFileAccess": "Accés als fitxers locals:",
-      "testingConnection": "S'està provant la connexió..."
+      "changeIcon": "Canvia la icona"
     },
     "deleteDialog": {
       "title": "Elimina la instància",
@@ -36,7 +23,6 @@
     },
     "toast": {
       "instanceDisabledTitle": "Instància desactivada",
-      "testDisabledDescription": "Activa la instància abans de provar la connexió.",
       "testSuccessTitle": "La prova de connexió ha anat bé",
       "testSuccessDescription": "S'ha connectat correctament a la instància de qBittorrent",
       "testFailedTitle": "Ha fallat la prova de connexió",
@@ -102,20 +88,15 @@
     },
     "buttons": {
       "updateInstance": "Actualitza la instància",
-      "addInstance": "Afegeix la instància",
-      "cancel": "Cancel·la",
-      "saving": "S'està desant..."
+      "addInstance": "Afegeix la instància"
     },
     "toast": {
       "instanceUpdatedTitle": "Instància actualitzada",
       "instanceUpdatedDescription": "S'ha actualitzat la instància correctament. S'està provant la connexió en segon pla...",
-      "updateFailedTitle": "No s'ha pogut actualitzar",
       "updateFailedDescription": "No s'ha pogut actualitzar la instància",
       "instanceCreatedTitle": "Instància creada",
       "instanceCreatedDescription": "S'ha creat la instància correctament. S'està provant la connexió en segon pla...",
-      "createFailedTitle": "No s'ha pogut crear",
-      "createFailedDescription": "No s'ha pogut crear la instància",
-      "missingCredentialsTitle": "Falten credencials"
+      "createFailedDescription": "No s'ha pogut crear la instància"
     },
     "authType": {
       "none": "Cap",
@@ -989,8 +970,6 @@
       "enableDryRunPrompt": {
         "title": "Vols activar l'execució de prova?",
         "description": "L'execució de prova simula totes les accions sense canviar res. Pots revisar els torrents afectats al registre d'activitat.",
-        "enableWithout": "Activa-ho sense execució de prova",
-        "enableWith": "Activa-ho amb execució de prova",
         "saveAndEnable": "Desa i activa"
       },
       "freeSpace": {
@@ -1001,7 +980,6 @@
         "defaultSource": "Predeterminat (qBittorrent)",
         "pathSource": "Camí al servidor",
         "pathSourceWindowsUnsupported": "Camí al servidor (no compatible amb Windows)",
-        "pathSourceLocalAccessRequired": "Camí al servidor (cal accés local)",
         "qbitPathSource": "Camí a l'amfitrió de qBittorrent",
         "qbitPathSourceUnsupported": "Camí a l'amfitrió de qBittorrent (necessita qBittorrent 5.3)",
         "pathPlaceholder": "/mnt/downloads",
@@ -1009,7 +987,6 @@
         "qbitPathHelp": "Introdueix un camí a l'amfitrió de qBittorrent. qBittorrent mesura l'espai lliure, de manera que qui no necessita accés a aquest disc.",
         "errors": {
           "unsupportedWindows": "L'origen d'espai lliure basat en un camí no és compatible amb Windows.",
-          "localAccessRequired": "L'origen d'espai lliure basat en un camí necessita accés al sistema de fitxers local.",
           "qbitPathUnsupported": "Aquesta instància és anterior a qBittorrent 5.3 i no pot informar de l'espai lliure d'un camí.",
           "pathRequired": "El camí és obligatori quan es fa servir «Camí al servidor».",
           "filesystemAccessRequired": "L'origen d'espai lliure basat en un camí necessita accés al sistema de fitxers local o per SSH.",
@@ -1217,7 +1194,6 @@
         "pathSourceUnsupportedWindows": "L'origen d'espai lliure basat en un camí no és compatible amb Windows. S'ha canviat al valor predeterminat de qBittorrent.",
         "qbitPathSourceUnsupported": "Aquesta instància no pot informar de l'espai lliure d'un camí. S'ha canviat a l'origen predeterminat.",
         "switchFreeSpaceSourceDefault": "Canvia l'origen de l'espai lliure a Predeterminat (qBittorrent)",
-        "enableLocalAccessOrDefault": "Activa l'accés al sistema de fitxers local a la configuració de la instància, o fes servir Predeterminat (qBittorrent)",
         "enterPathOrDefault": "Introdueix un camí o torna a posar l'origen de l'espai lliure a Predeterminat (qBittorrent)",
         "addScoreRule": "Afegeix com a mínim una regla de puntuació per ordenar per puntuació",
         "addRankingKey": "Afegeix almenys una clau d'ordenació per a l'ordenació per claus",
@@ -1447,8 +1423,6 @@
       "noInstancesDescription": "No hi ha cap instància configurada. Afegeix-ne una a Configuració per fer servir aquest servei.",
       "tooltip": "Troba els fitxers del disc que no estan associats a cap torrent de qBittorrent.\nNecessita accés als fitxers de cada instància. Activa «Accés al sistema de fitxers local» o configura l'accés SSH a la configuració de la instància.",
       "description": "Explora els directoris de baixada i identifica els fitxers orfes per netejar-los.",
-      "noLocalAccess": "Sense accés local",
-      "noLocalAccessTooltip": "qui i qBittorrent s'han d'executar a la mateixa màquina. Activa «Accés al sistema de fitxers local» a la configuració de la instància per fer servir l'exploració d'orfes.",
       "remoteLimits": "La supressió i la neteja automàtica en una instància remota necessiten la identitat dels fitxers, que qui només pot llegir si el servidor li permet executar GNU find i stat.",
       "remoteNoIdentity": "Aquesta instància remota no li permet executar-los, de manera que qui no pot saber quan dos camins són el mateix fitxer, i un fitxer accessible per un segon camí, per exemple amb un muntatge bind, pot aparèixer a la llista encara que un torrent l'utilitzi. Les exploracions d'aquí es poden previsualitzar i exportar, però no suprimir.",
       "on": "Activada",

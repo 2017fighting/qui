@@ -3,30 +3,17 @@
   "card": {
     "status": {
       "disabled": "Disabilitato",
-      "enabled": "Abilitato",
       "connected": "Connesso",
       "disconnected": "Disconnesso"
     },
     "tooltips": {
       "moveUp": "Sposta su",
-      "moveDown": "Sposta giù",
-      "disableInstance": "Disabilita istanza",
-      "enableInstance": "Abilita istanza"
+      "moveDown": "Sposta giù"
     },
     "actions": {
       "testConnection": "Prova connessione",
       "delete": "Elimina",
-      "changeIcon": "Cambia icona",
-      "edit": "Modifica"
-    },
-    "labels": {
-      "username": "Nome utente:",
-      "basicAuth": "Basic Auth:",
-      "tlsVerification": "Verifica TLS:",
-      "tlsSkipped": "Ignorata",
-      "tlsStrict": "Rigorosa",
-      "localFileAccess": "Accesso ai file locali:",
-      "testingConnection": "Prova della connessione in corso..."
+      "changeIcon": "Cambia icona"
     },
     "deleteDialog": {
       "title": "Elimina istanza",
@@ -36,7 +23,6 @@
     },
     "toast": {
       "instanceDisabledTitle": "Istanza disabilitata",
-      "testDisabledDescription": "Abilita l'istanza prima di provare la connessione.",
       "testSuccessTitle": "Prova di connessione riuscita",
       "testSuccessDescription": "Connessione all'istanza qBittorrent riuscita",
       "testFailedTitle": "Prova di connessione non riuscita",
@@ -102,20 +88,15 @@
     },
     "buttons": {
       "updateInstance": "Aggiorna istanza",
-      "addInstance": "Aggiungi istanza",
-      "cancel": "Annulla",
-      "saving": "Salvataggio..."
+      "addInstance": "Aggiungi istanza"
     },
     "toast": {
       "instanceUpdatedTitle": "Istanza aggiornata",
       "instanceUpdatedDescription": "Istanza aggiornata correttamente. Prova della connessione in background...",
-      "updateFailedTitle": "Aggiornamento non riuscito",
       "updateFailedDescription": "Impossibile aggiornare l'istanza",
       "instanceCreatedTitle": "Istanza creata",
       "instanceCreatedDescription": "Istanza creata correttamente. Prova della connessione in background...",
-      "createFailedTitle": "Creazione non riuscita",
-      "createFailedDescription": "Impossibile creare l'istanza",
-      "missingCredentialsTitle": "Credenziali mancanti"
+      "createFailedDescription": "Impossibile creare l'istanza"
     },
     "authType": {
       "none": "Nessuno",
@@ -760,8 +741,6 @@
       "noInstancesDescription": "Nessuna istanza configurata. Aggiungine una nelle Impostazioni per usare questo servizio.",
       "tooltip": "Trova i file su disco che non sono associati ad alcun torrent in qBittorrent.\nRichiede l'accesso ai file di ogni istanza. Abilita \"Accesso al filesystem locale\" o configura l'accesso SSH nelle impostazioni dell'istanza.",
       "description": "Scansiona le cartelle di download e identifica i file orfani da rimuovere.",
-      "noLocalAccess": "Nessun accesso locale",
-      "noLocalAccessTooltip": "qui e qBittorrent devono essere eseguiti sulla stessa macchina. Abilita \"Accesso al filesystem locale\" nelle impostazioni dell'istanza per usare la scansione orfani.",
       "remoteLimits": "L'eliminazione e la pulizia automatica su un'istanza remota richiedono l'identità dei file, che qui può leggere solo se il server gli consente di eseguire GNU find e stat.",
       "remoteNoIdentity": "Questa istanza remota non lo consente, quindi qui non riconosce quando due percorsi sono lo stesso file e un file raggiungibile da un secondo percorso, ad esempio tramite un bind mount, può comparire nell'elenco anche se un torrent lo usa. Le scansioni qui si possono visualizzare ed esportare, ma non eliminare.",
       "on": "On",
@@ -1463,7 +1442,6 @@
         "defaultSource": "Predefinito (qBittorrent)",
         "pathSource": "Percorso sul server",
         "pathSourceWindowsUnsupported": "Percorso sul server (non supportato su Windows)",
-        "pathSourceLocalAccessRequired": "Percorso sul server (richiede l'Accesso locale)",
         "qbitPathSource": "Percorso sull'host qBittorrent",
         "qbitPathSourceUnsupported": "Percorso sull'host qBittorrent (richiede qBittorrent 5.3)",
         "pathPlaceholder": "/mnt/downloads",
@@ -1471,7 +1449,6 @@
         "qbitPathHelp": "Inserisci un percorso sull'host qBittorrent. Lo spazio libero lo misura qBittorrent, quindi qui non deve accedere a quel disco.",
         "errors": {
           "unsupportedWindows": "L'origine dello spazio libero basata sul percorso non è supportata su Windows.",
-          "localAccessRequired": "L'origine dello spazio libero basata sul percorso richiede l'Accesso al filesystem locale.",
           "qbitPathUnsupported": "Questa istanza è precedente a qBittorrent 5.3 e non può riportare lo spazio libero di un percorso.",
           "pathRequired": "Il percorso è obbligatorio quando si usa \"Percorso sul server\".",
           "filesystemAccessRequired": "L'origine dello spazio libero basata sul percorso richiede l'accesso al filesystem locale o via SSH.",
@@ -1586,8 +1563,6 @@
       "enableDryRunPrompt": {
         "title": "Abilitare la simulazione (dry run)?",
         "description": "La simulazione (dry run) simula tutte le azioni senza modificare nulla. Puoi rivedere i torrent interessati nel registro delle attività.",
-        "enableWithout": "Abilita senza simulazione",
-        "enableWith": "Abilita con simulazione",
         "saveAndEnable": "Salva e abilita"
       },
       "customGroup": {
@@ -1692,7 +1667,6 @@
         "pathSourceUnsupportedWindows": "L'origine dello spazio libero basata sul percorso non è supportata su Windows. Passato al valore predefinito di qBittorrent.",
         "qbitPathSourceUnsupported": "Questa istanza non può riportare lo spazio libero di un percorso. Passato all'origine predefinita.",
         "switchFreeSpaceSourceDefault": "Cambia l'origine dello spazio libero in Predefinito (qBittorrent)",
-        "enableLocalAccessOrDefault": "Abilita l'accesso al filesystem locale nelle impostazioni dell'istanza, oppure usa Predefinito (qBittorrent)",
         "enterPathOrDefault": "Inserisci un percorso o riporta l'origine dello spazio libero su Predefinito (qBittorrent)",
         "addScoreRule": "Aggiungi almeno una regola di punteggio per l'ordinamento per Punteggio",
         "addRankingKey": "Aggiungi almeno una chiave di ordinamento per l'ordinamento a chiavi",
