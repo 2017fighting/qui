@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2025-2026, s0up and the autobrr contributors.
- * SPDX-License-Identifier: GPL-2.0-or-later
- */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { cleanup, fireEvent, render } from "@testing-library/react"
@@ -19,7 +15,6 @@ vi.mock("react-i18next", async (importOriginal) => ({
   }),
 }))
 
-// Stable singletons: a fresh object per render would rerun effects forever.
 const { instancesQuery, runsQuery, cancelMutation, createMutation, confirmMutation, updateRowsMutation, refillMutation, runQuery } = vi.hoisted(() => {
   const instance = {
     id: 1,
@@ -108,7 +103,7 @@ beforeEach(() => {
     } as unknown as DeletePlanRunSummary,
   ]
   cancelMutation.mutate.mockReset()
-  // Radix dialog and tooltip measure through ResizeObserver, which jsdom lacks.
+
   vi.stubGlobal("ResizeObserver", class {
     observe() {}
     unobserve() {}

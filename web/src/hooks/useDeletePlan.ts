@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2025-2026, s0up and the autobrr contributors.
- * SPDX-License-Identifier: GPL-2.0-or-later
- */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
@@ -14,7 +10,6 @@ import type {
   DeletePlanRunSummary
 } from "@/types"
 
-// A run is still moving while it waits for fresh sync data, builds its plan, or deletes.
 const ACTIVE_STATUSES: DeletePlanRunStatus[] = ["pending", "planning", "deleting"]
 
 function isActive(status: DeletePlanRunStatus): boolean {

@@ -86,7 +86,6 @@ func TestService_PendingRunWaitsForFreshSync(t *testing.T) {
 	require.Equal(t, models.DeletePlanStatusPending, run.Status)
 	require.True(t, run.WaitingForSync)
 
-	// Once the instance syncs, the run builds the plan.
 	client.setLastSync(time.Now())
 	require.Eventually(t, func() bool {
 		run, err := store.GetRun(t.Context(), runID)
@@ -105,7 +104,6 @@ func TestService_SecondPlanIsRejected(t *testing.T) {
 	first, err := svc.TriggerPlan(t.Context(), instanceID, PlanRequest{TargetBytes: 100, RemoveDeadGroups: true})
 	require.NoError(t, err)
 
-	// Wait for the first plan to finish, so the run is preview_ready and still active.
 	require.Eventually(t, func() bool {
 		run, err := store.GetRun(t.Context(), first)
 		return err == nil && run != nil && run.Status == models.DeletePlanStatusPreviewReady
@@ -141,9 +139,6 @@ func TestService_RejectsAnInvalidTarget(t *testing.T) {
 	require.ErrorIs(t, err, ErrInvalidTarget)
 }
 
-// seedPreviewPlan freezes a plan with a candidate beyond the target: A (100) and
-// B (200) are included against a 250-byte target, planned 300, overshoot 50, and
-// C (300) is the next candidate in plan order.
 func seedPreviewPlan(t *testing.T, store *models.DeletePlanStore, instanceID int, targetBytes int64) int64 {
 	t.Helper()
 	ctx := t.Context()
@@ -211,7 +206,7 @@ func TestService_RefillAddsTheNextCandidateWithoutReincludingTheVeto(t *testing.
 
 	run, err := store.GetRun(t.Context(), runID)
 	require.NoError(t, err)
-	// Veto B: the plan is 150 bytes short of the target.
+
 	require.NoError(t, svc.UpdateRunRows(t.Context(), runID, []int64{run.Groups[1].ID}))
 
 	require.NoError(t, svc.RefillRun(t.Context(), runID))
@@ -226,7 +221,7 @@ func TestService_RefillAddsTheNextCandidateWithoutReincludingTheVeto(t *testing.
 	require.EqualValues(t, 150, updated.OvershootBytes)
 	require.EqualValues(t, 0, updated.ShortfallBytes)
 	require.True(t, updated.TargetReached)
-	// Refill flips flags only: the groups that stay keep their order.
+
 	require.Equal(t, "/data/A", updated.Groups[0].ContentPath)
 	require.Equal(t, "/data/B", updated.Groups[1].ContentPath)
 	require.Equal(t, "/data/C", updated.Groups[2].ContentPath)
@@ -237,7 +232,6 @@ func TestService_RefillStopsAtTheTarget(t *testing.T) {
 	svc, store, _, instanceID := newServiceFixture(t, newFakeClient(time.Now()))
 	runID := seedPreviewPlan(t, store, instanceID, 250)
 
-	// The plan already reaches the target, so refill adds no candidate.
 	require.NoError(t, svc.RefillRun(t.Context(), runID))
 
 	updated, err := store.GetRun(t.Context(), runID)
@@ -256,7 +250,6 @@ func TestService_UpdateRunRowsReincludesARetickedRow(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, svc.UpdateRunRows(t.Context(), runID, []int64{run.Groups[1].ID}))
 
-	// Tick B back on: it leaves the unticked set and returns to the plan.
 	require.NoError(t, svc.UpdateRunRows(t.Context(), runID, nil))
 
 	updated, err := store.GetRun(t.Context(), runID)
@@ -293,24 +286,40 @@ func TestSelectionTotals(t *testing.T) {
 		{ID: 3, SizeBytes: 400, Dead: true},
 	}
 
-	// Every row is selected.
 	planned, dead, overshoot, reached := selectionTotals(rows, 250, idSet([]int64{1, 2, 3}))
 	require.EqualValues(t, 300, planned)
 	require.EqualValues(t, 400, dead, "dead bytes never count toward the target")
 	require.EqualValues(t, 50, overshoot)
 	require.True(t, reached)
 
-	// Only row 2 is selected: an unselected row contributes nothing.
 	planned, dead, overshoot, reached = selectionTotals(rows, 250, idSet([]int64{2}))
 	require.EqualValues(t, 200, planned)
 	require.EqualValues(t, 0, dead)
 	require.EqualValues(t, 0, overshoot)
 	require.False(t, reached)
 
-	// Only the dead row is selected: its bytes never reach the target.
 	planned, dead, overshoot, reached = selectionTotals(rows, 250, idSet([]int64{3}))
 	require.EqualValues(t, 0, planned)
 	require.EqualValues(t, 400, dead)
 	require.EqualValues(t, 0, overshoot)
 	require.False(t, reached)
+}
+
+func TestService_StartFailsARunARestartInterrupted(t *testing.T) {
+	t.Parallel()
+	client := newFakeClient(time.Now())
+	svc, store, _, instanceID := newServiceFixture(t, client)
+	ctx := t.Context()
+
+	interrupted := freezePreviewRun(t, store, instanceID, nil)
+	deleting, err := store.StartRunDeletion(ctx, interrupted)
+	require.NoError(t, err)
+	require.True(t, deleting)
+
+	svc.Start(ctx)
+
+	run, err := store.GetRun(ctx, interrupted)
+	require.NoError(t, err)
+	require.Equal(t, models.DeletePlanStatusFailed, run.Status)
+	require.Contains(t, run.ErrorMessage, "restart")
 }

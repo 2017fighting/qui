@@ -11,10 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// The nested-path guard (ADR 0017): a content group is excluded when a torrent outside
-// the group has a Content Path that nests with a group member's Content Path. Two nested
-// paths land in different buckets, so the file-overlap check never compares them, and a
-// delete with files removes the files of the path.
 func TestNestedPathExclusion(t *testing.T) {
 	tests := []struct {
 		scenario string
@@ -125,8 +121,6 @@ func TestNestedPathExclusion(t *testing.T) {
 	}
 }
 
-// The reason names the two paths so a preview can show it, and the conflict is chosen
-// deterministically when several torrents nest with the group.
 func TestNestedPathExclusion_PicksDeterministicConflict(t *testing.T) {
 	all := []qbt.Torrent{
 		{Hash: "pack", ContentPath: "/data/Pack"},

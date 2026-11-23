@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2025-2026, s0up and the autobrr contributors.
- * SPDX-License-Identifier: GPL-2.0-or-later
- */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { cleanup, fireEvent, render } from "@testing-library/react"
@@ -11,8 +7,7 @@ import type { DeletePlanRun } from "@/types"
 
 vi.mock("react-i18next", async (importOriginal) => ({
   ...await importOriginal<typeof import("react-i18next")>(),
-  // Key echo: the assertion names the key the UI picked, and the array form
-  // used for a computed reason key resolves to its first element.
+
   useTranslation: () => ({
     t: (key: string | string[], opts?: Record<string, unknown>) => {
       const resolved = Array.isArray(key) ? key[0] : key
@@ -21,7 +16,6 @@ vi.mock("react-i18next", async (importOriginal) => ({
   }),
 }))
 
-// Stable singletons: a fresh object per render would rerun effects forever.
 const { runQuery } = vi.hoisted(() => ({
   runQuery: { data: undefined as unknown, isLoading: false, isError: false },
 }))
@@ -109,7 +103,7 @@ beforeEach(() => {
   runQuery.data = completedRun
   runQuery.isLoading = false
   runQuery.isError = false
-  // Radix dialog measures through ResizeObserver, which jsdom lacks.
+
   vi.stubGlobal("ResizeObserver", class {
     observe() {}
     unobserve() {}
@@ -136,7 +130,7 @@ describe("DeletePlanHistoryDialog", () => {
 
     const text = document.body.textContent
     expect(text).toContain("preferences.deletePlanWizard.keysTitle")
-    // The enabled key keeps its field and direction, the disabled one is marked off.
+
     expect(text).toContain("queryBuilder.fields.GROUP_SIZE preferences.deletePlanWizard.directionAsc")
     expect(text).toContain(
       "preferences.deletePlanHistory.disabledKey(queryBuilder.fields.SIZE preferences.deletePlanWizard.directionAsc)"
@@ -179,7 +173,7 @@ describe("DeletePlanHistoryDialog", () => {
     expect(queryByRole("button", { name: "preferences.deletePlanWizard.buildPlan" })).toBeNull()
     expect(queryByRole("button", { name: "preferences.deletePlanWizard.reviewAndConfirm" })).toBeNull()
     expect(queryByRole("button", { name: "preferences.deletePlanPreview.exportCSV" })).toBeNull()
-    // The only control closes the read-only view.
+
     expect(queryByRole("button", { name: "preferences.deletePlan.close" })).not.toBeNull()
   })
 

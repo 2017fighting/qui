@@ -11,10 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// -----------------------------------------------------------------------------
-// NormalizePath tests
-// -----------------------------------------------------------------------------
-
 func TestNormalizePath(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -61,12 +57,6 @@ func TestNormalizePath(t *testing.T) {
 	}
 }
 
-// -----------------------------------------------------------------------------
-// Index.Group tests
-// -----------------------------------------------------------------------------
-
-// Groups by ContentPath equality only; does not expand by SavePath.
-// Cross-seeds are exact file matches (same content from different trackers).
 func TestIndexGroup(t *testing.T) {
 	tests := []struct {
 		scenario    string
@@ -97,7 +87,6 @@ func TestIndexGroup(t *testing.T) {
 				ContentPath: "/downloads/movies/My.Movie.2024.1080p.BluRay.x264-GRP",
 			},
 			allTorrents: []qbt.Torrent{
-				// Same release cross-seeded to two trackers (identical files, different .torrent)
 				{Hash: "abc123", Name: "My.Movie.2024.1080p.BluRay.x264-GRP", ContentPath: "/downloads/movies/My.Movie.2024.1080p.BluRay.x264-GRP"},
 				{Hash: "xyz789", Name: "My.Movie.2024.1080p.BluRay.x264-GRP", ContentPath: "/downloads/movies/My.Movie.2024.1080p.BluRay.x264-GRP"},
 				{Hash: "def456", Name: "Other.Movie.2024.1080p.BluRay.x264-GRP", ContentPath: "/downloads/movies/Other.Movie.2024.1080p.BluRay.x264-GRP"},
@@ -129,12 +118,12 @@ func TestIndexGroup(t *testing.T) {
 			},
 			allTorrents: []qbt.Torrent{
 				{Hash: "abc123", Name: "My.Movie.2024.1080p.BluRay.x264-GRP", SavePath: "/downloads/movies", ContentPath: "/downloads/movies/My.Movie.2024.1080p.BluRay.x264-GRP"},
-				// Different releases in same SavePath - NOT cross-seeds (different files)
+
 				{Hash: "def456", Name: "Other.Movie.2024.1080p.BluRay.x264-GRP", SavePath: "/downloads/movies", ContentPath: "/downloads/movies/Other.Movie.2024.1080p.BluRay.x264-GRP"},
 				{Hash: "ghi789", Name: "Another.Movie.2024.1080p.BluRay.x264-GRP", SavePath: "/downloads/movies", ContentPath: "/downloads/movies/Another.Movie.2024.1080p.BluRay.x264-GRP"},
 			},
 			wantCount:  1,
-			wantHashes: []string{"abc123"}, // Only target; others share SavePath but NOT ContentPath
+			wantHashes: []string{"abc123"},
 		},
 		{
 			scenario: "empty ContentPath => returns nil (no grouping possible)",
@@ -169,7 +158,6 @@ func TestIndexGroup(t *testing.T) {
 	}
 }
 
-// TestIndexGroupByPath covers the path lookup a frozen plan row's re-check uses.
 func TestIndexGroupByPath(t *testing.T) {
 	idx := BuildIndex([]qbt.Torrent{
 		{Hash: "a", ContentPath: "/downloads/Movies/Pack"},
@@ -185,13 +173,7 @@ func TestIndexGroupByPath(t *testing.T) {
 	assert.Nil(t, idx.GroupByPath("/downloads/Unknown"), "an unknown path has no bucket")
 }
 
-// -----------------------------------------------------------------------------
-// VerifiedMembers tests
-// -----------------------------------------------------------------------------
-
 func TestVerifiedMembers(t *testing.T) {
-	// Two unrelated packs whose payload folder is a bare "Season 2", so qBittorrent
-	// reports the same content path for both while they hold different files.
 	trigger := qbt.Torrent{
 		Hash:        "trigger",
 		Name:        "[Subs] Silver Lantern Chronicle S2 (BD 1080p)",
@@ -211,7 +193,6 @@ func TestVerifiedMembers(t *testing.T) {
 		SavePath:    "/downloads/anime",
 	}
 
-	// Ten equal episodes, so a swapped file moves the overlap by exactly 10%.
 	episodes := func(title string, shared int) qbt.TorrentFiles {
 		files := make(qbt.TorrentFiles, 0, 10)
 		for i := 1; i <= 10; i++ {

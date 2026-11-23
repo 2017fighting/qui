@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2025-2026, s0up and the autobrr contributors.
- * SPDX-License-Identifier: GPL-2.0-or-later
- */
 
 import { DeletePlanRunProgress } from "@/components/instances/preferences/DeletePlanRunProgress"
 import {
@@ -33,9 +29,6 @@ interface DeletePlanHistoryDialogProps {
   runId: number
 }
 
-// DeletePlanHistoryDialog reads a finished run back. It is read-only by
-// construction: it mounts the same rendering as the wizard preview but none of
-// the wizard's controls, so it cannot untick, refill, confirm or cancel.
 export function DeletePlanHistoryDialog({
   open,
   onOpenChange,

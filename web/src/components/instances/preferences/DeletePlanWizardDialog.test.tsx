@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2025-2026, s0up and the autobrr contributors.
- * SPDX-License-Identifier: GPL-2.0-or-later
- */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { cleanup, fireEvent, render } from "@testing-library/react"
@@ -13,8 +9,7 @@ import type { DeletePlanCreateInput, DeletePlanRun } from "@/types"
 
 vi.mock("react-i18next", async (importOriginal) => ({
   ...await importOriginal<typeof import("react-i18next")>(),
-  // Key echo: the assertion names the key the UI picked, and the array form
-  // used for a computed reason key resolves to its first element.
+
   useTranslation: () => ({
     t: (key: string | string[], opts?: Record<string, unknown>) => {
       const resolved = Array.isArray(key) ? key[0] : key
@@ -23,7 +18,6 @@ vi.mock("react-i18next", async (importOriginal) => ({
   }),
 }))
 
-// Stable singletons: a fresh object per render would rerun effects forever.
 const { createMutation, runQuery, cancelMutation, confirmMutation, updateRowsMutation, refillMutation, toastMock } = vi.hoisted(() => ({
   createMutation: { isPending: false, mutate: vi.fn() },
   runQuery: { data: undefined as unknown, isLoading: false, isError: false },
@@ -127,7 +121,7 @@ beforeEach(() => {
   refillMutation.mutate.mockReset()
   toastMock.success.mockReset()
   toastMock.error.mockReset()
-  // Radix dialog and select measure through ResizeObserver, which jsdom lacks.
+
   vi.stubGlobal("ResizeObserver", class {
     observe() {}
     unobserve() {}
@@ -176,7 +170,6 @@ describe("DeletePlanWizardDialog", () => {
   it("names the target, the planned reclaim and the overshoot on the preview", () => {
     renderWizard({ initialRunId: 7 })
 
-    // Each label sits next to its formatted value, so the pair proves the wiring.
     const text = document.body.textContent
     expect(text).toContain(`preferences.deletePlanPreview.target${formatBytes(previewRun.targetBytes)}`)
     expect(text).toContain(`preferences.deletePlanPreview.planned${formatBytes(previewRun.plannedBytes)}`)
@@ -193,7 +186,6 @@ describe("DeletePlanWizardDialog", () => {
   it("renders each excluded group with its translated reason, never the raw backend value", () => {
     renderWizard({ initialRunId: 7 })
 
-    // The reason cell holds the i18n key, not the backend's excludeReason string.
     const excludedTable = [...document.body.querySelectorAll("table")].at(-1)!
     const reasonCell = excludedTable.querySelector("tbody tr td:nth-child(3)")!
     expect(reasonCell.textContent).toBe("preferences.deletePlan.excludeReasons.partial_overlap")
@@ -278,14 +270,13 @@ describe("DeletePlanWizardDialog", () => {
 
     expect(document.body.textContent).toContain("preferences.deletePlanOverview.deleting")
     expect(document.body.textContent).toContain("preferences.deletePlanOverview.progress(")
-    // The confirm action is gone once the deletion is running.
+
     expect(queryByRole("button", { name: "preferences.deletePlanConfirm.confirm" })).toBeNull()
   })
 
   it("sends the chain in the order the wizard shows", () => {
     const { getAllByRole, getByRole } = renderWizard()
 
-    // The first key moves down one place, so the build must carry the new order.
     fireEvent.click(getAllByRole("button", { name: "preferences.deletePlanWizard.moveKeyDown" })[0])
     fireEvent.click(getByRole("button", { name: "preferences.deletePlanWizard.buildPlan" }))
 
@@ -321,7 +312,6 @@ describe("DeletePlanWizardDialog", () => {
     fireEvent.click(getByRole("button", { name: "preferences.deletePlan.back" }))
     fireEvent.click(getByRole("button", { name: "preferences.deletePlanWizard.buildPlan" }))
 
-    // One active run per instance: the create waits for the cancel to succeed.
     expect(createMutation.mutate).not.toHaveBeenCalled()
     expect(cancelMutation.mutate).toHaveBeenCalledWith(7, expect.any(Object))
 
@@ -377,7 +367,6 @@ describe("DeletePlanWizardDialog", () => {
       expect.any(Object)
     )
 
-    // The unticked row is still listed, only dimmed.
     expect(document.body.textContent).toContain("/data/PackDir")
   })
 
@@ -395,7 +384,7 @@ describe("DeletePlanWizardDialog", () => {
     const checkboxes = getAllByRole("checkbox", { name: "preferences.deletePlanPreview.untickGroup" })
     expect(checkboxes[1].getAttribute("data-state")).toBe("unchecked")
     expect(document.body.textContent).toContain("/data/Candidate")
-    // Nothing is vetoed, so there is nothing to refill.
+
     expect(queryByRole("button", { name: "preferences.deletePlanPreview.refill" })).toBeNull()
   })
 
@@ -413,7 +402,7 @@ describe("DeletePlanWizardDialog", () => {
     expect(document.body.textContent).toContain(
       `preferences.deletePlanPreview.belowTarget(${formatBytes(5_000_000_000)})`
     )
-    // The refill action is offered while a group is unticked.
+
     expect(document.body.textContent).toContain("preferences.deletePlanPreview.refill")
   })
 

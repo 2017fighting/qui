@@ -19,13 +19,11 @@ import (
 	"github.com/autobrr/qui/internal/models"
 )
 
-// bulkCall is one BulkAction the deletion path made.
 type bulkCall struct {
 	hashes []string
 	action string
 }
 
-// bulkRecorder collects the bulk delete calls from the deletion goroutine.
 type bulkRecorder struct {
 	mu    sync.Mutex
 	calls []bulkCall
@@ -43,7 +41,6 @@ func (r *bulkRecorder) snapshot() []bulkCall {
 	return slices.Clone(r.calls)
 }
 
-// freezePreviewRun builds a preview_ready run with the given rows.
 func freezePreviewRun(t *testing.T, store *models.DeletePlanStore, instanceID int, rows []*models.DeletePlanRow) int64 {
 	t.Helper()
 	ctx := t.Context()
@@ -221,7 +218,7 @@ func TestService_SkipsAChangedGroupWhole(t *testing.T) {
 			},
 		},
 	})
-	// c left the group since the plan was built: B must not be removed.
+
 	fake.getAllTorrentRefs = func(_ context.Context, _ int) ([]*qbt.Torrent, error) {
 		return torrentRefs([]qbt.Torrent{
 			torrent("a", "/data/A", 100, 1, qbt.TorrentStateUploading, ""),
@@ -254,7 +251,7 @@ func TestService_SkipsANewlyProtectedGroupWhole(t *testing.T) {
 	runID := freezePreviewRun(t, store, instanceID, []*models.DeletePlanRow{
 		singleMemberRow("/data/A", "a", 100),
 	})
-	// a is downloading again since the plan was built.
+
 	fake.getAllTorrentRefs = func(_ context.Context, _ int) ([]*qbt.Torrent, error) {
 		return torrentRefs([]qbt.Torrent{
 			torrent("a", "/data/A", 100, 0.5, qbt.TorrentStateDownloading, ""),

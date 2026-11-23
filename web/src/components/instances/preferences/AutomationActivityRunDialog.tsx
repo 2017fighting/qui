@@ -24,8 +24,6 @@ import { useTranslation } from "react-i18next"
 
 const PAGE_SIZE = 200
 
-// formatSkippedFilesLine renders the files a Skip small files pass set to
-// "Do not download", with a count for the ones the row does not name.
 function formatSkippedFilesLine(item: AutomationActivityRunItem, t: ReturnType<typeof useTranslation<"instances">>["t"]): string {
   const names = item.skippedFiles ?? []
   if (names.length === 0) return ""

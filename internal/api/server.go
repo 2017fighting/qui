@@ -795,8 +795,6 @@ func (s *Server) Handler() (*chi.Mux, error) {
 						})
 					})
 
-					// Delete plans. ADR 0040: the plan reads and edits under the
-					// Automations area, and only the run that deletes needs run.
 					r.Route("/delete-plan", func(r chi.Router) {
 						r.With(automations.Write).Post("/runs", deletePlanHandler.CreateRun)
 						r.With(automations.Read).Get("/runs", deletePlanHandler.ListRuns)

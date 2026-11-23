@@ -21,8 +21,6 @@ import (
 	"github.com/autobrr/qui/internal/testutil/testdb"
 )
 
-// A delete action must not expand to a content group whose Content Path nests with
-// another torrent's Content Path: the expansion would remove files that torrent needs.
 func TestSelectDeletions_SkipsNestedContentPath(t *testing.T) {
 	tests := []struct {
 		scenario     string
@@ -82,8 +80,6 @@ func TestSelectDeletions_SkipsNestedContentPath(t *testing.T) {
 	}
 }
 
-// newNestedPathDryRunService boots a Service against a stub qBittorrent whose maindata
-// holds the given torrents, so a dry run exercises the delete expansion.
 func newNestedPathDryRunService(t *testing.T, torrentsJSON string) (*Service, int) {
 	t.Helper()
 
@@ -165,8 +161,6 @@ func TestApplyRuleDryRun_IncludeCrossSeedsSkipsNestedContentPath(t *testing.T) {
 	}
 }
 
-// deleteActivityCount sums the torrents the dry run would delete, across the activity
-// rows the run records per action type.
 func deleteActivityCount(t *testing.T, activities []*models.AutomationActivity) int {
 	t.Helper()
 	total := 0
@@ -183,7 +177,6 @@ func deleteActivityCount(t *testing.T, activities []*models.AutomationActivity) 
 	return total
 }
 
-// The guard reads the content group index of the torrents.
 func TestNestedPathExcludedHashes(t *testing.T) {
 	nested := []qbt.Torrent{
 		{Hash: "pack", Size: 100, ContentPath: "/data/Pack"},

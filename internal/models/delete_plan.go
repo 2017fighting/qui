@@ -15,7 +15,6 @@ import (
 	"github.com/autobrr/qui/internal/dbinterface"
 )
 
-// Delete plan run statuses. One active run per instance.
 const (
 	DeletePlanStatusPending      = "pending"
 	DeletePlanStatusPlanning     = "planning"
@@ -26,7 +25,6 @@ const (
 	DeletePlanStatusCanceled     = "canceled"
 )
 
-// Delete plan row removal outcomes. A row is pending until the deletion reaches it.
 const (
 	DeletePlanRowStatusPending = "pending"
 	DeletePlanRowStatusDeleted = "deleted"
@@ -34,10 +32,8 @@ const (
 	DeletePlanRowStatusFailed  = "failed"
 )
 
-// ErrDeletePlanAlreadyActive is returned when a run is created while one is active.
 var ErrDeletePlanAlreadyActive = errors.New("a delete plan is already active for this instance")
 
-// DeletePlanRun is a delete plan run and, once built, its frozen rows.
 type DeletePlanRun struct {
 	ID               int64     `json:"id"`
 	InstanceID       int       `json:"instanceId"`
@@ -49,26 +45,21 @@ type DeletePlanRun struct {
 	PlannedBytes     int64     `json:"plannedBytes"`
 	DeadBytes        int64     `json:"deadBytes"`
 	OvershootBytes   int64     `json:"overshootBytes"`
-	// ShortfallBytes is targetBytes - plannedBytes when positive, else 0. It is
-	// derived on read, so an untick and a refill keep it consistent with the rows.
+
 	ShortfallBytes int64  `json:"shortfallBytes"`
 	TargetReached  bool   `json:"targetReached"`
 	RemovedBytes   int64  `json:"removedBytes"`
 	ErrorMessage   string `json:"errorMessage"`
-	// WarningMessage carries the failure summary of a completed run that lost some
-	// chunks. ErrorMessage stays empty on a completed run.
+
 	WarningMessage string     `json:"warningMessage"`
 	CreatedAt      time.Time  `json:"createdAt"`
 	UpdatedAt      time.Time  `json:"updatedAt"`
 	CompletedAt    *time.Time `json:"completedAt"`
-	// Groups holds the non-excluded groups in plan order, included and candidates
-	// alike; ExcludedGroups holds the groups dropped by a protection. Both are
-	// filled by GetRun.
+
 	Groups         []*DeletePlanRow `json:"groups"`
 	ExcludedGroups []*DeletePlanRow `json:"excludedGroups"`
 }
 
-// DeletePlanRow is one frozen content group in a delete plan.
 type DeletePlanRow struct {
 	ID          int64  `json:"id"`
 	RunID       int64  `json:"runId"`
@@ -77,19 +68,18 @@ type DeletePlanRow struct {
 	MemberCount int    `json:"memberCount"`
 	Dead        bool   `json:"dead"`
 	Included    bool   `json:"included"`
-	// Unticked marks a group the user vetoed. A refill never re-includes it.
+
 	Unticked      bool               `json:"unticked"`
 	Excluded      bool               `json:"excluded"`
 	ExcludeReason string             `json:"excludeReason"`
 	DecidingKey   string             `json:"decidingKey"`
 	Members       []DeletePlanMember `json:"members"`
-	// Removal outcome, filled by the deletion. RowStatus is pending until then.
+
 	RowStatus string `json:"rowStatus"`
 	RowReason string `json:"rowReason"`
 	RowError  string `json:"rowError"`
 }
 
-// DeletePlanMember is one torrent in a content group.
 type DeletePlanMember struct {
 	Hash      string   `json:"hash"`
 	Name      string   `json:"name"`
@@ -100,19 +90,14 @@ type DeletePlanMember struct {
 	SavePath  string   `json:"savePath"`
 }
 
-// DeletePlanStore handles database operations for delete plans.
 type DeletePlanStore struct {
 	db dbinterface.Querier
 }
 
-// NewDeletePlanStore creates a new DeletePlanStore.
 func NewDeletePlanStore(db dbinterface.Querier) *DeletePlanStore {
 	return &DeletePlanStore{db: db}
 }
 
-// CreateRunIfNoActive atomically checks for an active run and creates a pending
-// one if none exists. The active set is pending, planning, preview_ready and
-// deleting, so a second plan waits until the first is confirmed or canceled.
 func (s *DeletePlanStore) CreateRunIfNoActive(ctx context.Context, instanceID int, targetBytes int64, keysJSON string, removeDeadGroups bool) (int64, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -147,7 +132,6 @@ const deletePlanRunColumns = `id, instance_id, status, target_bytes, keys_json, 
 	planned_bytes, dead_bytes, overshoot_bytes, target_reached, removed_bytes,
 	error_message, warning_message, created_at, updated_at, completed_at`
 
-// GetRun retrieves a run with its frozen rows.
 func (s *DeletePlanStore) GetRun(ctx context.Context, runID int64) (*DeletePlanRun, error) {
 	row := s.db.QueryRowContext(ctx, `SELECT `+deletePlanRunColumns+` FROM delete_plan_runs WHERE id = ?`, runID)
 	run, err := scanDeletePlanRun(row)
@@ -160,8 +144,6 @@ func (s *DeletePlanStore) GetRun(ctx context.Context, runID int64) (*DeletePlanR
 	return run, nil
 }
 
-// GetRunByInstance retrieves a run with its frozen rows, scoped to an instance,
-// so a handler never leaks another instance's run.
 func (s *DeletePlanStore) GetRunByInstance(ctx context.Context, instanceID int, runID int64) (*DeletePlanRun, error) {
 	row := s.db.QueryRowContext(ctx, `SELECT `+deletePlanRunColumns+` FROM delete_plan_runs WHERE id = ? AND instance_id = ?`, runID, instanceID)
 	run, err := scanDeletePlanRun(row)
@@ -174,7 +156,6 @@ func (s *DeletePlanStore) GetRunByInstance(ctx context.Context, instanceID int, 
 	return run, nil
 }
 
-// ListRuns lists recent runs for an instance, newest first, without rows.
 func (s *DeletePlanStore) ListRuns(ctx context.Context, instanceID, limit int) ([]*DeletePlanRun, error) {
 	if limit <= 0 {
 		limit = 10
@@ -237,11 +218,6 @@ func (s *DeletePlanStore) loadRows(ctx context.Context, run *DeletePlanRun) erro
 	return nil
 }
 
-// UpdateRowSelection replaces a preview_ready run's unticked set and its selected
-// rows in one transaction: every non-excluded row is cleared, then the unticked
-// rows are vetoed and the included rows are selected. A candidate is neither, so
-// it stays out of the plan until a refill selects it. It reports whether the run
-// was still preview_ready, so a racing confirm or cancel leaves the rows untouched.
 func (s *DeletePlanStore) UpdateRowSelection(ctx context.Context, runID int64, unticked, included []int64, plannedBytes, deadBytes, overshootBytes int64, targetReached bool) (bool, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -284,7 +260,6 @@ func (s *DeletePlanStore) UpdateRowSelection(ctx context.Context, runID int64, u
 	return true, nil
 }
 
-// setRowFlag sets one boolean row flag on the given non-excluded rows.
 func setRowFlag(ctx context.Context, tx dbinterface.TxQuerier, runID int64, column string, rowIDs []int64) error {
 	if len(rowIDs) == 0 {
 		return nil
@@ -308,7 +283,6 @@ func setRowFlag(ctx context.Context, tx dbinterface.TxQuerier, runID int64, colu
 	return err
 }
 
-// StartRunPlanning moves a run from pending to planning, and reports whether it did.
 func (s *DeletePlanStore) StartRunPlanning(ctx context.Context, runID int64) (bool, error) {
 	result, err := s.db.ExecContext(ctx, `
 		UPDATE delete_plan_runs SET status = 'planning', updated_at = CURRENT_TIMESTAMP
@@ -324,7 +298,6 @@ func (s *DeletePlanStore) StartRunPlanning(ctx context.Context, runID int64) (bo
 	return affected > 0, nil
 }
 
-// UpdateRunPreview freezes the plan on a planning run, and reports whether it did.
 func (s *DeletePlanStore) UpdateRunPreview(ctx context.Context, runID, plannedBytes, deadBytes, overshootBytes int64, targetReached bool) (bool, error) {
 	result, err := s.db.ExecContext(ctx, `
 		UPDATE delete_plan_runs
@@ -342,8 +315,6 @@ func (s *DeletePlanStore) UpdateRunPreview(ctx context.Context, runID, plannedBy
 	return affected > 0, nil
 }
 
-// UpdateRunCompleted marks a deleting run completed with the bytes it removed and,
-// when some chunks failed, the failure summary. ErrorMessage stays empty.
 func (s *DeletePlanStore) UpdateRunCompleted(ctx context.Context, runID, removedBytes int64, warningMessage string) error {
 	_, err := s.db.ExecContext(ctx, `
 		UPDATE delete_plan_runs
@@ -353,7 +324,6 @@ func (s *DeletePlanStore) UpdateRunCompleted(ctx context.Context, runID, removed
 	return err
 }
 
-// StartRunDeletion moves a run from preview_ready to deleting, and reports whether it did.
 func (s *DeletePlanStore) StartRunDeletion(ctx context.Context, runID int64) (bool, error) {
 	result, err := s.db.ExecContext(ctx, `
 		UPDATE delete_plan_runs SET status = 'deleting', updated_at = CURRENT_TIMESTAMP
@@ -369,7 +339,6 @@ func (s *DeletePlanStore) StartRunDeletion(ctx context.Context, runID int64) (bo
 	return affected > 0, nil
 }
 
-// UpdateRunStatus updates the status of a run.
 func (s *DeletePlanStore) UpdateRunStatus(ctx context.Context, runID int64, status string) error {
 	_, err := s.db.ExecContext(ctx, `
 		UPDATE delete_plan_runs SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?
@@ -377,9 +346,6 @@ func (s *DeletePlanStore) UpdateRunStatus(ctx context.Context, runID int64, stat
 	return err
 }
 
-// CancelRunIfNotDeleting cancels a run that has not started deleting, and reports
-// whether it did. A run that reached deleting keeps that status, so cancel cannot
-// stop a deletion that already began.
 func (s *DeletePlanStore) CancelRunIfNotDeleting(ctx context.Context, runID int64) (bool, error) {
 	result, err := s.db.ExecContext(ctx, `
 		UPDATE delete_plan_runs SET status = 'canceled', updated_at = CURRENT_TIMESTAMP
@@ -395,8 +361,6 @@ func (s *DeletePlanStore) CancelRunIfNotDeleting(ctx context.Context, runID int6
 	return affected > 0, nil
 }
 
-// UpdateRunFailed marks a pending, planning, or deleting run failed, so a canceled
-// run keeps its status.
 func (s *DeletePlanStore) UpdateRunFailed(ctx context.Context, runID int64, errorMessage string) error {
 	_, err := s.db.ExecContext(ctx, `
 		UPDATE delete_plan_runs
@@ -406,8 +370,6 @@ func (s *DeletePlanStore) UpdateRunFailed(ctx context.Context, runID int64, erro
 	return err
 }
 
-// MarkDeletingRunsFailed marks runs left deleting by a restart as failed, so an
-// interrupted deletion does not stay in a non-terminal state.
 func (s *DeletePlanStore) MarkDeletingRunsFailed(ctx context.Context, errorMessage string) error {
 	_, err := s.db.ExecContext(ctx, `
 		UPDATE delete_plan_runs
@@ -417,8 +379,6 @@ func (s *DeletePlanStore) MarkDeletingRunsFailed(ctx context.Context, errorMessa
 	return err
 }
 
-// UpdateRowOutcome records one row's removal outcome. reason is set on a skip,
-// errorMessage on a failed chunk.
 func (s *DeletePlanStore) UpdateRowOutcome(ctx context.Context, rowID int64, status, reason, errorMessage string) error {
 	_, err := s.db.ExecContext(ctx, `
 		UPDATE delete_plan_rows SET row_status = ?, row_reason = ?, row_error = ? WHERE id = ?
@@ -426,10 +386,7 @@ func (s *DeletePlanStore) UpdateRowOutcome(ctx context.Context, rowID int64, sta
 	return err
 }
 
-// MarkStuckRunsFailed marks pending/planning runs older than the threshold as
-// failed, so a restart does not leave them stuck.
 func (s *DeletePlanStore) MarkStuckRunsFailed(ctx context.Context, threshold time.Duration, statuses []string) error {
-	// created_at is written by CURRENT_TIMESTAMP, so compare in the same UTC format.
 	cutoff := time.Now().Add(-threshold).UTC().Format(time.DateTime)
 
 	var placeholders strings.Builder
@@ -451,7 +408,6 @@ func (s *DeletePlanStore) MarkStuckRunsFailed(ctx context.Context, threshold tim
 	return err
 }
 
-// InsertRows inserts the frozen plan rows in batches of 100.
 func (s *DeletePlanStore) InsertRows(ctx context.Context, runID int64, rows []*DeletePlanRow) error {
 	if len(rows) == 0 {
 		return nil
@@ -546,7 +502,7 @@ func scanDeletePlanRunScanner(scan func(dest ...any) error) (*DeletePlanRun, err
 	if completedAt.Valid {
 		run.CompletedAt = &completedAt.Time
 	}
-	// A run waits for fresh sync data only while it is pending.
+
 	run.WaitingForSync = run.Status == DeletePlanStatusPending
 	run.Groups = []*DeletePlanRow{}
 	run.ExcludedGroups = []*DeletePlanRow{}

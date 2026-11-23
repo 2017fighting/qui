@@ -46,7 +46,6 @@ func runOneActiveRunRule(t *testing.T, newDB func(testing.TB, string) *database.
 	_, err = store.CreateRunIfNoActive(ctx, instanceID, 2000, "[]", true)
 	require.ErrorIs(t, err, models.ErrDeletePlanAlreadyActive)
 
-	// A canceled run no longer blocks a new plan.
 	require.NoError(t, store.UpdateRunStatus(ctx, runID, models.DeletePlanStatusCanceled))
 	secondID, err := store.CreateRunIfNoActive(ctx, instanceID, 2000, "[]", true)
 	require.NoError(t, err)
@@ -114,7 +113,6 @@ func TestDeletePlanStore_RoundTripsAFrozenPlan(t *testing.T) {
 	require.Len(t, run.ExcludedGroups, 1)
 	require.Equal(t, "incomplete", run.ExcludedGroups[0].ExcludeReason)
 
-	// A second freeze cannot fire once the run left planning.
 	frozen, err = store.UpdateRunPreview(ctx, runID, 1, 1, 1, true)
 	require.NoError(t, err)
 	require.False(t, frozen)
@@ -176,10 +174,10 @@ func TestDeletePlanStore_UpdateRowSelectionUnticksAndKeepsOrder(t *testing.T) {
 	require.True(t, run.Groups[0].Included)
 	require.False(t, run.Groups[1].Included)
 	require.True(t, run.Groups[1].Unticked, "a vetoed row is remembered as unticked")
-	// Only the included flag changes: the unticked row keeps its plan position.
+
 	require.Equal(t, "/data/A", run.Groups[0].ContentPath)
 	require.Equal(t, "/data/B", run.Groups[1].ContentPath)
-	// An excluded row is not part of the selection and stays excluded.
+
 	require.Len(t, run.ExcludedGroups, 1)
 	require.False(t, run.ExcludedGroups[0].Included)
 	require.True(t, run.ExcludedGroups[0].Excluded)
@@ -218,7 +216,6 @@ func TestDeletePlanStore_GetRunByInstanceScopesToTheInstance(t *testing.T) {
 	require.Nil(t, scoped)
 }
 
-// freezePreviewRun builds a plan run, inserts rows, and freezes it preview_ready.
 func freezePreviewRun(t *testing.T, store *models.DeletePlanStore, instanceID int, rows []*models.DeletePlanRow) int64 {
 	t.Helper()
 	ctx := t.Context()
@@ -255,17 +252,14 @@ func TestDeletePlanStore_DeletionStateTransitions(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, deleting)
 
-	// A second start cannot fire once the run is deleting.
 	deleting, err = store.StartRunDeletion(ctx, runID)
 	require.NoError(t, err)
 	require.False(t, deleting)
 
-	// Cancel is refused once deleting, so a deletion that began is not stopped.
 	canceled, err := store.CancelRunIfNotDeleting(ctx, runID)
 	require.NoError(t, err)
 	require.False(t, canceled)
 
-	// Rows start pending.
 	run, err := store.GetRun(ctx, runID)
 	require.NoError(t, err)
 	require.Equal(t, models.DeletePlanStatusDeleting, run.Status)
@@ -274,7 +268,6 @@ func TestDeletePlanStore_DeletionStateTransitions(t *testing.T) {
 
 	require.NoError(t, store.UpdateRowOutcome(ctx, run.Groups[0].ID, models.DeletePlanRowStatusSkipped, "members_changed", ""))
 
-	// A completed run carries removedBytes and, when chunks failed, a warning.
 	require.NoError(t, store.UpdateRunCompleted(ctx, runID, 400, "one chunk failed"))
 
 	run, err = store.GetRun(ctx, runID)

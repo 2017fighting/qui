@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2025-2026, s0up and the autobrr contributors.
- * SPDX-License-Identifier: GPL-2.0-or-later
- */
 
 import { Progress } from "@/components/ui/progress"
 import { formatBytes } from "@/lib/utils"
@@ -9,8 +5,6 @@ import type { DeletePlanRunStatus } from "@/types"
 import { Loader2 } from "lucide-react"
 import { useTranslation } from "react-i18next"
 
-// The fields the progress and result views read, so the card (a run summary) and
-// the wizard (a full run) share one component.
 export interface DeletePlanRunProgressRun {
   status: DeletePlanRunStatus
   removedBytes: number
@@ -19,8 +13,6 @@ export interface DeletePlanRunProgressRun {
   warningMessage: string
 }
 
-// DeletePlanRunProgress shows a run that is deleting or finished. It renders
-// nothing for a run that has not started deleting yet.
 export function DeletePlanRunProgress({ run }: { run: DeletePlanRunProgressRun }) {
   const { t } = useTranslation("instances")
 

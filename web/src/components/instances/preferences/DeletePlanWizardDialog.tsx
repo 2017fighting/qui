@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2025-2026, s0up and the autobrr contributors.
- * SPDX-License-Identifier: GPL-2.0-or-later
- */
 
 import { DeletePlanRunProgress } from "@/components/instances/preferences/DeletePlanRunProgress"
 import {
@@ -44,7 +40,7 @@ interface DeletePlanWizardDialogProps {
   onOpenChange: (open: boolean) => void
   instanceId: number
   instanceName?: string
-  // Set when the card reopens a frozen plan that is still the instance's active run.
+
   initialRunId?: number
 }
 
@@ -54,8 +50,6 @@ const TARGET_UNITS: ByteUnit[] = ["MiB", "GiB", "TiB"]
 const DEFAULT_TARGET_UNIT: ByteUnit = "TiB"
 const DEFAULT_TARGET_VALUE = "10"
 
-// Rebuilding over the run this wizard opened cancels it first, but only a run
-// that has not started deleting can be canceled and recreated.
 const REBUILDABLE_STATUSES: DeletePlanRunStatus[] = ["pending", "planning", "preview_ready"]
 
 export function DeletePlanWizardDialog({
@@ -134,8 +128,6 @@ export function DeletePlanWizardDialog({
       )
     }
 
-    // One active run per instance: rebuilding over the run this wizard opened must
-    // cancel it first, or the create answers 409.
     if (run && runId !== undefined && REBUILDABLE_STATUSES.includes(run.status)) {
       cancelMutation.mutate(run.id, {
         onSuccess: create,

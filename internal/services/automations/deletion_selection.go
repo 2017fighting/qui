@@ -361,8 +361,6 @@ func groupKeepsFilesForOtherInstances(evalCtx *EvalContext, hashes []string) (lo
 }
 
 func preserveCrossSeedsDelete(trigger qbt.Torrent, in deletionSelectionInput) (batchMode, logMsg string) {
-	// ADR 0017: a nested Content Path outside the group means the files this delete
-	// would remove can belong to another torrent, so keep them.
 	if nestedPathExcluded(in.evalCtx, trigger.Hash) {
 		return DeleteModeKeepFiles, "automations: removing torrent (nested content path - keeping files)"
 	}

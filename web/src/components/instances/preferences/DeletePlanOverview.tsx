@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2025-2026, s0up and the autobrr contributors.
- * SPDX-License-Identifier: GPL-2.0-or-later
- */
 
 import { DeletePlanHistoryDialog } from "@/components/instances/preferences/DeletePlanHistoryDialog"
 import { DeletePlanRunProgress } from "@/components/instances/preferences/DeletePlanRunProgress"
@@ -20,7 +16,6 @@ import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 
-// A second plan is refused while any of these is the instance's latest run.
 const ACTIVE_STATUSES: DeletePlanRunStatus[] = ["pending", "planning", "preview_ready", "deleting"]
 
 interface WizardTarget {
@@ -45,7 +40,7 @@ function InstanceDeletePlanRow({
 
   const latestRun = runsQuery.data?.[0]
   const isActive = !!latestRun && ACTIVE_STATUSES.includes(latestRun.status)
-  // Finished runs read back read-only; the active run is handled by the wizard.
+
   const pastRuns = (runsQuery.data ?? []).filter((run) => !ACTIVE_STATUSES.includes(run.status))
 
   const handleCancel = () => {
@@ -218,7 +213,6 @@ export function DeletePlanOverview() {
         ))}
       </CardContent>
 
-      {/* Mounted only while open, so every open starts from the first step. */}
       {wizardTarget && (
         <DeletePlanWizardDialog
           open

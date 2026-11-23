@@ -16,18 +16,10 @@ import (
 	"github.com/autobrr/qui/internal/models"
 )
 
-// MinFileOverlapPercent is the minimum percentage of file overlap required
-// to consider two torrents as sharing the same files.
-// 90% tolerates small differences (extra NFO/sample/metadata files) while preventing
-// accidental grouping of unrelated torrents that happen to share the same path.
 const MinFileOverlapPercent = 90
 
-// OverlapUnknown is returned when the overlap between two file lists cannot be
-// computed, for example when one of the lists is empty or has no bytes.
 const OverlapUnknown = -1
 
-// ResolvedTorrentFilePath resolves a torrent-internal file name against the torrent's
-// SavePath, so two torrents with different layouts can still meet on the same on-disk path.
 func ResolvedTorrentFilePath(torrent qbt.Torrent, fileName string) string {
 	savePath := NormalizePath(torrent.SavePath)
 	relativePath := strings.TrimPrefix(NormalizePath(fileName), "/")
@@ -40,13 +32,11 @@ func ResolvedTorrentFilePath(torrent qbt.Torrent, fileName string) string {
 	return savePath + "/" + relativePath
 }
 
-// FileOverlapIndex records one torrent's files by their resolved on-disk path.
 type FileOverlapIndex struct {
 	sizeByPath map[string]int64
 	totalBytes int64
 }
 
-// BuildFileOverlapIndex indexes a torrent's file list by resolved on-disk path.
 func BuildFileOverlapIndex(torrent qbt.Torrent, files qbt.TorrentFiles) FileOverlapIndex {
 	index := FileOverlapIndex{sizeByPath: make(map[string]int64, len(files))}
 	for _, file := range files {
@@ -56,8 +46,6 @@ func BuildFileOverlapIndex(torrent qbt.Torrent, files qbt.TorrentFiles) FileOver
 	return index
 }
 
-// FileOverlapPercent returns how much of the smaller torrent, in bytes, resolves
-// to the same on-disk paths. Returns OverlapUnknown when comparison is not possible.
 func FileOverlapPercent(triggerFiles FileOverlapIndex, candidate qbt.Torrent, candidateFiles qbt.TorrentFiles) int64 {
 	if len(triggerFiles.sizeByPath) == 0 || len(candidateFiles) == 0 {
 		return OverlapUnknown
@@ -78,24 +66,14 @@ func FileOverlapPercent(triggerFiles FileOverlapIndex, candidate qbt.Torrent, ca
 	return (matchedBytes * 100) / smallerBytes
 }
 
-// FileFetcher returns the file lists for the given hashes.
 type FileFetcher func(hashes []string) (map[string]qbt.TorrentFiles, error)
 
-// cachedFileFetcher serves file lists that the caller already loaded.
 func cachedFileFetcher(filesByHash map[string]qbt.TorrentFiles) FileFetcher {
 	return func(_ []string) (map[string]qbt.TorrentFiles, error) {
 		return filesByHash, nil
 	}
 }
 
-// VerifiedMembers returns the members of a shared-ContentPath group that hold the
-// same data as the trigger and are therefore safe to delete with it.
-//
-// A shared ContentPath only proves the torrents write into the same directory: unrelated
-// packs whose payload folder carries the same name (a bare "Season 2" root) all report the
-// same path. Members that share no file are dropped, the trigger is still deleted. Partial
-// overlap or unreadable files abort the group, because the delete would break data another
-// torrent needs.
 func VerifiedMembers(
 	trigger qbt.Torrent,
 	group []qbt.Torrent,
@@ -136,7 +114,7 @@ func VerifiedMembers(
 		case percent >= MinFileOverlapPercent:
 			verified = append(verified, candidate.Hash)
 		case percent == 0:
-			// Same directory, different content: not a copy of the trigger.
+
 			log.Debug().Str("hash", trigger.Hash).Str("otherHash", candidate.Hash).
 				Str("contentPath", trigger.ContentPath).
 				Msg("contentgroup: excluding torrent that shares the content path but no files")
@@ -149,9 +127,6 @@ func VerifiedMembers(
 	return verified, true
 }
 
-// ShouldPreserveCrossSeedFiles reports whether deleting the torrent with files would
-// break a verified partner in its Content Path bucket. An unreadable file list counts as
-// "preserve": the caller keeps the files instead of guessing.
 func ShouldPreserveCrossSeedFiles(torrent qbt.Torrent, idx Index, filesByHash map[string]qbt.TorrentFiles) bool {
 	verifiedHashes, ok := VerifiedMembers(
 		torrent,
@@ -162,13 +137,8 @@ func ShouldPreserveCrossSeedFiles(torrent qbt.Torrent, idx Index, filesByHash ma
 	return !ok || len(verifiedHashes) > 1
 }
 
-// BatchFileFetcher returns the file lists for the given hashes, honoring ctx.
 type BatchFileFetcher func(ctx context.Context, hashes []string) (map[string]qbt.TorrentFiles, error)
 
-// VerifyFileOverlap reports whether torrent1 and torrent2 share at least minOverlapPercent
-// of the smaller torrent's files. A zero or negative percent falls back to
-// MinFileOverlapPercent. It returns an error when the overlap cannot be computed, so the
-// caller can fail closed.
 func VerifyFileOverlap(ctx context.Context, fetch BatchFileFetcher, torrent1, torrent2 qbt.Torrent, minOverlapPercent int) (bool, error) {
 	if err := ctx.Err(); err != nil {
 		return false, err
@@ -196,30 +166,18 @@ func VerifyFileOverlap(ctx context.Context, fetch BatchFileFetcher, torrent1, to
 	return percent >= int64(minOverlapPercent), nil
 }
 
-// KeyContentPath is the group key that makes a group's Content Path ambiguous when it
-// equals the torrent's SavePath: the bucket may then hold unrelated torrents.
 const KeyContentPath = "contentPath"
 
-// AmbiguityPolicy values answer an ambiguous Content Path. They match the values
-// models.GroupDefinition.AmbiguousPolicy accepts.
 const (
 	AmbiguityVerifyOverlap = "verify_overlap"
 	AmbiguitySkip          = "skip"
 )
 
-// GroupIndex is the key-based group index an ambiguity check reads.
 type GroupIndex interface {
 	IsAmbiguousForHash(hash string) bool
 	MembersForHash(hash string) []string
 }
 
-// ShouldExpandAmbiguousGroup reports whether a group may expand for triggerHash when the
-// trigger's Content Path is ambiguous (ContentPath == SavePath).
-//
-// def supplies the policy. A nil def, a definition without KeyContentPath, a
-// non-ambiguous trigger, or AmbiguitySkip all decide without reading files. Otherwise
-// every member must share at least def.MinFileOverlapPercent of its files with the trigger,
-// or the whole group is skipped.
 func ShouldExpandAmbiguousGroup(
 	ctx context.Context,
 	fetch BatchFileFetcher,

@@ -9,32 +9,19 @@ import (
 	qbt "github.com/autobrr/go-qbittorrent"
 )
 
-// filePriorityDoNotDownload is qBittorrent's download priority 0: the file stays in
-// the torrent's file list and is never fetched.
 const filePriorityDoNotDownload = 0
 
-// maxSkippedFileNames bounds the file names one activity-run row carries, so a
-// torrent with thousands of small files does not bloat the in-memory run store.
 const maxSkippedFileNames = 10
 
-// skipSmallFilesPlan is what the size threshold changes in one torrent's file list.
 type skipSmallFilesPlan struct {
-	// indices and names are the files to set to "Do not download", in file order.
 	indices []int
 	names   []string
-	// bytes is the total size of those files.
+
 	bytes int64
-	// allBelow marks a file list where every file is under the threshold. Such a
-	// torrent is left alone: skipping all of them would leave it with no wanted
-	// bytes, so it would never download anything again.
+
 	allBelow bool
 }
 
-// planSkipSmallFiles picks the files the Skip small files action sets to priority 0:
-// every file under maxSizeBytes that is not already set to "Do not download".
-// hasFileList is false when there is nothing to plan against, which is a torrent
-// whose metadata has not downloaded (no file list) or one whose every file is under
-// the threshold; that second case is the plan's allBelow.
 func planSkipSmallFiles(files qbt.TorrentFiles, maxSizeBytes int64) (plan skipSmallFilesPlan, hasFileList bool) {
 	if len(files) == 0 {
 		return skipSmallFilesPlan{}, false
@@ -47,7 +34,6 @@ func planSkipSmallFiles(files qbt.TorrentFiles, maxSizeBytes int64) (plan skipSm
 		}
 		below++
 		if file.Priority == 0 {
-			// Already a skipped file: setting it again would only churn the client.
 			continue
 		}
 		plan.indices = append(plan.indices, file.Index)
@@ -61,11 +47,6 @@ func planSkipSmallFiles(files qbt.TorrentFiles, maxSizeBytes int64) (plan skipSm
 	return plan, true
 }
 
-// skipSmallFilesPlansFor reports, for every torrent that matched a Skip small files
-// action, the files to set to "Do not download". A torrent the run deletes or claims
-// for a delete keeps its file priorities: the delete removes it anyway, and a claimed
-// delete trigger gets no other action (ADR 0027). A torrent whose every file is
-// under the threshold lands in the plan as allBelow and is left alone there.
 func skipSmallFilesPlansFor(states map[string]*torrentDesiredState, evalCtx *EvalContext, deletions *deletionSelection) map[string]skipSmallFilesPlan {
 	plans := make(map[string]skipSmallFilesPlan)
 	if evalCtx == nil || deletions == nil {
@@ -86,10 +67,16 @@ func skipSmallFilesPlansFor(states map[string]*torrentDesiredState, evalCtx *Eva
 	return plans
 }
 
-// buildSkipSmallFilesRunItems reports the per-torrent detail of a Skip small files
-// pass for the given torrents: the files a torrent would lose from its download set,
-// or the reason it was left alone. The caller decides which torrents the detail
-// covers, so a live pass can leave out the ones it left alone.
+func skipSmallFilesRulesFor(plans map[string]skipSmallFilesPlan, states map[string]*torrentDesiredState) map[string]ruleRef {
+	rules := make(map[string]ruleRef, len(plans))
+	for hash := range plans {
+		if state := states[hash]; state != nil {
+			rules[hash] = state.skipSmallFilesRule
+		}
+	}
+	return rules
+}
+
 func buildSkipSmallFilesRunItems(hashes []string, plans map[string]skipSmallFilesPlan, torrentByHash map[string]*qbt.Torrent, scope *ruleScope) []ActivityRunTorrent {
 	items := make([]ActivityRunTorrent, 0, len(hashes))
 	for _, hash := range hashes {

@@ -20,23 +20,22 @@ import (
 )
 
 type runPlan struct {
-	uploadLimits   plannedAction[int64]
-	downloadLimits plannedAction[int64]
-	shareLimits    plannedShareLimits
-	pause          plannedTorrents
-	resume         plannedTorrents
-	recheck        plannedTorrents
-	reannounce     plannedTorrents
-	autoManage     plannedAction[bool]
-	tags           map[string]*tagChange
-	category       plannedAction[string]
-	move           plannedAction[string]
-	programs       []pendingProgramExec
-	exports        []pendingExportToInstance
-	transfers      []pendingTransfer
-	deletions      *deletionSelection
-	skipSmallFiles map[string]skipSmallFilesPlan
-	// skipSmallFilesRules holds the rule that chose each torrent of skipSmallFiles.
+	uploadLimits        plannedAction[int64]
+	downloadLimits      plannedAction[int64]
+	shareLimits         plannedShareLimits
+	pause               plannedTorrents
+	resume              plannedTorrents
+	recheck             plannedTorrents
+	reannounce          plannedTorrents
+	autoManage          plannedAction[bool]
+	tags                map[string]*tagChange
+	category            plannedAction[string]
+	move                plannedAction[string]
+	programs            []pendingProgramExec
+	exports             []pendingExportToInstance
+	transfers           []pendingTransfer
+	deletions           *deletionSelection
+	skipSmallFiles      map[string]skipSmallFilesPlan
 	skipSmallFilesRules map[string]ruleRef
 }
 
@@ -282,12 +281,7 @@ func (s *Service) buildRunPlan(ctx context.Context, in runPlanInput) runPlan {
 	plan.category = s.planCategories(ctx, in, categoryTriggers)
 	plan.move = s.planMoves(ctx, in, moveTriggers)
 	plan.skipSmallFiles = skipSmallFilesPlansFor(states, evalCtx, deletions)
-	plan.skipSmallFilesRules = make(map[string]ruleRef, len(plan.skipSmallFiles))
-	for hash := range plan.skipSmallFiles {
-		if state := states[hash]; state != nil {
-			plan.skipSmallFilesRules[hash] = state.skipSmallFilesRule
-		}
-	}
+	plan.skipSmallFilesRules = skipSmallFilesRulesFor(plan.skipSmallFiles, states)
 	plan.transfers = transfersAfterExports(transfersAfterMoves(plan.transfers, plan.move.rules), plan.exports)
 	var waitingExports []pendingExportToInstance
 	plan.exports, waitingExports = exportsAfterMoves(plan.exports, plan.move.rules)

@@ -16,31 +16,24 @@ import (
 	"github.com/autobrr/qui/internal/services/ranking"
 )
 
-// Exclusion reasons a preview maps to i18n keys. The set is stable.
 const (
 	ReasonIncomplete      = "incomplete"
 	ReasonNoDeleteTag     = "no_delete_tag"
 	ReasonPartialOverlap  = "partial_overlap"
 	ReasonUnreadableFiles = "unreadable_files"
 	ReasonNestedPath      = "nested_path"
-	// ReasonMembersChanged is the row-level reason for a group whose verified
-	// member set differs from the frozen plan (ADR 0018).
+
 	ReasonMembersChanged = "members_changed"
 )
 
-// ProtectionRules are the hard protections a plan applies before a group may be
-// removed. A group that trips any of them is excluded whole, with a reason.
 type ProtectionRules struct {
-	// DeleteTag protects a group when any member carries it.
 	DeleteTag string
-	// RemoveDeadGroups includes the groups no member is seeding. Their bytes do
-	// not count toward the target.
+
 	RemoveDeadGroups bool
-	// FilesByHash is the file list per torrent hash, used to verify a group's overlap.
+
 	FilesByHash map[string]qbt.TorrentFiles
 }
 
-// PlanGroup is one content group in a built plan. Members are largest first.
 type PlanGroup struct {
 	ContentPath   string
 	SizeBytes     int64
@@ -52,7 +45,6 @@ type PlanGroup struct {
 	DecidingKey   models.ConditionField
 }
 
-// Plan is the frozen result of BuildPlan.
 type Plan struct {
 	Groups         []PlanGroup
 	ExcludedGroups []PlanGroup
@@ -62,15 +54,6 @@ type Plan struct {
 	TargetReached  bool
 }
 
-// BuildPlan turns an instance's torrents into an ordered delete plan. It is pure:
-// no sync manager, no clock, no database. The key chain ranks the groups, the
-// target decides how far the ranked part runs, and the protection rules drop
-// groups whole with a reason.
-//
-// Bytes count once per group, as the largest member's size (ADR 0018). Dead
-// groups leave the target arithmetic. A protection is checked in a fixed order,
-// so the reason is deterministic: incomplete, no_delete_tag, nested_path,
-// unreadable_files, partial_overlap.
 func BuildPlan(torrents []qbt.Torrent, idx contentgroup.Index, keys []models.KeyRule, targetBytes int64, rules ProtectionRules) Plan {
 	groups := make([]PlanGroup, 0, len(torrents)/2)
 	excluded := make([]PlanGroup, 0)
@@ -101,8 +84,6 @@ func BuildPlan(torrents []qbt.Torrent, idx contentgroup.Index, keys []models.Key
 
 	ranked, dead := splitDead(groups)
 
-	// Every ranked group stays a row in plan order. Only the prefix that reaches the
-	// target is included; the groups after it are candidates a refill can add.
 	var plannedBytes int64
 	reached := false
 	planGroups := make([]PlanGroup, 0, len(ranked)+len(dead))
@@ -136,8 +117,6 @@ func BuildPlan(torrents []qbt.Torrent, idx contentgroup.Index, keys []models.Key
 	}
 }
 
-// buildGroup classifies one Content Path bucket: the verified members, the
-// group's size, whether it is dead, and the protection that excludes it.
 func buildGroup(bucket []qbt.Torrent, idx contentgroup.Index, rules ProtectionRules) PlanGroup {
 	representative := largest(bucket)
 	group := PlanGroup{
@@ -173,9 +152,6 @@ func excludeGroup(group PlanGroup, reason string) PlanGroup {
 	return group
 }
 
-// verifyMembers drops a member that shares no file with the group and excludes
-// the whole group on a partial overlap or an unreadable file list (ADR 0017).
-// The largest member is the trigger every other member is compared against.
 func verifyMembers(bucket []qbt.Torrent, filesByHash map[string]qbt.TorrentFiles) ([]qbt.Torrent, string) {
 	trigger := largest(bucket)
 	triggerFiles, ok := filesByHash[trigger.Hash]
@@ -200,7 +176,7 @@ func verifyMembers(bucket []qbt.Torrent, filesByHash map[string]qbt.TorrentFiles
 		case percent >= contentgroup.MinFileOverlapPercent:
 			verified = append(verified, candidate)
 		case percent == 0:
-			// Same directory, different content: not a member of this group.
+
 		default:
 			return nil, ReasonPartialOverlap
 		}
@@ -208,8 +184,6 @@ func verifyMembers(bucket []qbt.Torrent, filesByHash map[string]qbt.TorrentFiles
 	return verified, ""
 }
 
-// largest returns the group's representative: the largest member, ties by hash
-// ascending so the choice is deterministic (ADR 0018).
 func largest(members []qbt.Torrent) qbt.Torrent {
 	rep := members[0]
 	for _, member := range members[1:] {
@@ -254,9 +228,6 @@ func anyTagged(members []qbt.Torrent, tag string) bool {
 	return false
 }
 
-// anySeeding reports whether any member is seeding. A paused, stopped, errored
-// or missingFiles torrent is not seeding, so its group is dead (ADR 0018).
-//
 //nolint:exhaustive // Only the seeding states count; every other state is not seeding.
 func anySeeding(members []qbt.Torrent) bool {
 	for _, member := range members {
@@ -291,8 +262,6 @@ func sortGroupsByKeys(groups []PlanGroup, keys []models.KeyRule) {
 	})
 }
 
-// decidingKey is the first enabled key whose value differs from the group ranked
-// above it, else the first enabled key (ticket #6 shows it).
 func decidingKey(groups []PlanGroup, index int, keys []models.KeyRule) models.ConditionField {
 	first := firstEnabledKey(keys)
 	if index == 0 {
@@ -320,9 +289,6 @@ func firstEnabledKey(keys []models.KeyRule) models.ConditionField {
 	return ""
 }
 
-// groupKeyValues builds one ranking value per key for a group. Per-torrent keys
-// read the group's representative, GROUP_SIZE is the member count, and the
-// representative's size is the group's byte size (ADR 0018).
 func groupKeyValues(group PlanGroup, keys []models.KeyRule) []ranking.Value {
 	representative := group.Members[0]
 	values := make([]ranking.Value, len(keys))
@@ -332,8 +298,6 @@ func groupKeyValues(group PlanGroup, keys []models.KeyRule) []ranking.Value {
 	return values
 }
 
-// groupKeyValue is the two group-aware keys the representative cannot express.
-//
 //nolint:exhaustive // Only GROUP_SIZE and PRIVATE are group-aware; every other key reads the representative.
 func groupKeyValue(group PlanGroup, representative qbt.Torrent, field models.ConditionField) ranking.Value {
 	switch field {

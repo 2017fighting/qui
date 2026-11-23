@@ -16,7 +16,6 @@ import (
 
 var errNotStubbed = errors.New("deleteplan test: call not stubbed")
 
-// torrentRefs turns torrent values into the pointers a Sync snapshot returns.
 func torrentRefs(torrents []qbt.Torrent) []*qbt.Torrent {
 	refs := make([]*qbt.Torrent, 0, len(torrents))
 	for i := range torrents {
@@ -25,8 +24,6 @@ func torrentRefs(torrents []qbt.Torrent) []*qbt.Torrent {
 	return refs
 }
 
-// fakeSync stands in for the sync manager and the instance store. A nil field
-// fails the call, so a test stubs only what its path reads.
 type fakeSync struct {
 	getAllTorrentRefs    func(ctx context.Context, instanceID int) ([]*qbt.Torrent, error)
 	getTorrentFilesBatch func(ctx context.Context, instanceID int, hashes []string) (map[string]qbt.TorrentFiles, error)
@@ -35,7 +32,6 @@ type fakeSync struct {
 	getInstance          func(ctx context.Context, id int) (*models.Instance, error)
 }
 
-// stubSync installs a fakeSync on svc the first time it is called and returns it.
 func stubSync(svc *Service) *fakeSync {
 	if f, ok := svc.sync.(*fakeSync); ok {
 		return f
@@ -80,7 +76,6 @@ func (f *fakeSync) Get(ctx context.Context, id int) (*models.Instance, error) {
 	return f.getInstance(ctx, id)
 }
 
-// fakeClient is a healthChecker whose freshness a test can flip mid-run.
 type fakeClient struct {
 	healthy  atomic.Bool
 	lastSync atomic.Int64

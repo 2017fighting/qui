@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2025-2026, s0up and the autobrr contributors.
- * SPDX-License-Identifier: GPL-2.0-or-later
- */
 
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { cleanup, render } from "@testing-library/react"
@@ -9,7 +5,7 @@ import type { DeletePlanRunProgressRun } from "@/components/instances/preference
 
 vi.mock("react-i18next", async (importOriginal) => ({
   ...await importOriginal<typeof import("react-i18next")>(),
-  // Key echo: the assertion names the key the UI picked.
+
   useTranslation: () => ({
     t: (key: string | string[], opts?: Record<string, unknown>) => {
       const resolved = Array.isArray(key) ? key[0] : key
