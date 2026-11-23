@@ -119,7 +119,6 @@ func everyActionRules() []*models.Automation {
 				SkipSmallFiles:   &models.SkipSmallFilesAction{Enabled: true, MaxSizeBytes: 500 * 1024 * 1024},
 				ExternalProgram:  &models.ExternalProgramAction{Enabled: true, ProgramID: 1},
 				ExportToInstance: &models.ExportToInstanceAction{Enabled: true, TargetInstanceID: missingTargetInstanceID},
-				SkipSmallFiles:   &models.SkipSmallFilesAction{Enabled: true, MaxSizeBytes: 500 * 1024 * 1024},
 			},
 		},
 		{
