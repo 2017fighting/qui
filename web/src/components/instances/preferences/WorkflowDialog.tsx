@@ -131,7 +131,6 @@ const CONTENT_LAYOUT_OPTIONS = [
 
 const CONTENT_LAYOUT_VALUES = CONTENT_LAYOUT_OPTIONS.map(o => o.value)
 
-// Size units for display - storage is always bytes
 type SkipSmallFilesUnit = "MiB" | "GiB"
 
 const SIZE_UNIT_VALUES: SkipSmallFilesUnit[] = ["MiB", "GiB"]
@@ -272,8 +271,6 @@ function getDisabledStateValues(capabilities: Capabilities, t: ReturnType<typeof
 const SIMPLE_SORT_DISABLED_FIELDS = Object.keys(CONDITION_FIELDS)
   .filter(field => !SORT_FIELDS.has(field as ConditionField))
 
-// Ranking keys accept the sortable fields plus the two the sorter reads as a
-// number: the active group's member count and the private flag.
 const KEY_FIELD_SET = new Set<ConditionField>([
   ...SORT_FIELDS,
   "GROUP_SIZE",
@@ -535,9 +532,8 @@ type FormState = {
   exprExportPaused: boolean
   exprExportSkipChecking: boolean
   exprExportContentLayout: "" | "Original" | "Subfolder" | "NoSubfolder"
-  // Skip small files action settings
   skipSmallFilesEnabled: boolean
-  exprSkipSmallFilesSize?: number // in the unit below
+  exprSkipSmallFilesSize?: number
   exprSkipSmallFilesUnit: SkipSmallFilesUnit
   // Transfer to instance action settings
   transferToInstanceEnabled: boolean
@@ -673,8 +669,6 @@ type ShareLimitHydration = {
   value?: number
 }
 
-// hydrateSkipSmallFilesSize picks the unit that keeps the stored byte value exact:
-// a whole number of GiB shows as GiB, everything else as MiB.
 type SkipSmallFilesSizeHydration = {
   size: number
   unit: SkipSmallFilesUnit
@@ -2311,7 +2305,6 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
       }
     }
 
-    // Validate keys sorting configuration
     if (submitState.sortingType === "keys" && submitState.keyRules.length === 0) {
       toast.error(t("preferences.workflowDialog.toast.addRankingKey"))
       return
@@ -4101,7 +4094,6 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
                       </div>
                     )}
 
-                    {/* Skip small files - sets files under a size threshold to "Do not download" */}
                     {formState.skipSmallFilesEnabled && (
                       <div className="rounded-lg border p-3 space-y-3">
                         <div className="flex items-center justify-between">
