@@ -174,7 +174,7 @@ describe("WorkflowDialog tracker pattern", () => {
 
     fireEvent.change(screen.getByLabelText(key("nameLabel")), { target: { value: "Renamed" } })
     fireEvent.click(screen.getByRole("button", { name: key("save") }))
-    await waitFor(() => expect(mocks.save).toHaveBeenCalled(), { timeout: 2000 }).catch(() => { console.log('DBG errors:', mocks.error.mock.calls); console.log('DBG alertdialog:', document.querySelector('[role=alertdialog]')?.textContent?.slice(0, 400)) })
+    await waitFor(() => expect(mocks.save).toHaveBeenCalled(), { timeout: 2000 }).catch(() => { console.log("DBG errors:", mocks.error.mock.calls); console.log("DBG alertdialog:", document.querySelector("[role=alertdialog]")?.textContent?.slice(0, 400)) })
     const payload = mocks.save.mock.calls[0][2]
     expect(payload.trackerPattern).toBe(trackerPattern)
     expect(payload).not.toHaveProperty("trackerDomains")
@@ -912,7 +912,6 @@ describe("WorkflowDialog ranking keys", () => {
 
     expect(screen.getAllByRole("switch", { name: key("priority.enableKey") })).toHaveLength(2)
 
-    // Move the first key down, so NUM_COMPLETE leads the chain, then switch it off.
     fireEvent.click(screen.getAllByRole("button", { name: key("priority.moveKeyDown") })[0])
     fireEvent.click(screen.getAllByRole("switch", { name: key("priority.enableKey") })[0])
 
@@ -955,14 +954,10 @@ describe("WorkflowDialog skip small files", () => {
     mocks.save.mockResolvedValue(skipRule)
     const client = renderDialog(skipRule)
 
-    // The FieldHelp trigger sits inside the label, so the number input is the dialog's only spinbutton.
     const input = screen.getByRole("spinbutton") as HTMLInputElement
     expect(input.value).toBe("2")
-    // The unit select renders the label in both the trigger and a hidden native option.
     expect(screen.getAllByText("GiB").length).toBeGreaterThan(0)
 
-    // Upstream v1.36 closes the editor without a request when nothing changed since it
-    // loaded, so the save needs an edit.
     fireEvent.change(screen.getByLabelText(key("nameLabel")), { target: { value: "Renamed" } })
     fireEvent.click(screen.getByRole("button", { name: key("save") }))
     await waitFor(() => expect(mocks.save).toHaveBeenCalled())
@@ -978,11 +973,9 @@ describe("WorkflowDialog skip small files", () => {
     mocks.save.mockResolvedValue(skipRule)
     const client = renderDialog({ ...skipRule, conditions: { schemaVersion: "1", skipSmallFiles: { enabled: true, maxSizeBytes: 0 } } })
 
-    // The FieldHelp trigger sits inside the label, so the number input is the dialog's only spinbutton.
     const input = screen.getByRole("spinbutton") as HTMLInputElement
     fireEvent.change(input, { target: { value: "" } })
 
-    // Both need an edit: upstream v1.36 closes the editor on Save with no change since it loaded.
     fireEvent.change(screen.getByLabelText(key("nameLabel")), { target: { value: "Renamed" } })
     for (const control of [
       screen.getByRole("button", { name: key("save") }),
@@ -1005,7 +998,6 @@ describe("WorkflowDialog skip small files", () => {
     fireEvent.keyDown(screen.getByText(key("actions.addAction")), { key: "ArrowDown" })
     fireEvent.click(await screen.findByRole("option", { name: key("actions.skipSmallFiles") }))
 
-    // The FieldHelp trigger sits inside the label, so the number input is the dialog's only spinbutton.
     const input = screen.getByRole("spinbutton") as HTMLInputElement
     expect(input.value).toBe("500")
     expect(screen.getAllByText("MiB").length).toBeGreaterThan(0)
@@ -1016,7 +1008,6 @@ describe("WorkflowDialog skip small files", () => {
     mocks.instancesQuery.data = []
     const client = renderDialog({ ...skipRule, conditions: { schemaVersion: "1", skipSmallFiles: { enabled: true, maxSizeBytes: 524288 } } })
 
-    // The FieldHelp trigger sits inside the label, so the number input is the dialog's only spinbutton.
     const input = screen.getByRole("spinbutton") as HTMLInputElement
     fireEvent.change(input, { target: { value: "0.5" } })
     fireEvent.change(screen.getByLabelText(key("nameLabel")), { target: { value: "Renamed" } })
@@ -1037,8 +1028,6 @@ describe("WorkflowDialog skip small files", () => {
     mocks.capabilitiesQuery.data = undefined
   })
 
-  // Issue #12: Skip small files is the only action here, so the condition editor had no
-  // action to read the condition from and fell back to "No conditions".
   it("shows the saved condition when the action is the rule's only action", () => {
     mocks.instancesQuery.data = []
     const client = renderDialog({
@@ -1067,8 +1056,6 @@ describe("WorkflowDialog skip small files", () => {
     client.clear()
   })
 
-  // The same gap made Save drop the condition: the form rebuilt skipSmallFiles from an empty
-  // actionCondition, so an edit that touched nothing else erased the condition from the rule.
   it("keeps the saved condition when the rule is saved without touching it", async () => {
     mocks.instancesQuery.data = []
     mocks.save.mockResolvedValue(skipRule)
@@ -1091,6 +1078,7 @@ describe("WorkflowDialog skip small files", () => {
       },
     })
 
+    fireEvent.change(screen.getByLabelText(key("nameLabel")), { target: { value: "Renamed" } })
     fireEvent.click(screen.getByRole("button", { name: key("save") }))
     await waitFor(() => expect(mocks.save).toHaveBeenCalled())
     expect(mocks.save.mock.calls[0][2].conditions.skipSmallFiles.condition).toEqual({

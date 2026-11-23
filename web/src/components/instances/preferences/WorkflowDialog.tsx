@@ -265,8 +265,6 @@ function getDisabledStateValues(capabilities: Capabilities, t: ReturnType<typeof
 const SIMPLE_SORT_DISABLED_FIELDS = Object.keys(CONDITION_FIELDS)
   .filter(field => !SORT_FIELDS.has(field as ConditionField))
 
-// Ranking keys accept the sortable fields plus the two the sorter reads as a
-// number: the active group's member count and the private flag.
 const KEY_FIELD_SET = new Set<ConditionField>([
   ...SORT_FIELDS,
   "GROUP_SIZE",
@@ -632,8 +630,6 @@ type ShareLimitHydration = {
   value?: number
 }
 
-// hydrateSkipSmallFilesSize picks the unit that keeps the stored byte value exact:
-// a whole number of GiB shows as GiB, everything else as MiB.
 type SkipSmallFilesSizeHydration = {
   size: number
   unit: SkipSmallFilesUnit

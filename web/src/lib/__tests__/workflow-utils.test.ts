@@ -16,7 +16,6 @@ import {
   getTrackerTokens,
   firstActionCondition,
   hasMixedActionConditions,
-  hasAnyCondition,
   loadWorkflowNames,
   parseImportJSON,
   toCopyInput,
@@ -51,45 +50,6 @@ function makeAutomation(overrides: Partial<Automation> = {}): Automation {
     ...overrides,
   }
 }
-
-describe("hasAnyCondition", () => {
-  const condition: RuleCondition = {
-    operator: "AND",
-    conditions: [{ field: "STATE", operator: "EQUAL", value: "downloading" }],
-  }
-
-  it.each([
-    "speedLimits",
-    "shareLimits",
-    "pause",
-    "resume",
-    "recheck",
-    "reannounce",
-    "autoManagement",
-    "delete",
-    "tag",
-    "category",
-    "move",
-    "externalProgram",
-    "exportToInstance",
-    "skipSmallFiles",
-  ] as const)("finds the condition on a %s-only rule", (action) => {
-    expect(hasAnyCondition({ schemaVersion: "1", [action]: { enabled: true, condition } })).toBe(true)
-  })
-
-  it("finds a condition on any entry of the tags array", () => {
-    expect(hasAnyCondition({
-      schemaVersion: "1",
-      tags: [{ enabled: true, tags: ["a"], mode: "full" }, { enabled: true, tags: ["b"], mode: "full", condition }],
-    })).toBe(true)
-  })
-
-  it("reports no condition when every action is disabled or carries none", () => {
-    expect(hasAnyCondition({ schemaVersion: "1" })).toBe(false)
-    expect(hasAnyCondition({ schemaVersion: "1", pause: { enabled: true } })).toBe(false)
-    expect(hasAnyCondition({ schemaVersion: "1", skipSmallFiles: { enabled: false, maxSizeBytes: 1, condition } })).toBe(false)
-  })
-})
 
 describe("toExportFormat", () => {
   it("omits id, instanceId, sortOrder, enabled", () => {
@@ -372,7 +332,7 @@ describe("parseImportJSON", () => {
 
 })
 
-describe("hasAnyCondition", () => {
+describe("firstActionCondition finds the condition of any running action, so the overview never shows an All torrents badge for a rule that has one", () => {
   const condition: RuleCondition = {
     operator: "AND",
     conditions: [{ field: "STATE", operator: "EQUAL", value: "downloading" }],
@@ -394,20 +354,20 @@ describe("hasAnyCondition", () => {
     "exportToInstance",
     "skipSmallFiles",
   ] as const)("finds the condition on a %s-only rule", (action) => {
-    expect(hasAnyCondition({ schemaVersion: "1", [action]: { enabled: true, condition } })).toBe(true)
+    expect(firstActionCondition({ ...makeAutomation(), conditions: { schemaVersion: "1", [action]: { enabled: true, condition } } as ActionConditions })).toEqual(condition)
   })
 
   it("finds a condition on any entry of the tags array", () => {
-    expect(hasAnyCondition({
+    expect(firstActionCondition({ ...makeAutomation(), conditions: {
       schemaVersion: "1",
       tags: [{ enabled: true, tags: ["a"], mode: "full" }, { enabled: true, tags: ["b"], mode: "full", condition }],
-    })).toBe(true)
+    } })).toEqual(condition)
   })
 
   it("reports no condition when every action is disabled or carries none", () => {
-    expect(hasAnyCondition({ schemaVersion: "1" })).toBe(false)
-    expect(hasAnyCondition({ schemaVersion: "1", pause: { enabled: true } })).toBe(false)
-    expect(hasAnyCondition({ schemaVersion: "1", skipSmallFiles: { enabled: false, maxSizeBytes: 1, condition } })).toBe(false)
+    expect(firstActionCondition({ ...makeAutomation(), conditions: { schemaVersion: "1" } })).toBeNull()
+    expect(firstActionCondition({ ...makeAutomation(), conditions: { schemaVersion: "1", pause: { enabled: true } } })).toBeNull()
+    expect(firstActionCondition({ ...makeAutomation(), conditions: { schemaVersion: "1", skipSmallFiles: { enabled: false, maxSizeBytes: 1, condition } } })).toBeNull()
   })
 })
 
