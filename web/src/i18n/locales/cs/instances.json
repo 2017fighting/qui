@@ -3,30 +3,17 @@
   "card": {
     "status": {
       "disabled": "Vypnuto",
-      "enabled": "Zapnuto",
       "connected": "Připojeno",
       "disconnected": "Odpojeno"
     },
     "tooltips": {
       "moveUp": "Přesunout nahoru",
-      "moveDown": "Přesunout dolů",
-      "disableInstance": "Vypnout instanci",
-      "enableInstance": "Zapnout instanci"
+      "moveDown": "Přesunout dolů"
     },
     "actions": {
       "testConnection": "Testovat připojení",
       "delete": "Smazat",
-      "changeIcon": "Změnit ikonu",
-      "edit": "Editovat"
-    },
-    "labels": {
-      "username": "Uživatelské jméno:",
-      "basicAuth": "Základní autentizace:",
-      "tlsVerification": "TLS ověření:",
-      "tlsSkipped": "Přeskočit",
-      "tlsStrict": "Striktní",
-      "localFileAccess": "Lokální přístup k souborům:",
-      "testingConnection": "Testuji připojení..."
+      "changeIcon": "Změnit ikonu"
     },
     "deleteDialog": {
       "title": "Smazat instanci",
@@ -36,7 +23,6 @@
     },
     "toast": {
       "instanceDisabledTitle": "Instance vypnutá",
-      "testDisabledDescription": "Povolte instanci před testováním připojení.",
       "testSuccessTitle": "Test připojení úspěšný",
       "testSuccessDescription": "Úspěšně připojeno k instanci qBittorrentu",
       "testFailedTitle": "Test připojení selhal",
@@ -102,20 +88,15 @@
     },
     "buttons": {
       "updateInstance": "Aktualizovat instanci",
-      "addInstance": "Přidat instanci",
-      "cancel": "Zrušit",
-      "saving": "Ukládám..."
+      "addInstance": "Přidat instanci"
     },
     "toast": {
       "instanceUpdatedTitle": "Instance aktualizována",
       "instanceUpdatedDescription": "Instance aktualizována úspěšně. Testování připojení probíhá v pozadí...",
-      "updateFailedTitle": "Aktualizace selhala",
       "updateFailedDescription": "Nepodařilo se aktualizovat instanci",
       "instanceCreatedTitle": "Instance vytvořena",
       "instanceCreatedDescription": "Instance vytvořena úspěšně. Testování připojení probíhá v pozadí...",
-      "createFailedTitle": "Vytvoření selhalo",
-      "createFailedDescription": "Nepodařilo se vytvořit instanci",
-      "missingCredentialsTitle": "Chybí přihlašovací údaje"
+      "createFailedDescription": "Nepodařilo se vytvořit instanci"
     },
     "authType": {
       "none": "Žádná",
@@ -782,8 +763,6 @@
       "noInstancesDescription": "Žádné instance nenastaveny. Přidejte jednu v Nastavení pro použití této služby.",
       "tooltip": "Vyhledává soubory na disku, které nejsou přidruženy k žádnému torrentu v qBittorrentu.\nPotřebuje přístup k souborům každé instance. Povolte „Lokální přístup k souborům“ nebo nastavte přístup přes SSH v nastavení instance.",
       "description": "Vyhledává soubory v adresářích pro stahování a identifikuje nepárové soubory (sirotky) pro vyčištění.",
-      "noLocalAccess": "Žádný přístup k místnímu souborovému systému",
-      "noLocalAccessTooltip": "qui a qBittorrent musí běžet na stejném stroji. Povolte \"Místní souborový systém\" v nastavení instance pro použití vyhledávání sirotků.",
       "remoteLimits": "Mazání a automatické vyčištění na vzdálené instanci potřebují identitu souborů, kterou qui přečte jen tehdy, když mu server dovolí spouštět GNU find a stat.",
       "remoteNoIdentity": "Tato vzdálená instance je spouštět nedovoluje, takže qui nepozná, že dvě cesty vedou ke stejnému souboru, a soubor dostupný přes druhou cestu, například přes bind mount, se může objevit v seznamu, i když ho používá torrent. Výsledky vyhledávání zde lze zobrazit a exportovat, ale ne smazat.",
       "on": "Zapnuto",
@@ -1502,7 +1481,6 @@
         "defaultSource": "Výchozí (qBittorrent)",
         "pathSource": "Cesta na serveru",
         "pathSourceWindowsUnsupported": "Cesta na serveru (nepodporováno na Windows)",
-        "pathSourceLocalAccessRequired": "Cesta na serveru (vyžaduje místní přístup)",
         "qbitPathSource": "Cesta na hostiteli qBittorrent",
         "qbitPathSourceUnsupported": "Cesta na hostiteli qBittorrent (vyžaduje qBittorrent 5.3)",
         "pathPlaceholder": "/mnt/downloads",
@@ -1510,7 +1488,6 @@
         "qbitPathHelp": "Zadejte cestu na hostiteli qBittorrent. Volné místo měří qBittorrent, takže qui k tomuto disku nepotřebuje přístup.",
         "errors": {
           "unsupportedWindows": "Zdroj volného místa založený na cestě není podporován na Windows.",
-          "localAccessRequired": "Zdroj volného místa založený na cestě vyžaduje místní přístup k souborovému systému.",
           "qbitPathUnsupported": "Tato instance je starší než qBittorrent 5.3 a neumí hlásit volné místo pro cestu.",
           "pathRequired": "Cesta je vyžadována při použití \"Cesta na serveru\".",
           "filesystemAccessRequired": "Zdroj volného místa založený na cestě vyžaduje lokální přístup k souborovému systému nebo přístup přes SSH.",
@@ -1625,8 +1602,6 @@
       "enableDryRunPrompt": {
         "title": "Povolit simulaci?",
         "description": "Simulace neprovádí žádné akce. Můžete zkontrolovat ovlivněné torrenty v logu aktivit.",
-        "enableWithout": "Povolit bez simulace",
-        "enableWith": "Povolit se simulací",
         "saveAndEnable": "Uložit a povolit"
       },
       "customGroup": {
@@ -1733,7 +1708,6 @@
         "pathSourceUnsupportedWindows": "Zdroj volného místa založený na cestě není podporován na Windows. Přepnuto na výchozí (qBittorrent).",
         "qbitPathSourceUnsupported": "Tato instance neumí hlásit volné místo pro cestu. Přepnuto na výchozí zdroj.",
         "switchFreeSpaceSourceDefault": "Přepnout zdroj volného místa na výchozí (qBittorrent)",
-        "enableLocalAccessOrDefault": "Povolit místní přístup k souborovému systému v nastavení instance, nebo použít výchozí (qBittorrent)",
         "enterPathOrDefault": "Zadejte cestu nebo přepněte zdroj volného místa zpět na výchozí (qBittorrent)",
         "addScoreRule": "Přidat alespoň jedno pravidlo skóre pro řazení skóre",
         "addRankingKey": "Přidejte alespoň jeden řadicí klíč pro řazení podle klíčů",

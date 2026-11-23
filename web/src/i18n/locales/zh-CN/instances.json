@@ -3,30 +3,17 @@
   "card": {
     "status": {
       "disabled": "已禁用",
-      "enabled": "已启用",
       "connected": "已连接",
       "disconnected": "已断开"
     },
     "tooltips": {
       "moveUp": "上移",
-      "moveDown": "下移",
-      "disableInstance": "禁用实例",
-      "enableInstance": "启用实例"
+      "moveDown": "下移"
     },
     "actions": {
       "testConnection": "测试连接",
       "delete": "删除",
-      "changeIcon": "更改图标",
-      "edit": "编辑"
-    },
-    "labels": {
-      "username": "用户名：",
-      "basicAuth": "基本认证：",
-      "tlsVerification": "TLS 验证：",
-      "tlsSkipped": "已跳过",
-      "tlsStrict": "严格",
-      "localFileAccess": "本地文件系统访问：",
-      "testingConnection": "正在测试连接..."
+      "changeIcon": "更改图标"
     },
     "deleteDialog": {
       "title": "删除实例",
@@ -36,7 +23,6 @@
     },
     "toast": {
       "instanceDisabledTitle": "实例已禁用",
-      "testDisabledDescription": "请先启用实例，再测试连接。",
       "testSuccessTitle": "连接测试成功",
       "testSuccessDescription": "已成功连接到 qBittorrent 实例",
       "testFailedTitle": "连接测试失败",
@@ -102,20 +88,15 @@
     },
     "buttons": {
       "updateInstance": "更新实例",
-      "addInstance": "添加实例",
-      "cancel": "取消",
-      "saving": "保存中..."
+      "addInstance": "添加实例"
     },
     "toast": {
       "instanceUpdatedTitle": "实例已更新",
       "instanceUpdatedDescription": "实例更新成功。正在后台测试连接...",
-      "updateFailedTitle": "更新失败",
       "updateFailedDescription": "无法更新实例",
       "instanceCreatedTitle": "实例已创建",
       "instanceCreatedDescription": "实例创建成功。正在后台测试连接...",
-      "createFailedTitle": "创建失败",
-      "createFailedDescription": "无法创建实例",
-      "missingCredentialsTitle": "缺少凭据"
+      "createFailedDescription": "无法创建实例"
     },
     "authType": {
       "none": "无",
@@ -740,8 +721,6 @@
       "noInstancesDescription": "未配置实例。请在设置中添加实例以使用此服务。",
       "tooltip": "查找磁盘上与 qBittorrent 中任何种子都不关联的文件。\n需要访问每个实例的文件。请在实例设置中启用“本地文件系统访问”或设置 SSH 访问。",
       "description": "扫描下载目录并识别孤立文件以进行清理。",
-      "noLocalAccess": "无本地访问权限",
-      "noLocalAccessTooltip": "qui 和 qBittorrent 必须运行在同一台机器上。在实例设置中启用\"本地文件系统访问\"以使用孤立项目扫描。",
       "remoteLimits": "在远程实例上删除和自动清理需要文件标识，只有服务器允许 qui 运行 GNU find 和 stat 时才能读取。",
       "remoteNoIdentity": "此远程实例不允许这样做，因此 qui 无法判断两个路径是否指向同一文件，可通过第二个路径访问的文件（例如通过 bind mount）即使正被种子使用，也可能出现在列表中。此处的扫描只能预览和导出，不能删除。",
       "on": "开",
@@ -1432,7 +1411,6 @@
         "defaultSource": "默认（qBittorrent）",
         "pathSource": "服务器路径",
         "pathSourceWindowsUnsupported": "服务器路径（Windows 不支持）",
-        "pathSourceLocalAccessRequired": "服务器路径（需要本地访问权限）",
         "qbitPathSource": "qBittorrent 主机上的路径",
         "qbitPathSourceUnsupported": "qBittorrent 主机上的路径（需要 qBittorrent 5.3）",
         "pathPlaceholder": "/mnt/downloads",
@@ -1440,7 +1418,6 @@
         "qbitPathHelp": "输入 qBittorrent 主机上的路径。可用空间由 qBittorrent 测量，qui 无需访问该磁盘。",
         "errors": {
           "unsupportedWindows": "Windows 不支持基于路径的可用空间来源。",
-          "localAccessRequired": "基于路径的可用空间来源需要本地文件系统访问权限。",
           "qbitPathUnsupported": "此实例的版本早于 qBittorrent 5.3，无法报告某个路径的可用空间。",
           "pathRequired": "使用\"服务器路径\"时，路径为必填项。",
           "filesystemAccessRequired": "基于路径的可用空间来源需要本地或 SSH 文件系统访问权限。",
@@ -1555,8 +1532,6 @@
       "enableDryRunPrompt": {
         "title": "启用模拟运行？",
         "description": "模拟运行会模拟所有操作而不做任何实际更改。你可以在活动日志中查看受影响的种子。",
-        "enableWithout": "不启用模拟运行",
-        "enableWith": "启用模拟运行",
         "saveAndEnable": "保存并启用"
       },
       "customGroup": {
@@ -1659,7 +1634,6 @@
         "pathSourceUnsupportedWindows": "Windows 不支持基于路径的可用空间来源。已切换到 qBittorrent 默认值。",
         "qbitPathSourceUnsupported": "此实例无法报告某个路径的可用空间，已切换到默认来源。",
         "switchFreeSpaceSourceDefault": "将可用空间来源切换为默认（qBittorrent）",
-        "enableLocalAccessOrDefault": "请在实例设置中启用本地文件系统访问，或使用默认（qBittorrent）",
         "enterPathOrDefault": "请输入路径或将可用空间来源切换回默认（qBittorrent）",
         "addScoreRule": "得分排序至少需要一条得分规则",
         "addRankingKey": "请为排序键排序添加至少一个排序键",

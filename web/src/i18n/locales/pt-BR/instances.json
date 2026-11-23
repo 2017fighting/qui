@@ -3,30 +3,17 @@
   "card": {
     "status": {
       "disabled": "Desativado",
-      "enabled": "Ativado",
       "connected": "Conectado",
       "disconnected": "Desconectado"
     },
     "tooltips": {
       "moveUp": "Mover para cima",
-      "moveDown": "Mover para baixo",
-      "disableInstance": "Desativar instância",
-      "enableInstance": "Ativar instância"
+      "moveDown": "Mover para baixo"
     },
     "actions": {
       "testConnection": "Testar Conexão",
       "delete": "Excluir",
-      "changeIcon": "Alterar ícone",
-      "edit": "Editar"
-    },
-    "labels": {
-      "username": "Usuário:",
-      "basicAuth": "Basic Auth:",
-      "tlsVerification": "Verificação TLS:",
-      "tlsSkipped": "Ignorada",
-      "tlsStrict": "Rigorosa",
-      "localFileAccess": "Acesso a Arquivo Local:",
-      "testingConnection": "Testando conexão..."
+      "changeIcon": "Alterar ícone"
     },
     "deleteDialog": {
       "title": "Excluir Instância",
@@ -36,7 +23,6 @@
     },
     "toast": {
       "instanceDisabledTitle": "Instância Desativada",
-      "testDisabledDescription": "Ative a instância antes de testar a conexão.",
       "testSuccessTitle": "Conexão Bem-Sucedida",
       "testSuccessDescription": "Conectado com sucesso à instância do qBittorrent",
       "testFailedTitle": "Falha na Conexão",
@@ -102,20 +88,15 @@
     },
     "buttons": {
       "updateInstance": "Atualizar Instância",
-      "addInstance": "Adicionar Instância",
-      "cancel": "Cancelar",
-      "saving": "Salvando..."
+      "addInstance": "Adicionar Instância"
     },
     "toast": {
       "instanceUpdatedTitle": "Instância Atualizada",
       "instanceUpdatedDescription": "Instância atualizada com sucesso. Testando conexão em segundo plano...",
-      "updateFailedTitle": "Falha ao Atualizar",
       "updateFailedDescription": "Falha ao atualizar a instância",
       "instanceCreatedTitle": "Instância Criada",
       "instanceCreatedDescription": "Instância criada com sucesso. Testando conexão em segundo plano...",
-      "createFailedTitle": "Falha ao Criar",
-      "createFailedDescription": "Falha ao criar a instância",
-      "missingCredentialsTitle": "Credenciais Ausentes"
+      "createFailedDescription": "Falha ao criar a instância"
     },
     "authType": {
       "none": "Nenhuma",
@@ -761,8 +742,6 @@
       "noInstancesDescription": "Nenhuma instância configurada.",
       "tooltip": "Busca arquivos no disco que não estão associados a nenhum torrent no qBittorrent.\nPrecisa de acesso aos arquivos de cada instância. Ative \"Acesso ao Sistema de Arquivos Local\" ou configure o acesso SSH nas configurações da instância.",
       "description": "Analise seus diretórios e ache arquivos não associados a torrents para limpar o disco.",
-      "noLocalAccess": "Acesso Local Ausente",
-      "noLocalAccessTooltip": "Você precisa ativar o 'Acesso ao Sistema de Arquivos Local' na configuração da instância.",
       "remoteLimits": "A exclusão e a auto-limpeza em uma instância remota precisam da identidade dos arquivos, que o qui só consegue ler quando o servidor permite executar GNU find e stat.",
       "remoteNoIdentity": "Esta instância remota não permite isso, então o qui não consegue saber quando dois caminhos são o mesmo arquivo, e um arquivo acessível por um segundo caminho, como um bind mount, pode aparecer na lista mesmo que um torrent o utilize. As varreduras aqui podem ser visualizadas e exportadas, mas não excluídas.",
       "on": "Ligado",
@@ -1464,7 +1443,6 @@
         "defaultSource": "Pegar pelo próprio qBittorrent",
         "pathSource": "Localização Manual Exata",
         "pathSourceWindowsUnsupported": "Indisponível (Em Windows você deve usar pelo qBittorrent)",
-        "pathSourceLocalAccessRequired": "Localização Manual (Requer que o Acesso Local esteja ativado)",
         "qbitPathSource": "Caminho no host do qBittorrent",
         "qbitPathSourceUnsupported": "Caminho no host do qBittorrent (requer qBittorrent 5.3)",
         "pathPlaceholder": "/mnt/hd1",
@@ -1472,7 +1450,6 @@
         "qbitPathHelp": "Informe um caminho no host do qBittorrent. O qBittorrent mede o espaço livre, então o qui não precisa de acesso a esse disco.",
         "errors": {
           "unsupportedWindows": "Função não existe se instalada em Windows.",
-          "localAccessRequired": "A origem de espaço livre por caminho requer o \"Acesso ao Sistema de Arquivos Local\".",
           "qbitPathUnsupported": "Esta instância é anterior ao qBittorrent 5.3 e não informa o espaço livre de um caminho.",
           "pathRequired": "Você escolheu modo Manual, portanto escreva o caminho do HD.",
           "filesystemAccessRequired": "A origem de espaço livre por caminho requer acesso ao sistema de arquivos local ou via SSH.",
@@ -1587,8 +1564,6 @@
       "enableDryRunPrompt": {
         "title": "Ativar simulação?",
         "description": "A simulação executa todas as ações sem alterar nada. Você pode revisar os torrents afetados no histórico.",
-        "enableWithout": "Não, Ativar Direto",
-        "enableWith": "Sim, Modo Simulação (Recomendado)",
         "saveAndEnable": "Salvar e ativar"
       },
       "customGroup": {
@@ -1693,7 +1668,6 @@
         "pathSourceUnsupportedWindows": "Voltamos a opção de Verificação de HD para (Pegar pelo próprio qB). Windows é incompatível.",
         "qbitPathSourceUnsupported": "Esta instância não informa o espaço livre de um caminho. Alterado para a origem padrão.",
         "switchFreeSpaceSourceDefault": "Ajustado ao original (qB).",
-        "enableLocalAccessOrDefault": "Ative o Acesso ao Sistema de Arquivos Local nas configurações da instância, ou use \"Pegar pelo próprio qBittorrent\"",
         "enterPathOrDefault": "Você precisa de um caminho na caixa para usar esta opção.",
         "addScoreRule": "Adicione as regras da sua prioridade.",
         "addRankingKey": "Adicione pelo menos uma chave de classificação para a ordenação por chaves",

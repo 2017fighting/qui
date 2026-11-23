@@ -3,30 +3,17 @@
   "card": {
     "status": {
       "disabled": "Deaktiviert",
-      "enabled": "Aktiviert",
       "connected": "Verbunden",
       "disconnected": "Getrennt"
     },
     "tooltips": {
       "moveUp": "Nach oben",
-      "moveDown": "Nach unten",
-      "disableInstance": "Instanz deaktivieren",
-      "enableInstance": "Instanz aktivieren"
+      "moveDown": "Nach unten"
     },
     "actions": {
       "testConnection": "Verbindung testen",
       "delete": "Löschen",
-      "changeIcon": "Symbol ändern",
-      "edit": "Bearbeiten"
-    },
-    "labels": {
-      "username": "Benutzername:",
-      "basicAuth": "Basic Auth:",
-      "tlsVerification": "TLS-Überprüfung:",
-      "tlsSkipped": "Übersprungen",
-      "tlsStrict": "Strikt",
-      "localFileAccess": "Lokaler Dateizugriff:",
-      "testingConnection": "Verbindung wird getestet..."
+      "changeIcon": "Symbol ändern"
     },
     "deleteDialog": {
       "title": "Instanz löschen",
@@ -36,7 +23,6 @@
     },
     "toast": {
       "instanceDisabledTitle": "Instanz deaktiviert",
-      "testDisabledDescription": "Aktiviere die Instanz, bevor du die Verbindung testest.",
       "testSuccessTitle": "Verbindungstest erfolgreich",
       "testSuccessDescription": "Erfolgreich mit der qBittorrent-Instanz verbunden",
       "testFailedTitle": "Verbindungstest fehlgeschlagen",
@@ -102,20 +88,15 @@
     },
     "buttons": {
       "updateInstance": "Instanz aktualisieren",
-      "addInstance": "Instanz hinzufügen",
-      "cancel": "Abbrechen",
-      "saving": "Wird gespeichert..."
+      "addInstance": "Instanz hinzufügen"
     },
     "toast": {
       "instanceUpdatedTitle": "Instanz aktualisiert",
       "instanceUpdatedDescription": "Instanz erfolgreich aktualisiert. Verbindungstest läuft im Hintergrund...",
-      "updateFailedTitle": "Aktualisierung fehlgeschlagen",
       "updateFailedDescription": "Aktualisieren der Instanz fehlgeschlagen",
       "instanceCreatedTitle": "Instanz erstellt",
       "instanceCreatedDescription": "Instanz erfolgreich erstellt. Verbindungstest läuft im Hintergrund...",
-      "createFailedTitle": "Erstellen fehlgeschlagen",
-      "createFailedDescription": "Erstellen der Instanz fehlgeschlagen",
-      "missingCredentialsTitle": "Fehlende Anmeldedaten"
+      "createFailedDescription": "Erstellen der Instanz fehlgeschlagen"
     },
     "authType": {
       "none": "Keine",
@@ -761,8 +742,6 @@
       "noInstancesDescription": "Keine Instanzen konfiguriert. Füge in den Einstellungen eine hinzu, um diesen Dienst zu nutzen.",
       "tooltip": "Findet Dateien auf dem Datenträger, die keinem Torrent in qBittorrent zugeordnet sind.\nBraucht Zugriff auf die Dateien jeder Instanz. Aktiviere in den Instanzeinstellungen „Lokaler Dateisystemzugriff“ oder richte dort SSH-Zugriff ein.",
       "description": "Durchsucht Download-Verzeichnisse und identifiziert Orphan-Dateien zum Aufräumen.",
-      "noLocalAccess": "Kein lokaler Zugriff",
-      "noLocalAccessTooltip": "qui und qBittorrent müssen auf derselben Maschine laufen. Aktiviere \"Lokaler Dateisystemzugriff\" in den Instanzeinstellungen, um den Orphan-Scan zu nutzen.",
       "remoteLimits": "Löschen und Auto-Cleanup auf einer Remote-Instanz brauchen die Dateiidentität, die qui nur lesen kann, wenn der Server GNU find und stat ausführen lässt.",
       "remoteNoIdentity": "Diese Remote-Instanz lässt das nicht zu. qui erkennt daher nicht, wenn zwei Pfade dieselbe Datei sind, und eine Datei, die über einen zweiten Pfad erreichbar ist, etwa per Bind-Mount, kann gelistet werden, obwohl ein Torrent sie nutzt. Scans hier lassen sich ansehen und exportieren, aber nicht löschen.",
       "on": "An",
@@ -1464,7 +1443,6 @@
         "defaultSource": "Standard (qBittorrent)",
         "pathSource": "Pfad auf dem Server",
         "pathSourceWindowsUnsupported": "Pfad auf dem Server (unter Windows nicht unterstützt)",
-        "pathSourceLocalAccessRequired": "Pfad auf dem Server (erfordert lokalen Zugriff)",
         "qbitPathSource": "Pfad auf dem qBittorrent-Host",
         "qbitPathSourceUnsupported": "Pfad auf dem qBittorrent-Host (erfordert qBittorrent 5.3)",
         "pathPlaceholder": "/mnt/downloads",
@@ -1472,7 +1450,6 @@
         "qbitPathHelp": "Geben Sie einen Pfad auf dem qBittorrent-Host ein. qBittorrent misst den freien Speicher, qui braucht also keinen Zugriff auf diesen Datenträger.",
         "errors": {
           "unsupportedWindows": "Die pfadbasierte Quelle für freien Speicher wird unter Windows nicht unterstützt.",
-          "localAccessRequired": "Die pfadbasierte Quelle für freien Speicher erfordert lokalen Dateisystemzugriff.",
           "qbitPathUnsupported": "Diese Instanz ist älter als qBittorrent 5.3 und kann keinen freien Speicher für einen Pfad melden.",
           "pathRequired": "Bei Verwendung von \"Pfad auf dem Server\" ist ein Pfad erforderlich.",
           "filesystemAccessRequired": "Die pfadbasierte Quelle für freien Speicher erfordert lokalen oder SSH-Dateisystemzugriff.",
@@ -1587,8 +1564,6 @@
       "enableDryRunPrompt": {
         "title": "Probelauf aktivieren?",
         "description": "Der Probelauf simuliert alle Aktionen, ohne etwas zu ändern. Du kannst die betroffenen Torrents im Aktivitätsprotokoll prüfen.",
-        "enableWithout": "Ohne Probelauf aktivieren",
-        "enableWith": "Mit Probelauf aktivieren",
         "saveAndEnable": "Speichern und aktivieren"
       },
       "customGroup": {
@@ -1693,7 +1668,6 @@
         "pathSourceUnsupportedWindows": "Die pfadbasierte Quelle für freien Speicher wird unter Windows nicht unterstützt. Zum qBittorrent-Standard gewechselt.",
         "qbitPathSourceUnsupported": "Diese Instanz kann keinen freien Speicher für einen Pfad melden. Zur Standardquelle gewechselt.",
         "switchFreeSpaceSourceDefault": "Quelle für freien Speicher auf Standard (qBittorrent) umstellen",
-        "enableLocalAccessOrDefault": "Aktiviere den lokalen Dateisystemzugriff in den Instanzeinstellungen oder verwende Standard (qBittorrent)",
         "enterPathOrDefault": "Gib einen Pfad ein oder stelle die Quelle für freien Speicher zurück auf Standard (qBittorrent)",
         "addScoreRule": "Füge mindestens eine Score-Regel für die Score-Sortierung hinzu",
         "addRankingKey": "Füge mindestens einen Rangfolge-Schlüssel für die Sortierung nach Schlüsseln hinzu",
