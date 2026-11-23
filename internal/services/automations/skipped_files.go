@@ -11,8 +11,6 @@ import (
 	qbt "github.com/autobrr/go-qbittorrent"
 )
 
-// loadTorrentFiles fetches the file list of every given torrent in one batch.
-// Torrents whose metadata has not downloaded get no entry.
 func (s *Service) loadTorrentFiles(ctx context.Context, instanceID int, torrents []*qbt.Torrent) (map[string]qbt.TorrentFiles, error) {
 	hashes := make([]string, 0, len(torrents))
 	for _, t := range torrents {
@@ -29,7 +27,7 @@ func buildSkippedFilesResult(filesByHash map[string]qbt.TorrentFiles) map[string
 	result := make(map[string]bool, len(filesByHash))
 	for hash, files := range filesByHash {
 		if len(files) == 0 {
-			continue // No metadata yet
+			continue
 		}
 		result[hash] = slices.ContainsFunc(files, func(f qbt.TorrentFile) bool { return f.Priority == 0 })
 	}

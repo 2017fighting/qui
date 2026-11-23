@@ -11,8 +11,6 @@ import (
 	"github.com/autobrr/qui/internal/models"
 )
 
-// groupKeyValues builds the values of the default chain: member count, seeders,
-// group byte size, private.
 func groupKeyValues(members int, seeders, size float64, private bool) []Value {
 	privateValue := 0.0
 	if private {
@@ -46,13 +44,12 @@ func TestCompare_DefaultChain(t *testing.T) {
 			name: "member count first, then seeders desc, then size asc, then non-private",
 			keys: defaultChain(),
 			groups: map[string][]Value{
-				// One member, fewer seeders, largest bytes, public.
 				"c": groupKeyValues(1, 5, 100, false),
-				// Two members, most seeders, public.
+
 				"a": groupKeyValues(2, 10, 300, false),
-				// One member, few seeders, smallest bytes, public.
+
 				"b": groupKeyValues(1, 5, 50, false),
-				// One member, few seeders, smallest bytes, private.
+
 				"d": groupKeyValues(1, 5, 50, true),
 			},
 			expected: []string{"b", "d", "c", "a"},
@@ -70,7 +67,7 @@ func TestCompare_DefaultChain(t *testing.T) {
 				"y": groupKeyValues(1, 1, 1, false),
 				"z": groupKeyValues(2, 1, 1, false),
 			},
-			// Equal on every enabled key, so the hash breaks the tie ascending.
+
 			expected: []string{"x", "y", "z"},
 		},
 		{
@@ -106,6 +103,18 @@ func TestCompare_ReturnsSign(t *testing.T) {
 	require.Equal(t, -1, Compare([]Value{{Number: 1}}, []Value{{Number: 2}}, keys))
 	require.Equal(t, 0, Compare([]Value{{Number: 2}}, []Value{{Number: 2}}, keys))
 	require.Equal(t, 1, Compare([]Value{{Number: 3}}, []Value{{Number: 2}}, keys))
+}
+
+func TestCompare_ValueListWithoutTheDisabledKeySlotComparesNothingPastIt(t *testing.T) {
+	keys := []models.KeyRule{
+		{Field: models.FieldGroupSize, Enabled: false, Direction: models.SortDirectionASC},
+		{Field: models.FieldSize, Enabled: true, Direction: models.SortDirectionASC},
+	}
+	require.Equal(t, -1, Compare([]Value{{Number: 9}, {Number: 1}}, []Value{{Number: 0}, {Number: 2}}, keys))
+
+	short := []Value{{Number: 9}}
+	require.Equal(t, 0, Compare(short, []Value{{Number: 0}, {Number: 2}}, keys), "the size key never ran")
+	require.Equal(t, 0, Compare([]Value{{Number: 0}, {Number: 2}}, short, keys))
 }
 
 func TestCompare_TextKeys(t *testing.T) {

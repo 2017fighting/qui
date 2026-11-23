@@ -426,10 +426,9 @@ export interface AutomationActivity {
     limits?: Record<string, number> // "upload:1024" -> count, or "2.00:1440" -> count
     // Move activity details
     paths?: Record<string, number> // path -> count of torrents
-    // Skip small files activity details
-    files?: number // files set to "Do not download"
-    bytes?: number // total size of those files
-    guarded?: number // torrents left alone because every file was under the threshold
+    files?: number
+    bytes?: number
+    guarded?: number
   }
   createdAt: string
 }
@@ -449,10 +448,10 @@ export interface AutomationActivityRunItem {
   downloadLimitKiB?: number
   ratioLimit?: number
   seedingMinutes?: number
-  skippedFiles?: string[] // file names set to "Do not download", capped
-  skippedFileCount?: number // total files set, which can exceed the names
-  skippedBytes?: number // total size of those files
-  skippedAllBelow?: boolean // every file was under the threshold, so the torrent was left alone
+  skippedFiles?: string[]
+  skippedFileCount?: number
+  skippedBytes?: number
+  skippedAllBelow?: boolean
 }
 
 export interface AutomationActivityRun {

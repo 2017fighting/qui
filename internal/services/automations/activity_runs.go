@@ -27,11 +27,11 @@ type ActivityRunTorrent struct {
 	DownloadLimitKiB *int64   `json:"downloadLimitKiB,omitempty"`
 	RatioLimit       *float64 `json:"ratioLimit,omitempty"`
 	SeedingMinutes   *int64   `json:"seedingMinutes,omitempty"`
-	// Skip small files detail
-	SkippedFiles     []string `json:"skippedFiles,omitempty"`     // file names set to do-not-download, capped at maxSkippedFileNames
-	SkippedFileCount int      `json:"skippedFileCount,omitempty"` // total files set, which can exceed the names
-	SkippedBytes     int64    `json:"skippedBytes,omitempty"`     // total size of those files
-	SkippedAllBelow  bool     `json:"skippedAllBelow,omitempty"`  // every file is under the threshold, so the torrent was left alone
+
+	SkippedFiles     []string `json:"skippedFiles,omitempty"`
+	SkippedFileCount int      `json:"skippedFileCount,omitempty"`
+	SkippedBytes     int64    `json:"skippedBytes,omitempty"`
+	SkippedAllBelow  bool     `json:"skippedAllBelow,omitempty"`
 }
 
 type ActivityRunPage struct {

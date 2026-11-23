@@ -1116,7 +1116,6 @@ func (s *Service) buildEvalContext(ctx context.Context, instanceID int, instance
 		}
 	}
 
-	// File lists feed HAS_SKIPPED_FILES and the Skip small files action, so one fetch serves both.
 	if needs.SkippedFiles || needs.TorrentFiles {
 		filesByHash, err := s.loadTorrentFiles(ctx, instanceID, torrents)
 		if err != nil {

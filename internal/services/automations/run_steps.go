@@ -440,9 +440,6 @@ func (r *stepRun) move(ctx context.Context, plan *runPlan) {
 	}
 }
 
-// skipSmallFiles sets every file under the threshold to "Do not download". The plan holds
-// only the torrents with something to change; an entry with allBelow is a torrent that the
-// run leaves alone, because skipping every file would leave it with nothing to download.
 func (r *stepRun) skipSmallFiles(ctx context.Context, plan *runPlan) {
 	plans := plan.skipSmallFiles
 	if len(plans) == 0 {
@@ -493,8 +490,6 @@ func (r *stepRun) skipSmallFiles(ctx context.Context, plan *runPlan) {
 		}
 	}
 	if r.dryRun {
-		// The dry run sends nothing, so it shows every planned torrent, the ones it leaves
-		// alone included.
 		r.record(ctx, stepActivity{
 			action: models.ActivityActionSkippedSmallFiles,
 			details: map[string]any{

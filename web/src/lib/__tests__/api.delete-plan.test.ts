@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2025-2026, s0up and the autobrr contributors.
- * SPDX-License-Identifier: GPL-2.0-or-later
- */
 
 import { afterEach, describe, expect, it } from "vitest"
 import { http, HttpResponse } from "msw"
@@ -10,7 +6,6 @@ import "@/i18n"
 import { api, APIError } from "@/lib/api"
 import type { DeletePlanRun } from "@/types"
 
-// The run body is echoed back, so the test only needs the fields it asserts on.
 const run: DeletePlanRun = {
   id: 7,
   instanceId: 3,

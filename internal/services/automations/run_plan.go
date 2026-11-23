@@ -23,23 +23,22 @@ import (
 // reaches and the rule that chose each torrent. The live run carries it out, and the dry
 // run records it.
 type runPlan struct {
-	uploadLimits   plannedAction[int64] // limit in KiB
-	downloadLimits plannedAction[int64] // limit in KiB
-	shareLimits    plannedShareLimits
-	pause          plannedTorrents
-	resume         plannedTorrents
-	recheck        plannedTorrents
-	reannounce     plannedTorrents
-	autoManage     plannedAction[bool] // true turns automatic torrent management on
-	tags           map[string]*tagChange
-	category       plannedAction[string] // by category, with the group members and cross-seeds
-	move           plannedAction[string] // by save path, with the group members and cross-seeds
-	programs       []pendingProgramExec
-	exports        []pendingExportToInstance
-	transfers      []pendingTransfer
-	deletions      *deletionSelection
-	skipSmallFiles map[string]skipSmallFilesPlan
-	// skipSmallFilesRules holds the rule that chose each torrent of skipSmallFiles.
+	uploadLimits        plannedAction[int64] // limit in KiB
+	downloadLimits      plannedAction[int64] // limit in KiB
+	shareLimits         plannedShareLimits
+	pause               plannedTorrents
+	resume              plannedTorrents
+	recheck             plannedTorrents
+	reannounce          plannedTorrents
+	autoManage          plannedAction[bool] // true turns automatic torrent management on
+	tags                map[string]*tagChange
+	category            plannedAction[string] // by category, with the group members and cross-seeds
+	move                plannedAction[string] // by save path, with the group members and cross-seeds
+	programs            []pendingProgramExec
+	exports             []pendingExportToInstance
+	transfers           []pendingTransfer
+	deletions           *deletionSelection
+	skipSmallFiles      map[string]skipSmallFilesPlan
 	skipSmallFilesRules map[string]ruleRef
 }
 
@@ -321,12 +320,7 @@ func (s *Service) buildRunPlan(ctx context.Context, in runPlanInput) runPlan {
 	plan.category = s.planCategories(ctx, in, categoryTriggers)
 	plan.move = s.planMoves(ctx, in, moveTriggers)
 	plan.skipSmallFiles = skipSmallFilesPlansFor(states, evalCtx, deletions)
-	plan.skipSmallFilesRules = make(map[string]ruleRef, len(plan.skipSmallFiles))
-	for hash := range plan.skipSmallFiles {
-		if state := states[hash]; state != nil {
-			plan.skipSmallFilesRules[hash] = state.skipSmallFilesRule
-		}
-	}
+	plan.skipSmallFilesRules = skipSmallFilesRulesFor(plan.skipSmallFiles, states)
 	plan.transfers = transfersAfterExports(transfersAfterMoves(plan.transfers, plan.move.rules), plan.exports)
 	var waitingExports []pendingExportToInstance
 	plan.exports, waitingExports = exportsAfterMoves(plan.exports, plan.move.rules)

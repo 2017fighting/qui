@@ -1,7 +1,3 @@
-/*
- * Copyright (c) 2025-2026, s0up and the autobrr contributors.
- * SPDX-License-Identifier: GPL-2.0-or-later
- */
 
 import { deletePlanExcludeReasonKey } from "@/components/instances/preferences/deletePlanLabels"
 import { getFieldLabel } from "@/components/query-builder/constants"
@@ -14,9 +10,6 @@ import type { TFunction } from "i18next"
 import { AlertTriangle, ChevronRight } from "lucide-react"
 import { Fragment, useState } from "react"
 import { useTranslation } from "react-i18next"
-
-// Read-only rendering of a delete plan run. The wizard preview and the history
-// detail both mount these, so the two views cannot disagree about a run.
 
 export interface DeletePlanStat {
   label: string
@@ -95,9 +88,6 @@ export function DeletePlanChainSummary({ keys }: { keys: KeyRule[] }) {
   )
 }
 
-// DeletePlanConfiguration shows the chain and the dead-groups switch the run
-// recorded, including the keys that were switched off. The history detail reads
-// it back; the wizard preview shows only the ranking that decided the order.
 export function DeletePlanConfiguration({ keys, removeDeadGroups }: { keys: KeyRule[]; removeDeadGroups: boolean }) {
   const { t } = useTranslation("instances")
   const { t: tAutomations } = useTranslation("automations")
@@ -127,8 +117,7 @@ export function DeletePlanConfiguration({ keys, removeDeadGroups }: { keys: KeyR
 
 interface DeletePlanGroupsTableProps {
   groups: DeletePlanRow[]
-  // Ranked rows carry an untick checkbox in the wizard; the history view and the
-  // dead section stay read-only.
+
   selectable?: boolean
   disabled?: boolean
   onToggle?: (row: DeletePlanRow) => void

@@ -13,10 +13,6 @@ import (
 	"github.com/autobrr/qui/internal/services/contentgroup"
 )
 
-// The plan corpus runs one scenario per row. A row gives the instance's
-// torrents, the file lists the overlap check reads, the target, and the
-// verdict: the included groups in plan order, the excluded groups with their
-// reasons, and the totals. reason states why the verdict is the one it is.
 type planCorpusRow struct {
 	name string
 
@@ -25,7 +21,6 @@ type planCorpusRow struct {
 	targetBytes      int64
 	removeDeadGroups bool
 
-	// verdict
 	wantIncluded      []string
 	wantCandidates    []string
 	wantExcluded      map[string]string
@@ -50,7 +45,6 @@ func torrent(hash, contentPath string, size int64, progress float64, state qbt.T
 	}
 }
 
-// fileList names files under /data, the SavePath of every fixture torrent.
 func fileList(names ...string) qbt.TorrentFiles {
 	files := make(qbt.TorrentFiles, 0, len(names))
 	for _, name := range names {
@@ -249,7 +243,6 @@ func TestBuildPlan(t *testing.T) {
 	}
 }
 
-// TestBuildPlan_DefaultDeadGroupsOn pins the default the request falls back to.
 func TestBuildPlan_DefaultDeadGroupsOn(t *testing.T) {
 	torrents := []qbt.Torrent{
 		torrent("a", "/data/A", 100, 1, qbt.TorrentStateUploading, ""),
@@ -265,7 +258,6 @@ func TestBuildPlan_DefaultDeadGroupsOn(t *testing.T) {
 	require.Equal(t, int64(500), plan.DeadBytes)
 }
 
-// TestBuildPlan_DecidingKey names the key that decided the first group's place.
 func TestBuildPlan_DecidingKey(t *testing.T) {
 	torrents := []qbt.Torrent{
 		torrent("a", "/data/A", 100, 1, qbt.TorrentStateUploading, ""),
@@ -280,12 +272,10 @@ func TestBuildPlan_DecidingKey(t *testing.T) {
 	require.Equal(t, models.FieldGroupSize, plan.Groups[0].DecidingKey)
 }
 
-// includedPaths names the groups in the plan, in plan order.
 func includedPaths(groups []PlanGroup) []string {
 	return filterPaths(groups, func(group PlanGroup) bool { return group.Included })
 }
 
-// candidatePaths names the ranked groups after the target that a refill can add.
 func candidatePaths(groups []PlanGroup) []string {
 	return filterPaths(groups, func(group PlanGroup) bool { return !group.Included })
 }

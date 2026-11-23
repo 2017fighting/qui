@@ -139,8 +139,6 @@ func (s *Service) selectDeletions(ctx context.Context, instanceID int, in deleti
 		failedRules: make(map[int]error),
 	}
 	evalCtx := in.evalCtx
-	// ADR 0017: the guards below read the nested-path exclusion, so fill it once here for
-	// the live run, the dry run and the preview alike.
 	prepareNestedPathExclusion(evalCtx, in.torrents)
 	// Build the map only for the modes that expand groups, so the preview of another mode
 	// does not pay for it. The run builds the map later in any case.
@@ -352,8 +350,6 @@ func (s *Service) expandDeleteTrigger(
 	}
 }
 
-// includeCrossSeedDeletion expands a delete with files over the trigger's cross-seed group.
-// ok is false when the expansion would remove files another torrent or instance needs.
 func includeCrossSeedDeletion(
 	instanceID int,
 	in deletionSelectionInput,
@@ -361,8 +357,6 @@ func includeCrossSeedDeletion(
 	deleteAction *models.DeleteAction,
 	includedCrossSeeds map[bool]map[string]struct{},
 ) (hashes []string, batchMode, logMsg string, hardlinkCopies map[string]struct{}, ok bool) {
-	// ADR 0017: a nested Content Path outside the group means the expansion would
-	// remove files another torrent needs.
 	if nestedPathExcluded(in.evalCtx, trigger.Hash) {
 		log.Warn().Int("instanceID", instanceID).Str("hash", trigger.Hash).
 			Msg("automations: skipping delete, nested content path could remove another torrent's files")
@@ -412,8 +406,6 @@ func groupKeepsFilesForOtherInstances(evalCtx *EvalContext, hashes []string) (lo
 // preserveCrossSeedsDelete keeps the files of the trigger when a torrent on
 // this instance or on another instance can need them.
 func preserveCrossSeedsDelete(trigger qbt.Torrent, in deletionSelectionInput) (batchMode, logMsg string) {
-	// ADR 0017: a nested Content Path outside the group means the files this delete
-	// would remove can belong to another torrent, so keep them.
 	if nestedPathExcluded(in.evalCtx, trigger.Hash) {
 		return DeleteModeKeepFiles, "automations: removing torrent (nested content path - keeping files)"
 	}

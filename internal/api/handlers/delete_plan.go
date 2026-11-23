@@ -17,8 +17,6 @@ import (
 	"github.com/autobrr/qui/internal/services/deleteplan"
 )
 
-// deletePlanService is the subset of *deleteplan.Service the handler calls. It is
-// an interface so the handler tests can drive confirm without a sync manager.
 type deletePlanService interface {
 	TriggerPlan(ctx context.Context, instanceID int, req deleteplan.PlanRequest) (int64, error)
 	CancelRun(ctx context.Context, runID int64) error
@@ -27,26 +25,21 @@ type deletePlanService interface {
 	RefillRun(ctx context.Context, runID int64) error
 }
 
-// DeletePlanHandler serves the instance-scoped delete plan API.
 type DeletePlanHandler struct {
 	store   *models.DeletePlanStore
 	service deletePlanService
 }
 
-// NewDeletePlanHandler creates a new DeletePlanHandler.
 func NewDeletePlanHandler(store *models.DeletePlanStore, service deletePlanService) *DeletePlanHandler {
 	return &DeletePlanHandler{store: store, service: service}
 }
 
-// DeletePlanCreatePayload is the request body for creating a delete plan.
 type DeletePlanCreatePayload struct {
 	TargetBytes      *int64           `json:"targetBytes"`
 	Keys             []models.KeyRule `json:"keys"`
 	RemoveDeadGroups *bool            `json:"removeDeadGroups"`
 }
 
-// available answers 503 when the server was built without the delete plan store or
-// service, so a handler never dereferences a nil dependency.
 func (h *DeletePlanHandler) available(w http.ResponseWriter) bool {
 	if h.store == nil || h.service == nil {
 		RespondError(w, http.StatusServiceUnavailable, "Delete plan service not available")
@@ -55,7 +48,6 @@ func (h *DeletePlanHandler) available(w http.ResponseWriter) bool {
 	return true
 }
 
-// CreateRun creates a run and builds its plan.
 func (h *DeletePlanHandler) CreateRun(w http.ResponseWriter, r *http.Request) {
 	instanceID, err := parseInstanceID(w, r)
 	if err != nil {
@@ -109,7 +101,6 @@ func (h *DeletePlanHandler) CreateRun(w http.ResponseWriter, r *http.Request) {
 	RespondJSON(w, http.StatusAccepted, run)
 }
 
-// ListRuns lists recent runs for an instance, newest first.
 func (h *DeletePlanHandler) ListRuns(w http.ResponseWriter, r *http.Request) {
 	instanceID, err := parseInstanceID(w, r)
 	if err != nil {
@@ -139,7 +130,6 @@ func (h *DeletePlanHandler) ListRuns(w http.ResponseWriter, r *http.Request) {
 	RespondJSON(w, http.StatusOK, map[string]any{"runs": runs})
 }
 
-// GetRun returns a run with its frozen rows.
 func (h *DeletePlanHandler) GetRun(w http.ResponseWriter, r *http.Request) {
 	instanceID, err := parseInstanceID(w, r)
 	if err != nil {
@@ -167,7 +157,6 @@ func (h *DeletePlanHandler) GetRun(w http.ResponseWriter, r *http.Request) {
 	RespondJSON(w, http.StatusOK, run)
 }
 
-// CancelRun cancels a run that has not started deleting.
 func (h *DeletePlanHandler) CancelRun(w http.ResponseWriter, r *http.Request) {
 	instanceID, err := parseInstanceID(w, r)
 	if err != nil {
@@ -224,13 +213,10 @@ func (h *DeletePlanHandler) CancelRun(w http.ResponseWriter, r *http.Request) {
 	RespondJSON(w, http.StatusOK, run)
 }
 
-// DeletePlanRowsPayload is the request body for replacing a run's unticked set.
 type DeletePlanRowsPayload struct {
 	Unticked *[]int64 `json:"unticked"`
 }
 
-// UpdateRows replaces the unticked set of a preview_ready run. An unticked row
-// stays in the run with included false and leaves the totals.
 func (h *DeletePlanHandler) UpdateRows(w http.ResponseWriter, r *http.Request) {
 	instanceID, err := parseInstanceID(w, r)
 	if err != nil {
@@ -278,7 +264,6 @@ func (h *DeletePlanHandler) UpdateRows(w http.ResponseWriter, r *http.Request) {
 	h.respondUpdatedRun(w, r, runID)
 }
 
-// RefillRun re-includes the unticked groups in plan order until the target is met.
 func (h *DeletePlanHandler) RefillRun(w http.ResponseWriter, r *http.Request) {
 	instanceID, err := parseInstanceID(w, r)
 	if err != nil {
@@ -340,7 +325,6 @@ func (h *DeletePlanHandler) respondUpdatedRun(w http.ResponseWriter, r *http.Req
 	RespondJSON(w, http.StatusOK, run)
 }
 
-// ConfirmRun starts the background deletion of a preview_ready run.
 func (h *DeletePlanHandler) ConfirmRun(w http.ResponseWriter, r *http.Request) {
 	instanceID, err := parseInstanceID(w, r)
 	if err != nil {

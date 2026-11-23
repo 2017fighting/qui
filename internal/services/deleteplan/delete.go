@@ -16,27 +16,19 @@ import (
 	"github.com/autobrr/qui/internal/services/contentgroup"
 )
 
-// deletionChunkSize is the number of hashes one bulk delete call sends. It
-// matches the automations delete path and qBittorrent's announce default.
 const deletionChunkSize = 50
 
-// deleteTarget is one frozen row that survived the re-check: the hashes to remove
-// and the bytes the row counts.
 type deleteTarget struct {
 	rowID     int64
 	hashes    []string
 	sizeBytes int64
 }
 
-// deletionChunk is one bulk delete call: the hashes and the rows they came from.
 type deletionChunk struct {
 	hashes []string
 	rowIDs []int64
 }
 
-// executeDeletion re-reads the instance, re-checks every frozen row, and removes
-// the groups that survived in chunks through the bulk delete-with-files path. A
-// failed chunk does not stop the rest; the run reports the failures.
 func (s *Service) executeDeletion(ctx context.Context, instanceID int, runID int64) {
 	run, err := s.store.GetRun(ctx, runID)
 	if err != nil {
@@ -99,9 +91,6 @@ func (s *Service) deleteGroups(ctx context.Context, instanceID int, run *models.
 	return s.store.UpdateRunCompleted(ctx, run.ID, removedBytes, warning)
 }
 
-// removeTargets sends the targets' hashes in chunks of deletionChunkSize and
-// records each row's outcome. A failed chunk marks its rows failed and the loop
-// continues; the returned warning names the failures.
 func (s *Service) removeTargets(ctx context.Context, instanceID int, targets []deleteTarget) (int64, string) {
 	failed := make(map[int64]string)
 	deleted := make(map[int64]struct{})
@@ -153,8 +142,6 @@ func (s *Service) failDeletion(ctx context.Context, instanceID int, runID int64,
 	s.emitRun(instanceID, runID)
 }
 
-// buildDeletionChunks splits the targets' hashes into chunks of at most size. A
-// group larger than one chunk spans chunks; its row keeps every hash's row ID.
 func buildDeletionChunks(targets []deleteTarget, size int) []deletionChunk {
 	var chunks []deletionChunk
 	var current deletionChunk
@@ -174,9 +161,6 @@ func buildDeletionChunks(targets []deleteTarget, size int) []deletionChunk {
 	return chunks
 }
 
-// recheckRow re-derives a frozen row's group from the fresh torrent list and
-// reports why the group must not be removed ("" when it may). A group is skipped
-// when a protection now trips or its verified member set changed (ADR 0018).
 func recheckRow(row *models.DeletePlanRow, idx contentgroup.Index, rules ProtectionRules) (PlanGroup, string) {
 	bucket := idx.GroupByPath(row.ContentPath)
 	if len(bucket) == 0 {
@@ -192,7 +176,6 @@ func recheckRow(row *models.DeletePlanRow, idx contentgroup.Index, rules Protect
 	return group, ""
 }
 
-// sameMembers reports whether the fresh verified members are exactly the frozen ones.
 func sameMembers(fresh []qbt.Torrent, frozen []models.DeletePlanMember) bool {
 	if len(fresh) != len(frozen) {
 		return false

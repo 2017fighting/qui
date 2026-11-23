@@ -81,8 +81,6 @@ func everyActionTorrents() string {
 		`,"` + doomedHash + `":` + torrent("doomed", "stalledUP") + `}`
 }
 
-// everyActionFiles gives each torrent one file under the skip threshold and one over it, so the
-// Skip small files action has something to set and does not leave the torrent alone.
 func everyActionFiles(stub *stubQbt) {
 	files := `[{"index":0,"name":"small.bin","size":1024,"priority":1,"progress":1},{"index":1,"name":"large.bin","size":2147483648,"priority":1,"progress":1}]`
 	stub.files = make(map[string]string, 3)

@@ -155,10 +155,6 @@ var sqliteMigrationFilenameRenames = []migrationFilenameRename{
 		from: "091_drop_unused_timestamp_indexes.sql",
 		to:   "093_drop_unused_timestamp_indexes.sql",
 	},
-	// The delete plan shipped as 106 in v1.32.0, as 107 from v1.33.0, as 108 from
-	// v1.34.0 and as 111 from v1.35.0 of the fork. Upstream's v1.34.0 took 106 and
-	// 107, v1.35.0 took 108 to 110 and v1.36.0 took 111 to 128, so the plan moved
-	// to 129.
 	{
 		from: "106_add_delete_plan.sql",
 		to:   "129_add_delete_plan.sql",
@@ -238,10 +234,6 @@ var postgresMigrationFilenameRenames = []migrationFilenameRename{
 		from: "093_drop_unused_timestamp_indexes.sql",
 		to:   "094_drop_unused_timestamp_indexes.sql",
 	},
-	// The delete plan shipped as 107 in v1.32.0, as 108 from v1.33.0, as 109 from
-	// v1.34.0 and as 112 from v1.35.0 of the fork. Upstream's v1.34.0 took 107 and
-	// 108, v1.35.0 took 109 to 111 and v1.36.0 took 112 to 128, so the plan moved
-	// to 129.
 	{
 		from: "107_add_delete_plan.sql",
 		to:   "129_add_delete_plan.sql",

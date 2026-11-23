@@ -35,7 +35,6 @@ func newDeletePlanRouter(handler *DeletePlanHandler) *chi.Mux {
 	return router
 }
 
-// fakeDeletePlanService drives the confirm handler without a sync manager.
 type fakeDeletePlanService struct {
 	confirmErr error
 	confirmed  int64
@@ -129,8 +128,6 @@ func TestDeletePlan_CreateRunReturns202(t *testing.T) {
 	require.NotNil(t, run.Groups)
 	require.NotNil(t, run.ExcludedGroups)
 
-	// The fixture has no sync manager, so the run waits for fresh sync. Cancel it
-	// so the background plan stops before the database closes.
 	cancelURL := fmt.Sprintf("/api/instances/%d/delete-plan/runs/%d/cancel", instance.ID, run.ID)
 	cancelResp := httptest.NewRecorder()
 	router.ServeHTTP(cancelResp, httptest.NewRequestWithContext(t.Context(), http.MethodPost, cancelURL, nil))
@@ -186,7 +183,6 @@ func TestDeletePlan_GetRunReturnsTheFrozenBody(t *testing.T) {
 	require.Len(t, run.ExcludedGroups, 1)
 	require.Equal(t, "incomplete", run.ExcludedGroups[0].ExcludeReason)
 
-	// Another instance never sees this run.
 	other, err := instances.Create(t.Context(), "other", "http://example.invalid", "", "", nil, nil, false, nil)
 	require.NoError(t, err)
 	resp = httptest.NewRecorder()
@@ -225,7 +221,6 @@ func TestDeletePlan_CancelRun(t *testing.T) {
 	require.NoError(t, json.Unmarshal(resp.Body.Bytes(), &run))
 	require.Equal(t, models.DeletePlanStatusCanceled, run.Status)
 
-	// A finished run cannot be canceled again.
 	resp = httptest.NewRecorder()
 	router.ServeHTTP(resp, httptest.NewRequestWithContext(t.Context(), http.MethodPost, url, nil))
 	require.Equal(t, http.StatusConflict, resp.Code, resp.Body.String())
@@ -277,9 +272,6 @@ func TestDeletePlan_ConfirmRunScopesToTheInstance(t *testing.T) {
 	require.Equal(t, http.StatusNotFound, resp.Code, resp.Body.String())
 }
 
-// seedUntickableRun freezes a plan with a candidate beyond the target: rows A
-// (100) and B (200) are included against a 250-byte target, planned 300,
-// overshoot 50, and C (300) is the next candidate in plan order.
 func seedUntickableRun(t *testing.T, store *models.DeletePlanStore, instanceID int) int64 {
 	t.Helper()
 	ctx := t.Context()
@@ -364,7 +356,6 @@ func TestDeletePlan_RefillAddsTheNextCandidateInPlanOrder(t *testing.T) {
 	require.Len(t, run.Groups, 3)
 	untickedRowID := run.Groups[1].ID
 
-	// Veto B, so the plan is 150 bytes short of the target.
 	body := fmt.Sprintf(`{"unticked":[%d]}`, untickedRowID)
 	untickResp := httptest.NewRecorder()
 	untickURL := fmt.Sprintf("/api/instances/%d/delete-plan/runs/%d/rows", instance.ID, runID)
@@ -385,7 +376,7 @@ func TestDeletePlan_RefillAddsTheNextCandidateInPlanOrder(t *testing.T) {
 	require.EqualValues(t, 150, refilled.OvershootBytes)
 	require.EqualValues(t, 0, refilled.ShortfallBytes)
 	require.True(t, refilled.TargetReached)
-	// Plan order is unchanged: A stays before B, B before C.
+
 	require.Equal(t, "/data/A", refilled.Groups[0].ContentPath)
 	require.Equal(t, "/data/B", refilled.Groups[1].ContentPath)
 	require.Equal(t, "/data/C", refilled.Groups[2].ContentPath)

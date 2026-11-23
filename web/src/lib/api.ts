@@ -3020,7 +3020,6 @@ class ApiClient {
     )
   }
 
-  // Delete Plan endpoints
   async createDeletePlan(
     instanceId: number,
     payload: DeletePlanCreateInput

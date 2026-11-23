@@ -101,7 +101,6 @@ type ScoreRule struct {
 	Conditional     *ConditionalScoreRule     `json:"conditional,omitempty" doc:"With type 'conditional': the condition and score."`
 }
 
-// KeyRule is one key of a 'keys' sort chain.
 type KeyRule struct {
 	Field     ConditionField `json:"field" doc:"The condition field to rank by."`
 	Enabled   bool           `json:"enabled" doc:"When false, this key is skipped and never changes the order."`
@@ -803,11 +802,6 @@ func (f ConditionField) IsNumeric() bool {
 	}
 }
 
-// IsSortableKey reports whether a condition field can be a ranking key. It
-// accepts the numeric and string fields the sorter compares directly, plus
-// GROUP_SIZE (the member count of the active group) and PRIVATE, which the
-// sorter reads as 0 or 1.
-//
 //nolint:exhaustive // Only fields with a sort value belong here.
 func (f ConditionField) IsSortableKey() bool {
 	switch f {
@@ -1037,19 +1031,14 @@ type MoveAction struct {
 	Condition        *RuleCondition `json:"condition,omitempty" doc:"Optional. When set, the action applies only to torrents that also match this condition. All running actions of a rule must have the same condition, or all must have none."`
 }
 
-// MinSkipSmallFilesBytes is the smallest size threshold the Skip small files action
-// accepts. 1 MiB.
 const MinSkipSmallFilesBytes int64 = 1024 * 1024
 
-// SkipSmallFilesAction configures setting every file under a size threshold to
-// "Do not download" (download priority 0), with an optional condition.
 type SkipSmallFilesAction struct {
 	Enabled      bool           `json:"enabled" doc:"Whether the action runs."`
 	MaxSizeBytes int64          `json:"maxSizeBytes" doc:"Files under this size are set to 'Do not download'. In bytes, at least 1048576 when 'enabled' is 'true'."`
 	Condition    *RuleCondition `json:"condition,omitempty" doc:"Optional. When set, the action applies only to torrents that also match this condition."`
 }
 
-// Validate checks that the SkipSmallFilesAction has valid configuration.
 func (a *SkipSmallFilesAction) Validate() error {
 	if a == nil {
 		return nil

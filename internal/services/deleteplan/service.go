@@ -22,13 +22,11 @@ import (
 	"github.com/autobrr/qui/internal/services/contentgroup"
 )
 
-// healthChecker is the subset of *qbittorrent.Client methods needed for readiness checks.
 type healthChecker interface {
 	IsHealthy() bool
 	GetLastSyncUpdate() time.Time
 }
 
-// syncReader is the slice of the sync manager a delete plan reads. ADR 0005.
 type syncReader interface {
 	GetAllTorrentRefs(ctx context.Context, instanceID int) ([]*qbt.Torrent, error)
 	GetTorrentFilesBatch(ctx context.Context, instanceID int, hashes []string) (map[string]qbt.TorrentFiles, error)
@@ -43,7 +41,6 @@ type instanceReader interface {
 	Get(ctx context.Context, id int) (*models.Instance, error)
 }
 
-// syncClients adapts the sync manager's concrete *Client to healthChecker.
 type syncClients struct{ sm *qbittorrent.SyncManager }
 
 func (c syncClients) Client(ctx context.Context, instanceID int) (healthChecker, error) {
@@ -54,14 +51,12 @@ func (c syncClients) Client(ctx context.Context, instanceID int) (healthChecker,
 	return client, nil
 }
 
-// PlanRequest is a request to build a plan.
 type PlanRequest struct {
 	TargetBytes      int64
 	Keys             []models.KeyRule
 	RemoveDeadGroups bool
 }
 
-// Service builds delete plans in the background for one instance at a time.
 type Service struct {
 	cfg               Config
 	store             *models.DeletePlanStore
@@ -70,13 +65,10 @@ type Service struct {
 	instances         instanceReader
 	activityPublisher activity.Publisher
 
-	// In-memory cancel handles keyed by runID.
 	cancelFuncs map[int64]context.CancelFunc
 	cancelMu    sync.Mutex
 }
 
-// NewService creates a new delete plan service. The concrete sync manager is
-// accepted here only; the service reads it through narrow interfaces.
 func NewService(cfg Config, instanceStore *models.InstanceStore, store *models.DeletePlanStore, syncManager *qbittorrent.SyncManager) *Service {
 	defaults := DefaultConfig()
 	if cfg.SyncPollInterval <= 0 {
@@ -96,8 +88,6 @@ func NewService(cfg Config, instanceStore *models.InstanceStore, store *models.D
 	}
 }
 
-// SetActivityPublisher wires the server-event hub so run status transitions are
-// pushed to connected clients. Safe to call once at startup.
 func (s *Service) SetActivityPublisher(publisher activity.Publisher) {
 	if s == nil || publisher == nil {
 		return
@@ -116,9 +106,6 @@ func (s *Service) emitRun(instanceID int, runID int64) {
 	})
 }
 
-// Start recovers runs left pending or planning by a restart. A plan is manual,
-// so there is no scheduler to start. A run interrupted mid-deletion is failed
-// rather than left in a non-terminal state.
 func (s *Service) Start(ctx context.Context) {
 	if s == nil {
 		return
@@ -132,8 +119,6 @@ func (s *Service) Start(ctx context.Context) {
 	}
 }
 
-// TriggerPlan creates a run and builds its plan in the background. It returns
-// ErrPlanAlreadyActive when the instance already has an active run.
 func (s *Service) TriggerPlan(ctx context.Context, instanceID int, req PlanRequest) (int64, error) {
 	if req.TargetBytes <= 0 {
 		return 0, ErrInvalidTarget
@@ -159,8 +144,6 @@ func (s *Service) TriggerPlan(ctx context.Context, instanceID int, req PlanReque
 		return 0, err
 	}
 
-	// The run outlives the request that triggered it, so it keeps the request's values
-	// without its cancellation; CancelRun cancels it through cancelFuncs.
 	runCtx, cancel := context.WithCancel(context.WithoutCancel(ctx))
 	s.cancelMu.Lock()
 	s.cancelFuncs[runID] = cancel
@@ -180,8 +163,6 @@ func (s *Service) TriggerPlan(ctx context.Context, instanceID int, req PlanReque
 	return runID, nil
 }
 
-// CancelRun cancels a pending, planning, or preview_ready run. A run that already
-// started deleting cannot be canceled.
 func (s *Service) CancelRun(ctx context.Context, runID int64) error {
 	run, err := s.store.GetRun(ctx, runID)
 	if err != nil {
@@ -199,8 +180,6 @@ func (s *Service) CancelRun(ctx context.Context, runID int64) error {
 		}
 		s.cancelMu.Unlock()
 
-		// The conditional update closes the race with ConfirmRun: a run that
-		// reached deleting between the read and the update is not canceled.
 		canceled, err := s.store.CancelRunIfNotDeleting(ctx, runID)
 		if err != nil {
 			return err
@@ -219,8 +198,6 @@ func (s *Service) CancelRun(ctx context.Context, runID int64) error {
 	}
 }
 
-// ConfirmRun moves a preview_ready run to deleting and starts the background
-// deletion. Any other status returns ErrPlanRunInvalidStatus.
 func (s *Service) ConfirmRun(ctx context.Context, runID int64) error {
 	run, err := s.store.GetRun(ctx, runID)
 	if err != nil {
@@ -238,18 +215,14 @@ func (s *Service) ConfirmRun(ctx context.Context, runID int64) error {
 		return err
 	}
 	if !started {
-		// A cancel or another confirm won the race.
 		return fmt.Errorf("%w: %s", ErrPlanRunInvalidStatus, models.DeletePlanStatusDeleting)
 	}
 	s.emitRun(run.InstanceID, runID)
 
-	// The deletion outlives the request, so it detaches from the request context.
 	go s.executeDeletion(context.WithoutCancel(ctx), run.InstanceID, runID)
 	return nil
 }
 
-// UpdateRunRows replaces a preview_ready run's unticked set and recomputes the
-// totals from the rows. An unticked row stays in the run with included false.
 func (s *Service) UpdateRunRows(ctx context.Context, runID int64, unticked []int64) error {
 	run, err := s.store.GetRun(ctx, runID)
 	if err != nil {
@@ -270,8 +243,6 @@ func (s *Service) UpdateRunRows(ctx context.Context, runID int64, unticked []int
 		vetoed[rowID] = struct{}{}
 	}
 
-	// A veto takes a row out of the plan; a row that was vetoed and is no longer in
-	// the set comes back in. A candidate was never selected and stays a candidate.
 	included := make([]int64, 0, len(run.Groups))
 	for _, row := range run.Groups {
 		if _, isVetoed := vetoed[row.ID]; isVetoed {
@@ -286,9 +257,6 @@ func (s *Service) UpdateRunRows(ctx context.Context, runID int64, unticked []int
 	return s.applyRowSelection(ctx, run, unticked, included, planned, dead, overshoot, reached)
 }
 
-// RefillRun adds the next candidate groups in plan order until the included
-// bytes reach the target, without reordering the groups that stay. A vetoed row
-// is never re-included.
 func (s *Service) RefillRun(ctx context.Context, runID int64) error {
 	run, err := s.store.GetRun(ctx, runID)
 	if err != nil {
@@ -335,15 +303,12 @@ func (s *Service) applyRowSelection(ctx context.Context, run *models.DeletePlanR
 		return err
 	}
 	if !applied {
-		// A confirm or cancel moved the run between the read and the update.
 		return fmt.Errorf("%w: %s", ErrPlanRunInvalidStatus, models.DeletePlanStatusPreviewReady)
 	}
 	s.emitRun(run.InstanceID, run.ID)
 	return nil
 }
 
-// selectionTotals recomputes a plan's totals from its rows and the selected set.
-// Dead bytes never count toward the target.
 func selectionTotals(rows []*models.DeletePlanRow, targetBytes int64, included map[int64]struct{}) (planned, dead, overshoot int64, targetReached bool) {
 	for _, row := range rows {
 		if _, isIncluded := included[row.ID]; !isIncluded {
@@ -366,7 +331,6 @@ func idSet(ids []int64) map[int64]struct{} {
 	return set
 }
 
-// untickedRowIDs returns the rows the user vetoed, which a refill never re-includes.
 func untickedRowIDs(rows []*models.DeletePlanRow) []int64 {
 	unticked := make([]int64, 0, len(rows))
 	for _, row := range rows {
@@ -397,7 +361,6 @@ func (s *Service) executePlan(ctx context.Context, instanceID int, runID int64) 
 	}
 
 	if err := s.waitForFreshSync(ctx, instanceID); err != nil {
-		// Canceled while waiting: CancelRun already set the final status.
 		return
 	}
 
@@ -407,7 +370,6 @@ func (s *Service) executePlan(ctx context.Context, instanceID int, runID int64) 
 		return
 	}
 	if !started {
-		// Canceled while waiting for sync data.
 		return
 	}
 	s.emitRun(instanceID, runID)
@@ -433,9 +395,6 @@ func (s *Service) executePlan(ctx context.Context, instanceID int, runID int64) 
 	}
 }
 
-// waitForFreshSync blocks until the instance has sync data no older than
-// MaxSyncAge or the run is canceled. A pending run waits rather than ranking a
-// stale torrent list.
 func (s *Service) waitForFreshSync(ctx context.Context, instanceID int) error {
 	for {
 		if s.syncIsFresh(ctx, instanceID) {
@@ -545,8 +504,6 @@ func splitTags(tags string) []string {
 	return result
 }
 
-// torrentValues copies the torrents of a Sync snapshot into values, so that the
-// plan is not built from pointers the next sync replaces.
 func torrentValues(refs []*qbt.Torrent) []qbt.Torrent {
 	torrents := make([]qbt.Torrent, 0, len(refs))
 	for _, ref := range refs {

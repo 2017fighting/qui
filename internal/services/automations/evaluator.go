@@ -43,9 +43,7 @@ type EvalContext struct {
 	moveChecks map[moveCheckKey]checkedMove
 
 	// trackers holds the tracker list of each torrent, when the rules read trackers.
-	trackers qbittorrent.TrackerLookup
-	// nestedPathExcluded holds the hashes whose Content Path nests with another
-	// torrent's. ADR 0017: a delete that expands to a content group keeps their files.
+	trackers           qbittorrent.TrackerLookup
 	nestedPathExcluded map[string]struct{}
 	// TrackerHealth is the tracker health snapshot of the instance. It is nil
 	// when the instance has no tracker health yet.
@@ -59,9 +57,7 @@ type EvalContext struct {
 	HasMissingFilesByHash map[string]bool
 	// HasSkippedFilesByHash maps torrent hash to whether any file has priority 0 (Do not download)
 	HasSkippedFilesByHash map[string]bool
-	// TorrentFilesByHash holds the file list of each torrent when an action reads
-	// file sizes. Torrents without metadata get no entry.
-	TorrentFilesByHash map[string]qbt.TorrentFiles
+	TorrentFilesByHash    map[string]qbt.TorrentFiles
 	// InstanceCanRead gates the missing-files field.
 	InstanceCanRead bool
 	// InstanceHasTrustedIdentity gates the hardlink fields, hardlink grouping

@@ -31,8 +31,6 @@ type filePrioCall struct {
 	priority int
 }
 
-// skipSmallFilesRig is a Service in front of a stub qBittorrent that keeps a mutable
-// file list, so a priority change is visible to the next pass.
 type skipSmallFilesRig struct {
 	svc           *Service
 	instanceID    int
@@ -103,7 +101,6 @@ func newSkipSmallFilesRig(t *testing.T, files qbt.TorrentFiles) *skipSmallFilesR
 	return rig
 }
 
-// recordPriority stores the call and applies it, so the next file list read sees the change.
 func (r *skipSmallFilesRig) recordPriority(hash string, ids string, priority string) {
 	prio, _ := strconv.Atoi(priority)
 
@@ -136,7 +133,6 @@ func (r *skipSmallFilesRig) setPrivate(private bool) {
 	r.private = private
 }
 
-// setFilePriority simulates a user changing one file by hand.
 func (r *skipSmallFilesRig) setFilePriority(hash string, index int, priority int) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -184,7 +180,6 @@ func javSkipRule(maxSizeBytes int64, cond *models.RuleCondition) *models.Automat
 	}
 }
 
-// javPublicCondition is the rule the user described: the jav category and a public torrent.
 func javPublicCondition() *models.RuleCondition {
 	return &models.RuleCondition{
 		Operator: models.OperatorAnd,
@@ -278,7 +273,6 @@ func TestSkipSmallFiles_SetsAReEnabledFileBackToDoNotDownload(t *testing.T) {
 	_, err := rig.svc.applyRulesForInstance(t.Context(), rig.instanceID, true, []*models.Automation{rule}, false)
 	require.NoError(t, err)
 
-	// The user re-enables the sample by hand; the next pass takes it back.
 	rig.setFilePriority(skipHash, 1, 1)
 	_, err = rig.svc.applyRulesForInstance(t.Context(), rig.instanceID, true, []*models.Automation{rule}, false)
 	require.NoError(t, err)
@@ -291,10 +285,8 @@ func TestSkipSmallFiles_SetsAReEnabledFileBackToDoNotDownload(t *testing.T) {
 
 func TestSkipSmallFiles_UnsupportedClientRecordsFailure(t *testing.T) {
 	rig := newSkipSmallFilesRig(t, sampleFiles())
-	rig.webAPIVersion = "2.1.0" // file priority needs 2.2.0
+	rig.webAPIVersion = "2.1.0"
 
-	// The rule carries no condition: upstream skips a rule that reads a field the instance
-	// does not send (ADR 0039), which would hide the unsupported request behind rule_skipped.
 	_, err := rig.svc.applyRulesForInstance(t.Context(), rig.instanceID, true, []*models.Automation{javSkipRule(500*mib, nil)}, false)
 	require.NoError(t, err)
 

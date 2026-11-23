@@ -126,9 +126,6 @@ var (
 )
 
 // conditionFieldNames returns the sorted names of the current condition fields for which keep returns true.
-// keyFieldNames lists the fields a Keys order accepts. It is the one list that the
-// ranking key predicate in models decides, not the field table, because a key also
-// reads the group-aware GROUP_SIZE and PRIVATE.
 func keyFieldNames() []string {
 	var names []string
 	for field, spec := range automations.ConditionFields {

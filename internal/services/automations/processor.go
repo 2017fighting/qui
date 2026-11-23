@@ -106,7 +106,6 @@ type torrentDesiredState struct {
 	transferToInstance     *models.TransferToInstanceAction
 	transferToInstanceRule ruleRef
 
-	// Skip small files (last rule wins)
 	skipSmallFiles     *models.SkipSmallFilesAction
 	skipSmallFilesRule ruleRef
 }
@@ -650,7 +649,6 @@ func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *
 		}
 	}
 
-	// Skip small files (last rule wins)
 	if conditions.SkipSmallFiles != nil && conditions.SkipSmallFiles.Enabled && conditions.SkipSmallFiles.MaxSizeBytes > 0 {
 		shouldApply := conditions.SkipSmallFiles.Condition == nil ||
 			EvaluateConditionWithContext(conditions.SkipSmallFiles.Condition, torrent, evalCtx, 0)
@@ -1335,7 +1333,6 @@ func SortTorrents(torrents []*qbt.Torrent, config *models.SortingConfig, evalCtx
 		}
 	}
 
-	// A key chain compares value lists, so it ranks with the shared sorter.
 	if config != nil && config.Type == models.SortingTypeKeys {
 		ranking.SortByKeys(torrents, config.Keys, func(t *qbt.Torrent) []ranking.Value {
 			return torrentKeyValues(*t, config.Keys, evalCtx)
@@ -1364,13 +1361,9 @@ func SortTorrents(torrents []*qbt.Torrent, config *models.SortingConfig, evalCtx
 	return nil
 }
 
-// torrentKeyValues returns one ranking value per key, in the same order as keys.
 func torrentKeyValues(t qbt.Torrent, keys []models.KeyRule, evalCtx *EvalContext) []ranking.Value {
 	values := make([]ranking.Value, len(keys))
 	for i, key := range keys {
-		// The field table owns the readers, so a key reads the same value that a
-		// simple sort by the field reads. GROUP_SIZE and PRIVATE are sortable keys
-		// without a reader of their own.
 		spec := ConditionFields[key.Field]
 		switch {
 		case key.Field == models.FieldGroupSize:
@@ -1386,7 +1379,6 @@ func torrentKeyValues(t qbt.Torrent, keys []models.KeyRule, evalCtx *EvalContext
 	return values
 }
 
-// activeGroupSize returns the member count of the active group for the torrent, or 0.
 func activeGroupSize(evalCtx *EvalContext, hash string) int {
 	if evalCtx == nil || evalCtx.activeGroupIndex == nil {
 		return 0
