@@ -128,3 +128,5 @@ The qBittorrent wiki includes a longer [list of community WebUIs](https://github
 ## License
 
 GPL-2.0-or-later
+
+<!-- ci probe -->
