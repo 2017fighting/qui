@@ -4,8 +4,10 @@
 package filesmanager
 
 import (
+	"cmp"
 	"context"
 	"fmt"
+	"slices"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -82,13 +84,37 @@ func testBatchReadsMatchViews(t *testing.T, open testDBOpener) {
 			wantFiles := queryRows(ctx, t, db, fmt.Sprintf(viewFilesBatchQuery, placeholders), args)
 			gotFiles := queryRows(ctx, t, db, fmt.Sprintf(filesBatchQuery, placeholders), args)
 			require.NotEmpty(t, wantFiles)
+			sortFileRows(wantFiles)
+			sortFileRows(gotFiles)
 			require.Equal(t, wantFiles, gotFiles, "files rows, instance %d", instanceID)
 
 			wantSync := queryRows(ctx, t, db, fmt.Sprintf(viewSyncInfoBatchQuery, placeholders), args)
 			gotSync := queryRows(ctx, t, db, fmt.Sprintf(syncInfoBatchQuery, placeholders), args)
 			require.NotEmpty(t, wantSync)
 			require.ElementsMatch(t, wantSync, gotSync, "sync rows, instance %d", instanceID)
+
+			filesByHash, err := repo.GetFilesBatch(ctx, instanceID, input)
+			require.NoError(t, err)
+			for hash, files := range filesByHash {
+				for i := 1; i < len(files); i++ {
+					require.Less(t, files[i-1].FileIndex, files[i].FileIndex, "hash %s file order, instance %d", hash, instanceID)
+				}
+			}
+
+			entries, err := NewService(db).GetCachedFilesBatchWithMeta(ctx, instanceID, input)
+			require.NoError(t, err)
+			for hash, entry := range entries {
+				for i := 1; i < len(entry.Files); i++ {
+					require.Less(t, entry.Files[i-1].Index, entry.Files[i].Index, "hash %s entry file order, instance %d", hash, instanceID)
+				}
+			}
 		}
+	})
+}
+
+func sortFileRows(rows [][]any) {
+	slices.SortFunc(rows, func(a, b []any) int {
+		return cmp.Or(cmp.Compare(a[2].(string), b[2].(string)), cmp.Compare(a[3].(int64), b[3].(int64)))
 	})
 }
 
