@@ -47,7 +47,6 @@ const filesBatchQuery = `
 	CROSS JOIN torrent_files_cache tfc
 	LEFT JOIN string_pool sp_name ON tfc.name_id = sp_name.id
 	WHERE tfc.instance_id = ? AND sp_hash.value IN (%s) AND tfc.torrent_hash_id = sp_hash.id
-	ORDER BY sp_hash.value, tfc.file_index ASC
 `
 
 const syncInfoBatchQuery = `
@@ -67,13 +66,16 @@ const entriesBatchQuery = `
 	JOIN torrent_files_cache tfc ON tfc.instance_id = tfs.instance_id AND tfc.torrent_hash_id = tfs.torrent_hash_id
 	LEFT JOIN string_pool sp_name ON tfc.name_id = sp_name.id
 	WHERE tfs.instance_id = ? AND sp_hash.value IN (%s) AND tfs.torrent_hash_id = sp_hash.id
-	ORDER BY sp_hash.value, tfc.file_index ASC
 `
 
 type cacheEntryRows struct {
 	files    []CachedFile
 	print    *int64
 	syncedAt time.Time
+}
+
+func sortFilesByIndex(files []CachedFile) {
+	slices.SortFunc(files, func(a, b CachedFile) int { return cmp.Compare(a.FileIndex, b.FileIndex) })
 }
 
 func NewRepository(db dbinterface.Querier) *Repository {
@@ -138,6 +140,10 @@ func (r *Repository) GetFilesBatch(ctx context.Context, instanceID int, hashes [
 		}
 	}
 
+	for _, files := range results {
+		sortFilesByIndex(files)
+	}
+
 	return results, nil
 }
 
@@ -199,6 +205,10 @@ func (r *Repository) getEntriesBatch(ctx context.Context, instanceID int, hashes
 		if err := rows.Err(); err != nil {
 			return nil, err
 		}
+	}
+
+	for _, entry := range results {
+		sortFilesByIndex(entry.files)
 	}
 
 	return results, nil
