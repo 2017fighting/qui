@@ -57,6 +57,8 @@ var walkCannotAnswer = map[routeKey]string{
 	{http.MethodGet, "/api/logs/files/{filename}"}:                                              "the rig writes no log file",
 	{http.MethodGet, "/api/instances/{instanceID}/cross-seed/status"}:                           "the route is not implemented",
 	{http.MethodGet, "/api/instances/{instanceID}/automations/activity/{activityId}"}:           "run details stay in memory, and the rig runs no automation",
+	{http.MethodGet, "/api/instances/{instanceID}/delete-plan/runs"}:                            "the rig sets up no delete plan store",
+	{http.MethodGet, "/api/instances/{instanceID}/delete-plan/runs/{runID}/"}:                   "the rig sets up no delete plan store",
 	{http.MethodGet, "/api/instances/{instanceID}/mediainfo"}:                                   "needs the content file on disk",
 	{http.MethodGet, "/api/instances/{instanceID}/torrents/{hash}/files/{fileIndex}/download"}:  "needs the content file on disk",
 	{http.MethodGet, "/api/instances/{instanceID}/torrents/{hash}/files/{fileIndex}/mediainfo"}: "needs the content file on disk",
