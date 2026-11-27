@@ -265,14 +265,14 @@ function getDisabledStateValues(capabilities: Capabilities, t: ReturnType<typeof
 const SIMPLE_SORT_DISABLED_FIELDS = Object.keys(CONDITION_FIELDS)
   .filter(field => !SORT_FIELDS.has(field as ConditionField))
 
-const KEY_FIELD_SET = new Set<ConditionField>([
+const KEY_FIELD_SET: ReadonlySet<string> = new Set<ConditionField>([
   ...SORT_FIELDS,
   "GROUP_SIZE",
   "PRIVATE",
 ])
 
 const KEY_DISABLED_FIELDS = Object.keys(CONDITION_FIELDS)
-  .filter(field => !KEY_FIELD_SET.has(field as ConditionField))
+  .filter(field => !KEY_FIELD_SET.has(field))
 
 const SCORE_MULTIPLIER_DISABLED_FIELDS = Object.keys(CONDITION_FIELDS)
   .filter(field => !SCORE_FIELDS.has(field as ConditionField))
@@ -282,7 +282,7 @@ function isSupportedSimpleSortField(field: string): field is ConditionField {
 }
 
 function isSupportedKeyField(field: string): field is ConditionField {
-  return KEY_FIELD_SET.has(field as ConditionField)
+  return KEY_FIELD_SET.has(field)
 }
 
 function isSupportedScoreMultiplierField(field: string): field is ConditionField {
@@ -1666,7 +1666,7 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
       sortingConfig = {
         schemaVersion: "1",
         type: "keys",
-        direction: input.sortDirection!,
+        direction: input.sortDirection,
         keys: input.keyRules.flatMap((key): KeyRule[] => {
           if (!isSupportedKeyField(key.field)) {
             throw new Error("Invalid ranking key: field is not supported")
@@ -2580,7 +2580,7 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
 
                 {formState.sortingType === "keys" && (
                   <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground uppercase tracking-wider">{t("preferences.workflowDialog.priority.keys")}</Label>
+                    <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("preferences.workflowDialog.priority.keys")}</h3>
                     {formState.keyRules.map((key, idx) => (
                       <div key={key.id} className="flex items-center gap-2 rounded-md border p-2">
                         <Switch
@@ -2590,26 +2590,26 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
                         />
                         <FieldCombobox
                           value={key.field}
-                          onChange={(val) => setFormState(prev => ({ ...prev, keyRules: updateKeyRule(prev.keyRules, idx, { field: val as ConditionField }) }))}
+                          onChange={(val) => {
+                            if (!isSupportedKeyField(val)) return
+                            setFormState(prev => ({ ...prev, keyRules: updateKeyRule(prev.keyRules, idx, { field: val }) }))
+                          }}
                           disabledFields={keyDisabledFields}
                         />
-                        <div className="flex items-center border rounded-md">
+                        <div className="flex items-center gap-1">
                           <Button
                             type="button"
                             variant={key.direction === "ASC" ? "secondary" : "ghost"}
                             size="sm"
-                            className="px-2 h-8 rounded-r-none"
                             onClick={() => setFormState(prev => ({ ...prev, keyRules: updateKeyRule(prev.keyRules, idx, { direction: "ASC" }) }))}
                           >
                             <ArrowUp className="h-3.5 w-3.5 mr-1" />
                             {t("preferences.workflowDialog.priority.asc")}
                           </Button>
-                          <div className="w-[1px] bg-border h-4" />
                           <Button
                             type="button"
                             variant={key.direction === "DESC" ? "secondary" : "ghost"}
                             size="sm"
-                            className="px-2 h-8 rounded-l-none"
                             onClick={() => setFormState(prev => ({ ...prev, keyRules: updateKeyRule(prev.keyRules, idx, { direction: "DESC" }) }))}
                           >
                             <ArrowDown className="h-3.5 w-3.5 mr-1" />
@@ -3921,7 +3921,7 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
                     {formState.skipSmallFilesEnabled && (
                       <div className="rounded-lg border p-3 space-y-3">
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm font-medium">{t("preferences.workflowDialog.actions.skipSmallFiles")}</Label>
+                          <Label>{t("preferences.workflowDialog.actions.skipSmallFiles")}</Label>
                           <Button
                             type="button"
                             variant="ghost"
@@ -3933,7 +3933,7 @@ export function WorkflowDialog({ open, onOpenChange, instanceId, rule, onSuccess
                           </Button>
                         </div>
                         <div className="space-y-1.5">
-                          <Label size="sm" className="gap-1" htmlFor="skip-small-files-size">
+                          <Label size="sm" htmlFor="skip-small-files-size">
                             {t("preferences.workflowDialog.skipSmallFiles.maxSize")}
                             <FieldHelp>{t("preferences.workflowDialog.skipSmallFiles.description")}</FieldHelp>
                           </Label>
