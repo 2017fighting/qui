@@ -26,7 +26,7 @@ import {
   type WorkflowExport,
   type WorkflowImport
 } from "@/lib/workflow-utils"
-import type { ActionConditions, Automation, RuleCondition } from "@/types"
+import type { RuleCondition } from "@/types"
 import { QueryClient } from "@tanstack/react-query"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
@@ -34,22 +34,7 @@ const listAutomations = vi.hoisted(() => vi.fn())
 
 vi.mock("@/lib/api", () => ({ api: { listAutomations } }))
 
-const conditions: ActionConditions = { schemaVersion: "1" }
-
-function makeAutomation(overrides: Partial<Automation> = {}): Automation {
-  return {
-    id: 1,
-    instanceId: 1,
-    name: "My workflow",
-    trackerPattern: "",
-    conditions,
-    enabled: true,
-    dryRun: false,
-    notify: true,
-    sortOrder: 0,
-    ...overrides,
-  }
-}
+import { automationConditions as conditions, makeAutomation } from "./workflowAutomation"
 
 describe("toExportFormat", () => {
   it("omits id, instanceId, sortOrder, enabled", () => {
@@ -330,45 +315,6 @@ describe("parseImportJSON", () => {
     expect(result.data).not.toHaveProperty("trackerPattern")
   })
 
-})
-
-describe("firstActionCondition finds the condition of any running action, so the overview never shows an All torrents badge for a rule that has one", () => {
-  const condition: RuleCondition = {
-    operator: "AND",
-    conditions: [{ field: "STATE", operator: "EQUAL", value: "downloading" }],
-  }
-
-  it.each([
-    "speedLimits",
-    "shareLimits",
-    "pause",
-    "resume",
-    "recheck",
-    "reannounce",
-    "autoManagement",
-    "delete",
-    "tag",
-    "category",
-    "move",
-    "externalProgram",
-    "exportToInstance",
-    "skipSmallFiles",
-  ] as const)("finds the condition on a %s-only rule", (action) => {
-    expect(firstActionCondition({ ...makeAutomation(), conditions: { schemaVersion: "1", [action]: { enabled: true, condition } } as ActionConditions })).toEqual(condition)
-  })
-
-  it("finds a condition on any entry of the tags array", () => {
-    expect(firstActionCondition({ ...makeAutomation(), conditions: {
-      schemaVersion: "1",
-      tags: [{ enabled: true, tags: ["a"], mode: "full" }, { enabled: true, tags: ["b"], mode: "full", condition }],
-    } })).toEqual(condition)
-  })
-
-  it("reports no condition when every action is disabled or carries none", () => {
-    expect(firstActionCondition({ ...makeAutomation(), conditions: { schemaVersion: "1" } })).toBeNull()
-    expect(firstActionCondition({ ...makeAutomation(), conditions: { schemaVersion: "1", pause: { enabled: true } } })).toBeNull()
-    expect(firstActionCondition({ ...makeAutomation(), conditions: { schemaVersion: "1", skipSmallFiles: { enabled: false, maxSizeBytes: 1, condition } } })).toBeNull()
-  })
 })
 
 describe("toExportJSON", () => {
