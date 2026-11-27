@@ -5,9 +5,7 @@ import { useActivityStream } from "@/contexts/SyncStreamContext"
 import { api } from "@/lib/api"
 import type {
   DeletePlanCreateInput,
-  DeletePlanRun,
-  DeletePlanRunStatus,
-  DeletePlanRunSummary
+  DeletePlanRunStatus
 } from "@/types"
 
 const ACTIVE_STATUSES: DeletePlanRunStatus[] = ["pending", "planning", "deleting"]
@@ -33,7 +31,7 @@ export function useDeletePlanRuns(
       }),
     enabled: shouldEnable,
     refetchInterval: (query) => {
-      const runs = query.state.data as DeletePlanRunSummary[] | undefined
+      const runs = query.state.data
       if (!runs) {
         return false
       }
@@ -53,10 +51,13 @@ export function useDeletePlanRun(
 
   return useQuery({
     queryKey: ["delete-plan", instanceId, "run", runId ?? null],
-    queryFn: () => api.getDeletePlanRun(instanceId, runId as number),
+    queryFn: () => {
+      if (runId === undefined) throw new Error("a delete plan run needs an id")
+      return api.getDeletePlanRun(instanceId, runId)
+    },
     enabled: shouldEnable,
     refetchInterval: (query) => {
-      const run = query.state.data as DeletePlanRun | undefined
+      const run = query.state.data
       if (!run) {
         return false
       }

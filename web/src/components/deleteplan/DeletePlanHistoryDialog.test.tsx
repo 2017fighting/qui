@@ -24,7 +24,7 @@ vi.mock("@/hooks/useDeletePlan", () => ({
   useDeletePlanRun: () => runQuery,
 }))
 
-import { DeletePlanHistoryDialog } from "@/components/instances/preferences/DeletePlanHistoryDialog"
+import { DeletePlanHistoryDialog } from "@/components/deleteplan/DeletePlanHistoryDialog"
 import "@/i18n"
 
 const completedRun: DeletePlanRun = {

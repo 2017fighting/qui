@@ -9,7 +9,7 @@ export const DEFAULT_DELETE_PLAN_KEYS: KeyRule[] = [
   { field: "PRIVATE", enabled: true, direction: "ASC" },
 ]
 
-const SORTABLE_KEY_FIELDS = new Set<ConditionField>([
+const SORTABLE_KEY_FIELDS: ReadonlySet<string> = new Set<ConditionField>([
   "SIZE",
   "TOTAL_SIZE",
   "DOWNLOADED",
@@ -53,8 +53,12 @@ const SORTABLE_KEY_FIELDS = new Set<ConditionField>([
 ])
 
 export const NON_SORTABLE_KEY_FIELDS = Object.keys(CONDITION_FIELDS).filter(
-  (field) => !SORTABLE_KEY_FIELDS.has(field as ConditionField)
+  (field) => !SORTABLE_KEY_FIELDS.has(field)
 )
+
+export function isSortableKeyField(field: string): field is ConditionField {
+  return SORTABLE_KEY_FIELDS.has(field)
+}
 
 export function moveKey<T>(keys: T[], index: number, delta: number): T[] {
   const target = index + delta

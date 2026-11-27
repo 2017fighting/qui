@@ -68,7 +68,7 @@ vi.mock("@/hooks/useDeletePlan", () => ({
   useRefillDeletePlanRun: () => refillMutation,
 }))
 
-import { DeletePlanOverview } from "@/components/instances/preferences/DeletePlanOverview"
+import { DeletePlanOverview } from "@/components/deleteplan/DeletePlanOverview"
 import "@/i18n"
 
 beforeEach(() => {

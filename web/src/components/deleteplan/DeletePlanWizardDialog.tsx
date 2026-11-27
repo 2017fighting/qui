@@ -1,15 +1,15 @@
 
-import { DeletePlanRunProgress } from "@/components/instances/preferences/DeletePlanRunProgress"
+import { DeletePlanRunProgress } from "@/components/deleteplan/DeletePlanRunProgress"
+import { DeletePlanTargetStep } from "@/components/deleteplan/DeletePlanTargetStep"
 import {
   DeletePlanChainSummary,
   DeletePlanExcludedTable,
   DeletePlanGroupsTable,
   DeletePlanTotals,
   DeletePlanTotalsGrid
-} from "@/components/instances/preferences/DeletePlanRunDetails"
-import { deletePlanExcludeReasonKey, deletePlanStatusLabelKey } from "@/components/instances/preferences/deletePlanLabels"
-import { DEFAULT_DELETE_PLAN_KEYS, NON_SORTABLE_KEY_FIELDS, moveKey } from "@/components/instances/preferences/deletePlanKeys"
-import { FieldCombobox } from "@/components/query-builder/FieldCombobox"
+} from "@/components/deleteplan/DeletePlanRunDetails"
+import { deletePlanExcludeReasonKey, deletePlanStatusLabelKey } from "@/components/deleteplan/deletePlanLabels"
+import { DEFAULT_DELETE_PLAN_KEYS, NON_SORTABLE_KEY_FIELDS } from "@/components/deleteplan/deletePlanKeys"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,17 +20,13 @@ import {
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
 import { useCancelDeletePlanRun, useConfirmDeletePlanRun, useCreateDeletePlan, useDeletePlanRun, useRefillDeletePlanRun, useUpdateDeletePlanRows } from "@/hooks/useDeletePlan"
 import { APIError } from "@/lib/api"
 import { type CsvColumn, downloadBlob, toCsv } from "@/lib/csv-export"
-import { BYTES_PER_UNIT, unitLabel, type ByteUnit } from "@/lib/unit-format"
+import { BYTES_PER_UNIT, type ByteUnit } from "@/lib/unit-format"
 import { formatBytes } from "@/lib/utils"
-import type { ConditionField, DeletePlanRow, DeletePlanRunStatus, KeyRule } from "@/types"
-import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Download, Loader2, RefreshCw, X } from "lucide-react"
+import type { DeletePlanRow, DeletePlanRunStatus, KeyRule } from "@/types"
+import { Download, Loader2, RefreshCw, X } from "lucide-react"
 import { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
@@ -46,7 +42,6 @@ interface DeletePlanWizardDialogProps {
 
 type WizardStep = "target" | "preview" | "confirm"
 
-const TARGET_UNITS: ByteUnit[] = ["MiB", "GiB", "TiB"]
 const DEFAULT_TARGET_UNIT: ByteUnit = "TiB"
 const DEFAULT_TARGET_VALUE = "10"
 
@@ -234,126 +229,22 @@ export function DeletePlanWizardDialog({
         </DialogHeader>
 
         {step === "target" && (
-          <div className="flex-1 min-h-0 overflow-y-auto space-y-4 py-2">
-            <div className="space-y-1.5">
-              <Label>{t("preferences.deletePlanWizard.instance")}</Label>
-              <p className="text-sm font-medium wrap-anywhere">{instanceName ?? instanceId}</p>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="delete-plan-target">{t("preferences.deletePlanWizard.targetLabel")}</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="delete-plan-target"
-                  type="number"
-                  min="1"
-                  inputMode="numeric"
-                  value={targetValue}
-                  onChange={(e) => setTargetValue(e.target.value)}
-                  placeholder={t("preferences.deletePlanWizard.targetPlaceholder")}
-                  className="max-w-[12rem]"
-                />
-                <Select value={targetUnit} onValueChange={(value) => setTargetUnit(value as ByteUnit)}>
-                  <SelectTrigger className="w-[7rem]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TARGET_UNITS.map((unit) => (
-                      <SelectItem key={unit} value={unit}>
-                        {unitLabel(unit)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {(targetInvalid || conflict) && (
-              <div role="alert" className="rounded-md border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
-                {conflict
-                  ? t("preferences.deletePlanWizard.conflict")
-                  : t("preferences.deletePlanWizard.targetRequired")}
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <div className="space-y-1">
-                <Label>{t("preferences.deletePlanWizard.keysTitle")}</Label>
-                <p className="text-xs text-muted-foreground">{t("preferences.deletePlanWizard.keysDescription")}</p>
-              </div>
-              {chain.map((key, index) => (
-                <div key={index} className="flex flex-wrap items-center gap-2 rounded-md border p-2">
-                  <Switch
-                    checked={key.enabled}
-                    onCheckedChange={(checked) => updateChainKey(index, { enabled: checked })}
-                    aria-label={t("preferences.deletePlanWizard.enableKey")}
-                  />
-                  <FieldCombobox
-                    value={key.field}
-                    onChange={(value) => updateChainKey(index, { field: value as ConditionField })}
-                    disabledFields={keyDisabledFields}
-                  />
-                  <div className="flex items-center rounded-md border">
-                    <Button
-                      type="button"
-                      variant={key.direction === "ASC" ? "secondary" : "ghost"}
-                      size="sm"
-                      className="h-8 rounded-r-none px-2"
-                      onClick={() => updateChainKey(index, { direction: "ASC" })}
-                    >
-                      <ArrowUp className="mr-1 h-3.5 w-3.5" />
-                      {t("preferences.deletePlanWizard.directionAsc")}
-                    </Button>
-                    <div className="h-4 w-px bg-border" />
-                    <Button
-                      type="button"
-                      variant={key.direction === "DESC" ? "secondary" : "ghost"}
-                      size="sm"
-                      className="h-8 rounded-l-none px-2"
-                      onClick={() => updateChainKey(index, { direction: "DESC" })}
-                    >
-                      <ArrowDown className="mr-1 h-3.5 w-3.5" />
-                      {t("preferences.deletePlanWizard.directionDesc")}
-                    </Button>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="ml-auto h-8 w-8"
-                    disabled={index === 0}
-                    aria-label={t("preferences.deletePlanWizard.moveKeyUp")}
-                    onClick={() => setChain((prev) => moveKey(prev, index, -1))}
-                  >
-                    <ChevronUp className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    disabled={index === chain.length - 1}
-                    aria-label={t("preferences.deletePlanWizard.moveKeyDown")}
-                    onClick={() => setChain((prev) => moveKey(prev, index, 1))}
-                  >
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex items-start gap-2 rounded-md border p-3">
-              <Switch
-                id="delete-plan-remove-dead"
-                checked={removeDeadGroups}
-                onCheckedChange={setRemoveDeadGroups}
-              />
-              <div className="space-y-1">
-                <Label htmlFor="delete-plan-remove-dead">{t("preferences.deletePlanWizard.removeDeadGroups")}</Label>
-                <p className="text-xs text-muted-foreground">{t("preferences.deletePlanWizard.removeDeadGroupsDescription")}</p>
-              </div>
-            </div>
-          </div>
+          <DeletePlanTargetStep
+            instanceId={instanceId}
+            instanceName={instanceName}
+            targetValue={targetValue}
+            setTargetValue={setTargetValue}
+            targetUnit={targetUnit}
+            setTargetUnit={setTargetUnit}
+            targetInvalid={targetInvalid}
+            conflict={conflict}
+            chain={chain}
+            setChain={setChain}
+            updateChainKey={updateChainKey}
+            keyDisabledFields={keyDisabledFields}
+            removeDeadGroups={removeDeadGroups}
+            setRemoveDeadGroups={setRemoveDeadGroups}
+          />
         )}
 
         {step === "preview" && (
@@ -446,7 +337,7 @@ export function DeletePlanWizardDialog({
               </p>
             )}
             {run.status === "preview_ready" ? (
-              <div className="rounded-md border border-yellow-500/20 bg-yellow-500/10 p-3 text-sm text-yellow-600 dark:text-yellow-400">
+              <div className="rounded-md border border-warning/20 bg-warning/10 p-3 text-sm text-warning">
                 <p className="font-medium">{t("preferences.deletePlanConfirm.title")}</p>
                 <p>{t("preferences.deletePlanConfirm.description")}</p>
                 <p className="mt-1">{t("preferences.deletePlanConfirm.otherInstances")}</p>

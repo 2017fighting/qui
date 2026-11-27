@@ -1,8 +1,8 @@
 
-import { DeletePlanHistoryDialog } from "@/components/instances/preferences/DeletePlanHistoryDialog"
-import { DeletePlanRunProgress } from "@/components/instances/preferences/DeletePlanRunProgress"
-import { DeletePlanWizardDialog } from "@/components/instances/preferences/DeletePlanWizardDialog"
-import { deletePlanStatusLabelKey } from "@/components/instances/preferences/deletePlanLabels"
+import { DeletePlanHistoryDialog } from "@/components/deleteplan/DeletePlanHistoryDialog"
+import { DeletePlanRunProgress } from "@/components/deleteplan/DeletePlanRunProgress"
+import { DeletePlanWizardDialog } from "@/components/deleteplan/DeletePlanWizardDialog"
+import { deletePlanStatusLabelKey } from "@/components/deleteplan/deletePlanLabels"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -63,7 +63,7 @@ function InstanceDeletePlanRow({
         <div className="flex min-w-0 items-center gap-3">
           <span className="font-medium wrap-anywhere">{instance.name}</span>
           {latestRun && (
-            <Badge variant="outline" className="text-xs">
+            <Badge variant="outline" size="sm">
               {t([deletePlanStatusLabelKey(latestRun.status), "preferences.deletePlan.statusLabels.unknown"])}
             </Badge>
           )}
@@ -126,7 +126,7 @@ function InstanceDeletePlanRow({
             {pastRuns.map((run) => (
               <div key={run.id} className="flex flex-wrap items-center justify-between gap-2 p-2">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" size="sm">
                     {t([deletePlanStatusLabelKey(run.status), "preferences.deletePlan.statusLabels.unknown"])}
                   </Badge>
                   <span>{t("preferences.deletePlanPreview.target")} {formatBytes(run.targetBytes)}</span>

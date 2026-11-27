@@ -39,8 +39,8 @@ vi.mock("@/hooks/useDeletePlan", () => ({
 
 vi.mock("sonner", () => ({ toast: toastMock }))
 
-import { DeletePlanWizardDialog } from "@/components/instances/preferences/DeletePlanWizardDialog"
-import { DEFAULT_DELETE_PLAN_KEYS, moveKey } from "@/components/instances/preferences/deletePlanKeys"
+import { DeletePlanWizardDialog } from "@/components/deleteplan/DeletePlanWizardDialog"
+import { DEFAULT_DELETE_PLAN_KEYS, moveKey } from "@/components/deleteplan/deletePlanKeys"
 import "@/i18n"
 
 const previewRun: DeletePlanRun = {

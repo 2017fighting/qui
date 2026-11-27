@@ -46,7 +46,7 @@ export function DeletePlanRunProgress({ run }: { run: DeletePlanRunProgressRun }
           })}
         </p>
         {run.warningMessage && (
-          <p className="text-xs text-yellow-600 break-words dark:text-yellow-400">{run.warningMessage}</p>
+          <p className="text-xs text-warning break-words">{run.warningMessage}</p>
         )}
       </div>
     )

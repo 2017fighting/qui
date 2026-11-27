@@ -1,12 +1,12 @@
 
-import { DeletePlanRunProgress } from "@/components/instances/preferences/DeletePlanRunProgress"
+import { DeletePlanRunProgress } from "@/components/deleteplan/DeletePlanRunProgress"
 import {
   DeletePlanConfiguration,
   DeletePlanExcludedTable,
   DeletePlanGroupsTable,
   DeletePlanStatGrid
-} from "@/components/instances/preferences/DeletePlanRunDetails"
-import { deletePlanStatusLabelKey } from "@/components/instances/preferences/deletePlanLabels"
+} from "@/components/deleteplan/DeletePlanRunDetails"
+import { deletePlanStatusLabelKey } from "@/components/deleteplan/deletePlanLabels"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -65,7 +65,7 @@ export function DeletePlanHistoryDialog({
 
           {run && (
             <>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" size="sm">
                 {t([deletePlanStatusLabelKey(run.status), "preferences.deletePlan.statusLabels.unknown"])}
               </Badge>
 

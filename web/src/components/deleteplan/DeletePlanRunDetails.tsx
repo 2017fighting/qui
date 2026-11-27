@@ -1,5 +1,5 @@
 
-import { deletePlanExcludeReasonKey } from "@/components/instances/preferences/deletePlanLabels"
+import { deletePlanExcludeReasonKey } from "@/components/deleteplan/deletePlanLabels"
 import { getFieldLabel } from "@/components/query-builder/constants"
 import { Checkbox } from "@/components/ui/checkbox"
 import { PathCell } from "@/components/ui/path-cell"
@@ -51,7 +51,7 @@ export function DeletePlanTotals({ run, canRefill = false }: { run: DeletePlanRu
       <DeletePlanTotalsGrid run={run} />
 
       {!run.targetReached && (
-        <div role="alert" className="flex items-start gap-2 rounded-md border border-yellow-500/20 bg-yellow-500/10 p-3 text-sm text-yellow-600 dark:text-yellow-400">
+        <div role="alert" className="flex items-start gap-2 rounded-md border border-warning/20 bg-warning/10 p-3 text-sm text-warning">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <p>
             {canRefill

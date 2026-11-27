@@ -1,7 +1,7 @@
 
 import { afterEach, describe, expect, it, vi } from "vitest"
 import { cleanup, render } from "@testing-library/react"
-import type { DeletePlanRunProgressRun } from "@/components/instances/preferences/DeletePlanRunProgress"
+import type { DeletePlanRunProgressRun } from "@/components/deleteplan/DeletePlanRunProgress"
 
 vi.mock("react-i18next", async (importOriginal) => ({
   ...await importOriginal<typeof import("react-i18next")>(),
@@ -14,7 +14,7 @@ vi.mock("react-i18next", async (importOriginal) => ({
   }),
 }))
 
-import { DeletePlanRunProgress } from "@/components/instances/preferences/DeletePlanRunProgress"
+import { DeletePlanRunProgress } from "@/components/deleteplan/DeletePlanRunProgress"
 import "@/i18n"
 
 afterEach(cleanup)

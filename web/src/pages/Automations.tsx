@@ -4,7 +4,7 @@
  */
 
 import { AUTOMATIONS_NAV_GROUPS, DEFAULT_AUTOMATIONS_TAB, type AutomationsTab } from "@/components/automations/tabs"
-import { DeletePlanOverview } from "@/components/instances/preferences/DeletePlanOverview"
+import { DeletePlanOverview } from "@/components/deleteplan/DeletePlanOverview"
 import { OrphanScanOverview } from "@/components/instances/preferences/OrphanScanOverview"
 import { OrphanScanSettingsDialog } from "@/components/instances/preferences/OrphanScanSettingsDialog"
 import { ReannounceOverview } from "@/components/instances/preferences/ReannounceOverview"

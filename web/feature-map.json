@@ -28,6 +28,7 @@
       "source": "web/src/routes/_authenticated/automations.tsx",
       "search": {
         "tab": [
+          "delete-plan",
           "orphan-scan",
           "reannounce",
           "workflows"
@@ -35,7 +36,7 @@
       },
       "steps": [
         "Click \"Automations\" in the sidebar, or open /automations. The page opens on Workflows.",
-        "Click \"Workflows\", \"Reannounce\", or \"Orphan Scan\". The address gets ?tab=workflows, ?tab=reannounce, or ?tab=orphan-scan.",
+        "Click \"Workflows\", \"Reannounce\", \"Orphan Scan\", or \"Delete Plan\". The address gets ?tab=workflows, ?tab=reannounce, ?tab=orphan-scan, or ?tab=delete-plan.",
         "On Workflows, click the name of an instance to show its rules and its activity. An instance with no rule shows \"Add your first rule\" and \"Import\"."
       ]
     },
@@ -356,6 +357,26 @@
         "/_authenticated/dashboard"
       ],
       "steps": []
+    },
+    "web/src/components/deleteplan/DeletePlanHistoryDialog.tsx#DeletePlanHistoryDialog": {
+      "routes": [
+        "/_authenticated/automations"
+      ],
+      "steps": [
+        "On the Delete Plan tab, click \"View\" on a run in the history of an instance.",
+        "The dialog shows that run's plan read-only: its state, its totals, the ranking keys it recorded, and the groups it planned and left out."
+      ]
+    },
+    "web/src/components/deleteplan/DeletePlanWizardDialog.tsx#DeletePlanWizardDialog": {
+      "routes": [
+        "/_authenticated/automations"
+      ],
+      "steps": [
+        "On the Delete Plan tab, click \"New Plan\" on an instance. Pick the instance and a target size with its unit, then click \"Build Plan\".",
+        "While the plan builds, the dialog waits until the instance's torrent list is no longer than two minutes old.",
+        "Review the plan: the totals, the ranking keys, the planned groups, and the groups left out with their reason. Click \"Refill\" when the plan is below the target.",
+        "Click \"Confirm and Delete\" to start the deletion, or close the dialog. The plan removes nothing until you confirm."
+      ]
     },
     "web/src/components/display-profiles/DisplayProfileSheet.tsx#DisplayProfileSheet": {
       "routes": [
