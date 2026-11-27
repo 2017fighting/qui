@@ -18,32 +18,26 @@ import (
 	"github.com/autobrr/qui/internal/models"
 )
 
-// stepRun is one pass of the batch steps over a Run plan. The live form sends the writes to
-// qBittorrent and records the torrents that qBittorrent accepted. The dry-run form sends
-// nothing and records the planned torrents.
 type stepRun struct {
 	s             *Service
 	instanceID    int
 	torrentByHash map[string]*qbt.Torrent
-	// scope gives the tracker that an activity row shows.
+
 	scope  *ruleScope
 	dryRun bool
-	// summary feeds the notification of a live run. A dry run has none.
+
 	summary *automationSummary
-	// resetTags are the managed tags that a live run deletes from qBittorrent before the tags step (ADR 0028).
+
 	resetTags []string
-	// activities are the rows that a dry run wrote.
+
 	activities []*models.AutomationActivity
 }
 
-// planStep carries out the part of the Run plan in fields.
 type planStep struct {
-	fields []string // the runPlan fields that the step reads
+	fields []string
 	run    func(r *stepRun, ctx context.Context, plan *runPlan)
 }
 
-// planSteps lists the batch steps in the order that both forms of the run call them.
-// External programs, exports and deletions keep their own code.
 var planSteps = []planStep{
 	{fields: []string{"uploadLimits", "downloadLimits"}, run: (*stepRun).speedLimits},
 	{fields: []string{"shareLimits"}, run: (*stepRun).shareLimits},
@@ -72,8 +66,6 @@ func (r *stepRun) runSteps(ctx context.Context, plan *runPlan) {
 	}
 }
 
-// write sends the torrents to qBittorrent in batches and returns the torrents of the batches
-// that qBittorrent accepted. A dry run sends nothing and returns all the torrents.
 func (r *stepRun) write(hashes []string, send func(batch []string) error) []string {
 	if r.dryRun || len(hashes) == 0 {
 		return hashes
@@ -87,21 +79,18 @@ func (r *stepRun) write(hashes []string, send func(batch []string) error) []stri
 	return accepted
 }
 
-// stepActivity is one Activity row that a step writes.
 type stepActivity struct {
 	action  string
-	outcome string // empty: success in a live run, dry run in a dry run
+	outcome string
 	hash    string
 	reason  string
 	details any
-	count   int // the torrents that the run summary counts
+	count   int
 	rules   map[ruleRef]int
-	hashes  []string // the torrents of the sample names
+	hashes  []string
 	items   func() []ActivityRunTorrent
 }
 
-// record writes the Activity. A live run also adds it to the run summary with the rule counts
-// and the sample names.
 func (r *stepRun) record(ctx context.Context, a stepActivity) {
 	detailsJSON, err := json.Marshal(a.details)
 	if err != nil {
@@ -149,7 +138,6 @@ func (r *stepRun) record(ctx context.Context, a stepActivity) {
 	}
 }
 
-// recordCount writes the Activity of an Action that only counts its torrents.
 func (r *stepRun) recordCount(ctx context.Context, action string, hashes []string, rules map[string]ruleRef) {
 	if len(hashes) == 0 {
 		return
@@ -164,14 +152,13 @@ func (r *stepRun) recordCount(ctx context.Context, action string, hashes []strin
 	})
 }
 
-// speedLimits sets the upload and download limits and writes one Activity for both.
 func (r *stepRun) speedLimits(ctx context.Context, plan *runPlan) {
 	upload := r.speedLimit(ctx, "upload", plan.uploadLimits, r.s.syncManager.SetTorrentUploadLimit)
 	download := r.speedLimit(ctx, "download", plan.downloadLimits, r.s.syncManager.SetTorrentDownloadLimit)
 	if len(upload) == 0 && len(download) == 0 {
 		return
 	}
-	limits := make(map[string]int) // "upload:1024" -> count, "download:2048" -> count
+	limits := make(map[string]int)
 	for limit, hashes := range upload {
 		limits[fmt.Sprintf("upload:%d", limit)] = len(hashes)
 	}
@@ -201,7 +188,6 @@ func (r *stepRun) speedLimits(ctx context.Context, plan *runPlan) {
 	})
 }
 
-// speedLimit sets one direction of the speed limits. Each refused batch writes a failed row.
 func (r *stepRun) speedLimit(
 	ctx context.Context,
 	limitType string,
@@ -234,8 +220,6 @@ func (r *stepRun) speedLimit(
 	return accepted
 }
 
-// shareLimits sets the share limits. The Activity counts the torrents by ratio, seeding time
-// and inactive time, so groups that differ only in the share action or the mode add up.
 func (r *stepRun) shareLimits(ctx context.Context, plan *runPlan) {
 	planned := plan.shareLimits
 	ruleMaps := []map[string]ruleRef{planned.ratioRules, planned.seedingRules, planned.actionRules, planned.modeRules}
@@ -282,7 +266,6 @@ func (r *stepRun) shareLimits(ctx context.Context, plan *runPlan) {
 	})
 }
 
-// bulk carries out pause, resume, recheck or reannounce. A refused batch only logs.
 func (r *stepRun) bulk(ctx context.Context, action, done, activityAction string, planned plannedTorrents) {
 	accepted := r.write(planned.hashes, func(batch []string) error {
 		err := r.s.syncManager.BulkAction(ctx, r.instanceID, batch, action)
@@ -296,7 +279,6 @@ func (r *stepRun) bulk(ctx context.Context, action, done, activityAction string,
 	r.recordCount(ctx, activityAction, accepted, planned.rules)
 }
 
-// autoManage turns automatic torrent management on or off. A refused batch only logs.
 func (r *stepRun) autoManage(ctx context.Context, plan *runPlan) {
 	accepted := make([]string, 0, len(plan.autoManage.byTarget[true])+len(plan.autoManage.byTarget[false]))
 	for _, enable := range []bool{true, false} {
@@ -314,7 +296,6 @@ func (r *stepRun) autoManage(ctx context.Context, plan *runPlan) {
 	r.recordCount(ctx, models.ActivityActionAutoManaged, accepted, plan.autoManage.rules)
 }
 
-// tags resets the managed tags in a live run, then changes the tags. A refused batch only logs.
 func (r *stepRun) tags(ctx context.Context, plan *runPlan) {
 	if len(r.resetTags) > 0 {
 		if err := r.s.syncManager.DeleteTags(ctx, r.instanceID, r.resetTags); err != nil {
@@ -334,8 +315,8 @@ func (r *stepRun) tags(ctx context.Context, plan *runPlan) {
 		return
 	}
 
-	added := make(map[string]int)   // tag -> count of torrents
-	removed := make(map[string]int) // tag -> count of torrents
+	added := make(map[string]int)
+	removed := make(map[string]int)
 	rules := make(map[ruleRef]int)
 	for _, change := range accepted {
 		for _, tag := range change.toAdd {
@@ -366,7 +347,6 @@ func (r *stepRun) tags(ctx context.Context, plan *runPlan) {
 	}
 }
 
-// category sets the category. A refused batch only logs.
 func (r *stepRun) category(ctx context.Context, plan *runPlan) {
 	accepted := make(map[string][]string)
 	for _, category := range slices.Sorted(maps.Keys(plan.category.byTarget)) {
@@ -397,7 +377,6 @@ func (r *stepRun) category(ctx context.Context, plan *runPlan) {
 	})
 }
 
-// move sets the save path. All refused batches of the run write one failed row.
 func (r *stepRun) move(ctx context.Context, plan *runPlan) {
 	accepted := make(map[string][]string)
 	refused := make(map[string][]string)
@@ -440,6 +419,13 @@ func (r *stepRun) move(ctx context.Context, plan *runPlan) {
 	}
 }
 
+type skipSmallFilesDetails struct {
+	Count   int   `json:"count"`
+	Files   int   `json:"files"`
+	Bytes   int64 `json:"bytes"`
+	Guarded int   `json:"guarded"`
+}
+
 func (r *stepRun) skipSmallFiles(ctx context.Context, plan *runPlan) {
 	plans := plan.skipSmallFiles
 	if len(plans) == 0 {
@@ -467,7 +453,7 @@ func (r *stepRun) skipSmallFiles(ctx context.Context, plan *runPlan) {
 					outcome: models.ActivityOutcomeFailed,
 					hash:    hash,
 					reason:  "skip small files failed: " + err.Error(),
-					details: map[string]any{"count": 1, "files": len(skipPlan.indices)},
+					details: skipSmallFilesDetails{Count: 1, Files: len(skipPlan.indices)},
 					count:   1,
 					rules:   buildRuleCountsFromHashes(batch, plan.skipSmallFilesRules),
 					hashes:  batch,
@@ -491,14 +477,9 @@ func (r *stepRun) skipSmallFiles(ctx context.Context, plan *runPlan) {
 	}
 	if r.dryRun {
 		r.record(ctx, stepActivity{
-			action: models.ActivityActionSkippedSmallFiles,
-			details: map[string]any{
-				"count":   len(accepted),
-				"files":   files,
-				"bytes":   bytes,
-				"guarded": guarded,
-			},
-			count: len(accepted),
+			action:  models.ActivityActionSkippedSmallFiles,
+			details: skipSmallFilesDetails{Count: len(accepted), Files: files, Bytes: bytes, Guarded: guarded},
+			count:   len(accepted),
 			items: func() []ActivityRunTorrent {
 				return buildSkipSmallFilesRunItems(slices.Sorted(maps.Keys(plans)), plans, r.torrentByHash, r.scope)
 			},
@@ -510,7 +491,7 @@ func (r *stepRun) skipSmallFiles(ctx context.Context, plan *runPlan) {
 	}
 	r.record(ctx, stepActivity{
 		action:  models.ActivityActionSkippedSmallFiles,
-		details: map[string]any{"count": len(accepted), "files": files, "bytes": bytes},
+		details: skipSmallFilesDetails{Count: len(accepted), Files: files, Bytes: bytes},
 		count:   len(accepted),
 		rules:   rules,
 		hashes:  accepted,
@@ -520,9 +501,6 @@ func (r *stepRun) skipSmallFiles(ctx context.Context, plan *runPlan) {
 	})
 }
 
-// flattenHashes returns each torrent of the targets once, and the number of writes. A
-// cross-seed can join two category targets in one run: its rule counts it once, and the
-// Activity counts both writes.
 func flattenHashes[K comparable](byTarget map[K][]string) (unique []string, writes int) {
 	var all []string
 	for _, hashes := range byTarget {
@@ -531,7 +509,6 @@ func flattenHashes[K comparable](byTarget map[K][]string) (unique []string, writ
 	return dedupeHashes(all), len(all)
 }
 
-// countByTarget returns the number of torrents of each target.
 func countByTarget(byTarget map[string][]string) map[string]int {
 	counts := make(map[string]int, len(byTarget))
 	for target, hashes := range byTarget {

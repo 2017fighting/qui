@@ -9,8 +9,6 @@ import (
 	"github.com/autobrr/qui/internal/models"
 )
 
-// RuleNeeds is the prepared data that a rule set reads. buildEvalContext loads
-// only what it asks for.
 type RuleNeeds struct {
 	HardlinkScope      bool
 	HardlinkCrossScope bool
@@ -18,27 +16,24 @@ type RuleNeeds struct {
 	MissingFiles       bool
 	SkippedFiles       bool
 	CrossMatch         CrossMatchNeeds
-	// TagCrossSeeds is set when a tag action includes cross-seeds.
+
 	TagCrossSeeds         bool
 	SeasonPack            bool
 	SeasonPackAnyInstance bool
 	FreeSpace             bool
 	TrackerNames          bool
-	SavePaths             bool // .CategorySavePath or .DefaultSavePath in a move or export path
-	TrackerURLs           bool // the URL of each tracker, from MainData
-	TrackerEntries        bool // the per-torrent tracker list with status and message
+	SavePaths             bool
+	TrackerURLs           bool
+	TrackerEntries        bool
 	TorrentFiles          bool
 }
 
-// fieldData is the prepared data one condition field reads. A field without a
-// row reads only the torrent and is always known.
 type fieldData struct {
-	trustedIdentity bool // needs models.FilesystemCapabilitiesOf(instance).TrustedIdentity
-	read            bool // needs models.FilesystemCapabilitiesOf(instance).Read
-	// need marks the data in RuleNeeds.
+	trustedIdentity bool
+	read            bool
+
 	need func(n *RuleNeeds)
-	// known reports whether ctx holds the field's data for the torrent. A row
-	// without it is always known.
+
 	known func(ctx *EvalContext, hash string) bool
 }
 
@@ -99,8 +94,6 @@ func otherInstanceCrossSeedKnown(ctx *EvalContext, hash string) bool {
 }
 
 func conditionDataKnown(field ConditionField, hash string, ctx *EvalContext) bool {
-	// The switch skips the map lookup for the common field that reads only the
-	// torrent; this runs for every leaf on every torrent.
 	switch field {
 	case FieldExistsOnSameInstance, FieldSeedingOnSameInstance, FieldCrossSeedTags,
 		FieldExistsOnOtherInstance, FieldSeedingOnOtherInstance:
@@ -124,7 +117,7 @@ func conditionDataKnown(field ConditionField, hash string, ctx *EvalContext) boo
 	if data.known(ctx, hash) {
 		return true
 	}
-	// An unread extra candidate cannot undo a confirmed positive match.
+
 	var confirmed map[string]struct{}
 	switch field { //nolint:exhaustive // Only these fields have a set of confirmed hashes.
 	case FieldExistsOnSameInstance:
@@ -140,10 +133,6 @@ func conditionDataKnown(field ConditionField, hash string, ctx *EvalContext) boo
 	return matched
 }
 
-// NeedsFor reports the data that the enabled rules read: through the conditions
-// of their enabled actions and their sorting, and through includeHardlinks,
-// hardlink signature grouping, tracker display names in tags and path
-// templates, and save paths in path templates.
 func NeedsFor(rules []*models.Automation) RuleNeeds {
 	var needs RuleNeeds
 	for _, rule := range rules {
@@ -160,7 +149,6 @@ func NeedsFor(rules []*models.Automation) RuleNeeds {
 			needs.HardlinkSignature = true
 		}
 		if ac := rule.Conditions; ac != nil {
-			// includeHardlinks expands a delete only in the include-cross-seeds mode.
 			if del := ac.Delete; del != nil && del.Enabled && del.IncludeHardlinks && del.Mode == DeleteModeWithFilesIncludeCrossSeeds {
 				needs.HardlinkScope = true
 			}
@@ -179,8 +167,6 @@ func NeedsFor(rules []*models.Automation) RuleNeeds {
 	return needs
 }
 
-// addCrossSeedActions marks what the actions of a rule read from the run
-// session.
 func (n *RuleNeeds) addCrossSeedActions(ac *models.ActionConditions) {
 	if deleteKeepsFilesForOtherInstances(ac.Delete) {
 		n.CrossMatch.SameContent = true
@@ -210,15 +196,11 @@ func tagsIncludeCrossSeeds(ac *models.ActionConditions) bool {
 	return false
 }
 
-// deleteKeepsFilesForOtherInstances reports whether the delete mode keeps the
-// files that a torrent on another instance needs.
 func deleteKeepsFilesForOtherInstances(del *models.DeleteAction) bool {
 	return del != nil && del.Enabled &&
 		(del.Mode == DeleteModeWithFilesPreserveCrossSeeds || del.Mode == DeleteModeWithFilesIncludeCrossSeeds)
 }
 
-// previewNeeds is NeedsFor of one rule as if it were enabled: the preview shows
-// what the rule would do once it runs.
 func previewNeeds(rule *models.Automation) RuleNeeds {
 	enabled := *rule
 	enabled.Enabled = true
@@ -266,9 +248,6 @@ func (n *RuleNeeds) addSorting(config *models.SortingConfig) {
 	}
 }
 
-// ruleTemplatesUseTrackerName reports whether an enabled action needs the tracker display-name map
-// outside its condition. The "Tracker" match pairs with the key pathTemplateData passes to path
-// templates, so it also catches {{ index . "Tracker" }}.
 func ruleTemplatesUseTrackerName(ac *models.ActionConditions) bool {
 	if move := ac.Move; move != nil && move.Enabled && strings.Contains(move.Path, "Tracker") {
 		return true

@@ -34,6 +34,10 @@ func NewDeletePlanHandler(store *models.DeletePlanStore, service deletePlanServi
 	return &DeletePlanHandler{store: store, service: service}
 }
 
+type deletePlanRunsResponse struct {
+	Runs []*models.DeletePlanRun `json:"runs"`
+}
+
 type DeletePlanCreatePayload struct {
 	TargetBytes      *int64           `json:"targetBytes"`
 	Keys             []models.KeyRule `json:"keys"`
@@ -127,7 +131,7 @@ func (h *DeletePlanHandler) ListRuns(w http.ResponseWriter, r *http.Request) {
 		runs = []*models.DeletePlanRun{}
 	}
 
-	RespondJSON(w, http.StatusOK, map[string]any{"runs": runs})
+	RespondJSON(w, http.StatusOK, deletePlanRunsResponse{Runs: runs})
 }
 
 func (h *DeletePlanHandler) GetRun(w http.ResponseWriter, r *http.Request) {

@@ -24,19 +24,16 @@ import (
 	"github.com/autobrr/qui/pkg/pathutil"
 )
 
-// torrentDesiredState tracks accumulated actions for a single torrent across all matching rules.
 type torrentDesiredState struct {
 	hash           string
 	name           string
-	trackerDomains []string // all tracker domains for this torrent
+	trackerDomains []string
 
-	// Speed limits (last rule wins)
 	uploadLimitKiB   *int64
 	downloadLimitKiB *int64
 	uploadRule       ruleRef
 	downloadRule     ruleRef
 
-	// Share limits (last rule wins)
 	ratioLimit       *float64
 	seedingMinutes   *int64
 	shareLimitAction string
@@ -46,45 +43,37 @@ type torrentDesiredState struct {
 	shareActionRule  ruleRef
 	shareModeRule    ruleRef
 
-	// Pause (OR - any rule can trigger)
 	shouldPause bool
 	pauseRule   ruleRef
 
-	// Resume (OR - any rule can trigger)
 	shouldResume bool
 	resumeRule   ruleRef
 
-	// Recheck (OR - any rule can trigger)
 	shouldRecheck bool
 	recheckRule   ruleRef
 
-	// Reannounce (OR - any rule can trigger)
 	shouldReannounce bool
 	reannounceRule   ruleRef
 
-	// Auto management (last rule wins)
 	shouldAutoManage bool
-	autoManageValue  bool // true = enable ATM, false = disable ATM
+	autoManageValue  bool
 	autoManageRule   ruleRef
 
-	// Tags (accumulated, last action per tag wins)
 	currentTags    map[string]struct{}
-	tagActions     map[string]string // tag -> "add" | "remove"
+	tagActions     map[string]string
 	tagRuleByTag   map[string]ruleRef
-	tagExpandByTag map[string]tagExpandIntent // tag -> pending cross-seed expansion of a tag decision
-	tagResetTags   map[string]struct{}        // tags re-added after a managed reset: a real change even when already present
+	tagExpandByTag map[string]tagExpandIntent
+	tagResetTags   map[string]struct{}
 
-	// Category (last rule wins)
 	category                  *string
-	categoryGroupID           string // Optional group ID to expand category changes
+	categoryGroupID           string
 	categoryRuleID            int
-	categoryIncludeCrossSeeds bool // Whether winning category rule wants cross-seeds moved
+	categoryIncludeCrossSeeds bool
 	categoryRule              ruleRef
 
-	// Move (first rule to trigger wins)
 	shouldMove           bool
 	movePath             string
-	moveGroupID          string // Optional group ID to expand moves
+	moveGroupID          string
 	moveAtomic           string
 	moveBlockIfCrossSeed bool
 	moveCondition        *models.RuleCondition
@@ -92,17 +81,14 @@ type torrentDesiredState struct {
 	moveRuleName         string
 	moveRule             ruleRef
 
-	// External program (last rule wins)
 	externalProgramID *int
 	programRuleID     int
 	programRuleName   string
 
-	// Export to instance (last rule wins)
 	exportToInstance         *models.ExportToInstanceAction
 	exportToInstanceRuleID   int
 	exportToInstanceRuleName string
 
-	// Transfer to instance (last rule wins)
 	transferToInstance     *models.TransferToInstanceAction
 	transferToInstanceRule ruleRef
 
@@ -115,10 +101,6 @@ type ruleRef struct {
 	name string
 }
 
-// tagExpandIntent is a pending cross-seed expansion of a tag decision: the rule
-// that requested it, the decision to propagate ("add" or "remove"), and whether
-// the action runs in managed-reset mode (the tag is wholesale-deleted in the
-// client before matches are re-added).
 type tagExpandIntent struct {
 	rule            ruleRef
 	action          string
@@ -152,7 +134,7 @@ type ruleRunStats struct {
 	MoveConditionNotMet              int
 	MoveAlreadyAtDestination         int
 	MoveBlockedByCrossSeed           int
-	movePathWarned                   bool // one relative-path warning per rule per run
+	movePathWarned                   bool
 	ExternalProgramApplied           int
 	ExternalProgramConditionNotMet   int
 	ExportToInstanceApplied          int
@@ -182,7 +164,6 @@ func getOrCreateRuleStats(m map[int]*ruleRunStats, rule *models.Automation) *rul
 	return s
 }
 
-// processTorrents processes all torrents against all rules, returning desired states.
 func processTorrents(
 	torrents []*qbt.Torrent,
 	rules []*models.Automation,
@@ -206,7 +187,7 @@ func processTorrents(
 
 	for _, torrent := range torrents {
 		state := applyRulesToTorrent(torrent, rules, states[torrent.Hash], evalCtx, crossSeeds, scope, stats, torrents)
-		// Only store if there are actions to take
+
 		if state != nil && hasActions(state) {
 			states[torrent.Hash] = state
 		}
@@ -215,9 +196,6 @@ func processTorrents(
 	return states
 }
 
-// applyRulesToTorrent applies each enabled rule that holds the torrent in its Rule scope to the
-// state of the torrent, in rule order. existing is the state from an earlier batch, or nil. It
-// returns nil when no rule handles the torrent.
 func applyRulesToTorrent(torrent *qbt.Torrent, rules []*models.Automation, existing *torrentDesiredState, evalCtx *EvalContext, crossSeeds *crossSeedGroups, scope *ruleScope, stats map[int]*ruleRunStats, allTorrents []*qbt.Torrent) *torrentDesiredState {
 	var state *torrentDesiredState
 	for _, rule := range rules {
@@ -241,7 +219,7 @@ func applyRulesToTorrent(torrent *qbt.Torrent, rules []*models.Automation, exist
 			}
 			state.trackerDomains = scope.trackerDomains(torrent)
 		}
-		// The torrent drops out of the rule and keeps its managed tags. ADR 0039.
+
 		if answer == scopeNoValue {
 			keepResetTagsOfRule(rule, state)
 			continue
@@ -255,8 +233,6 @@ func applyRulesToTorrent(torrent *qbt.Torrent, rules []*models.Automation, exist
 	return state
 }
 
-// askActionGroups asks the run session once for the groups that the moves, tags and categories
-// read, before the rule loop reads them one torrent at a time.
 func askActionGroups(torrents []*qbt.Torrent, rules []*models.Automation, evalCtx *EvalContext, crossSeeds *crossSeedGroups, scope *ruleScope, states map[string]*torrentDesiredState) {
 	if evalCtx == nil || !crossSeeds.readsGroups() {
 		return
@@ -271,7 +247,7 @@ func askActionGroups(torrents []*qbt.Torrent, rules []*models.Automation, evalCt
 		if c.Move != nil && c.Move.Enabled {
 			moveRules = append(moveRules, rule)
 		}
-		// The tag ownership check reads the group of each torrent in the scope of every tag rule.
+
 		asksTagScope[rule] = crossSeeds.session.tagGroups && slices.ContainsFunc(c.TagActions(), func(a *models.TagAction) bool {
 			return tagActionHasTags(a) && !tagActionMissesTrackerHealth(a, evalCtx)
 		})
@@ -301,7 +277,7 @@ func askActionGroups(torrents []*qbt.Torrent, rules []*models.Automation, evalCt
 	asks := slices.Concat(groupHashes, moveHashes)
 	slices.Sort(asks)
 	crossSeeds.session.resolveGroups(slices.Compact(asks), false)
-	// A move that blocks on a cross-seed checks its condition on each member.
+
 	if slices.ContainsFunc(moveRules, moveBlockReadsCrossSeedFacts) {
 		var members []string
 		for _, hash := range moveHashes {
@@ -312,10 +288,6 @@ func askActionGroups(torrents []*qbt.Torrent, rules []*models.Automation, evalCt
 	}
 }
 
-// groupReadAsks returns the torrent when a tag or category action of a rule that holds it in its
-// Rule scope reads its group, with the members of the category GroupID that asked does not hold yet.
-// A tag rule in asksTagScope reads the group of each torrent in its scope. A category reads the
-// group only when its condition matches.
 func groupReadAsks(torrent *qbt.Torrent, rules []*models.Automation, asksTagScope map[*models.Automation]bool, torrents []*qbt.Torrent, evalCtx *EvalContext, scope *ruleScope, asked map[askedGroup]struct{}) []string {
 	var hashes []string
 	for _, rule := range rules {
@@ -346,14 +318,11 @@ func moveBlockReadsCrossSeedFacts(rule *models.Automation) bool {
 	return move.BlockIfCrossSeed && strings.TrimSpace(move.GroupID) == "" && conditionReadsCrossSeedFacts(move.Condition)
 }
 
-// askedGroup is a GroupID group of one rule that the read-ahead already asked for.
 type askedGroup struct {
 	rule *models.Automation
 	key  string
 }
 
-// groupIDMembers returns the members of the GroupID group of the torrent, or nil when asked
-// already holds the group.
 func groupIDMembers(rule *models.Automation, groupID, hash string, torrents []*qbt.Torrent, evalCtx *EvalContext, scope *ruleScope, asked map[askedGroup]struct{}) []string {
 	idx := getOrBuildGroupIndexForRule(evalCtx, rule, groupID, torrents, scope)
 	group := askedGroup{rule, idx.KeyForHash(hash)}
@@ -364,8 +333,6 @@ func groupIDMembers(rule *models.Automation, groupID, hash string, torrents []*q
 	return idx.MembersForHash(hash)
 }
 
-// moveAsks returns the torrent when the move of a rule that holds it in its Rule scope can apply
-// to it, with the members of the move GroupID that asked does not hold yet.
 func moveAsks(torrent *qbt.Torrent, rules []*models.Automation, torrents []*qbt.Torrent, evalCtx *EvalContext, scope *ruleScope, asked map[askedGroup]struct{}) []string {
 	state := &torrentDesiredState{trackerDomains: scope.trackerDomains(torrent)}
 	var hashes []string
@@ -388,8 +355,6 @@ func moveAsks(torrent *qbt.Torrent, rules []*models.Automation, torrents []*qbt.
 	return hashes
 }
 
-// enterRule makes the free space ledger and the grouping (GROUP_SIZE / IS_GROUPED) of the rule
-// active. Each pass calls it before it evaluates the rule.
 func enterRule(evalCtx *EvalContext, rule *models.Automation, allTorrents []*qbt.Torrent, scope *ruleScope) {
 	if evalCtx == nil {
 		return
@@ -401,7 +366,6 @@ func enterRule(evalCtx *EvalContext, rule *models.Automation, allTorrents []*qbt
 	activateRuleGrouping(evalCtx, rule, allTorrents, scope)
 }
 
-// processRuleForTorrent applies a single rule to the torrent state.
 func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *torrentDesiredState, evalCtx *EvalContext, scope *ruleScope, crossSeeds *crossSeedGroups, stats *ruleRunStats, allTorrents []*qbt.Torrent) {
 	conditions := rule.Conditions
 	if conditions == nil {
@@ -410,7 +374,6 @@ func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *
 
 	enterRule(evalCtx, rule, allTorrents, scope)
 
-	// Speed limits
 	if conditions.SpeedLimits != nil && conditions.SpeedLimits.Enabled {
 		shouldApply := conditions.SpeedLimits.Condition == nil ||
 			EvaluateConditionWithContext(conditions.SpeedLimits.Condition, torrent, evalCtx, 0)
@@ -432,7 +395,6 @@ func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *
 		}
 	}
 
-	// Share limits (ratio/seeding time)
 	if conditions.ShareLimits != nil && conditions.ShareLimits.Enabled {
 		shouldApply := conditions.ShareLimits.Condition == nil ||
 			EvaluateConditionWithContext(conditions.ShareLimits.Condition, torrent, evalCtx, 0)
@@ -462,7 +424,6 @@ func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *
 		}
 	}
 
-	// Pause (last rule wins)
 	if conditions.Pause != nil && conditions.Pause.Enabled {
 		shouldApply := conditions.Pause.Condition == nil ||
 			EvaluateConditionWithContext(conditions.Pause.Condition, torrent, evalCtx, 0)
@@ -471,11 +432,11 @@ func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *
 			if stats != nil {
 				stats.PauseApplied++
 			}
-			// Only pause if not already paused/stopped
+
 			if torrent.State != qbt.TorrentStatePausedUp && torrent.State != qbt.TorrentStatePausedDl &&
 				torrent.State != qbt.TorrentStateStoppedUp && torrent.State != qbt.TorrentStateStoppedDl {
 				state.shouldPause = true
-				state.shouldResume = false // Clear conflicting resume from earlier rule if any
+				state.shouldResume = false
 				state.pauseRule = ruleRef{id: rule.ID, name: rule.Name}
 				state.resumeRule = ruleRef{}
 			}
@@ -484,7 +445,6 @@ func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *
 		}
 	}
 
-	// Resume (last rule wins)
 	if conditions.Resume != nil && conditions.Resume.Enabled {
 		shouldApply := conditions.Resume.Condition == nil ||
 			EvaluateConditionWithContext(conditions.Resume.Condition, torrent, evalCtx, 0)
@@ -494,11 +454,10 @@ func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *
 				stats.ResumeApplied++
 			}
 
-			// Only resume if currently paused/stopped
 			if torrent.State == qbt.TorrentStatePausedUp || torrent.State == qbt.TorrentStatePausedDl ||
 				torrent.State == qbt.TorrentStateStoppedUp || torrent.State == qbt.TorrentStateStoppedDl {
 				state.shouldResume = true
-				state.shouldPause = false // Clear conflicting pause from earlier rule if any
+				state.shouldPause = false
 				state.resumeRule = ruleRef{id: rule.ID, name: rule.Name}
 				state.pauseRule = ruleRef{}
 			}
@@ -507,7 +466,6 @@ func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *
 		}
 	}
 
-	// Recheck (last rule wins)
 	if conditions.Recheck != nil && conditions.Recheck.Enabled {
 		shouldApply := conditions.Recheck.Condition == nil ||
 			EvaluateConditionWithContext(conditions.Recheck.Condition, torrent, evalCtx, 0)
@@ -516,7 +474,7 @@ func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *
 			if stats != nil {
 				stats.RecheckApplied++
 			}
-			// Avoid re-triggering while already checking.
+
 			if torrent.State != qbt.TorrentStateCheckingUp &&
 				torrent.State != qbt.TorrentStateCheckingDl &&
 				torrent.State != qbt.TorrentStateCheckingResumeData {
@@ -528,7 +486,6 @@ func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *
 		}
 	}
 
-	// Reannounce (last rule wins)
 	if conditions.Reannounce != nil && conditions.Reannounce.Enabled {
 		shouldApply := conditions.Reannounce.Condition == nil ||
 			EvaluateConditionWithContext(conditions.Reannounce.Condition, torrent, evalCtx, 0)
@@ -544,7 +501,6 @@ func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *
 		}
 	}
 
-	// Auto management (last rule wins)
 	if conditions.AutoManagement != nil {
 		shouldApply := conditions.AutoManagement.Condition == nil ||
 			EvaluateConditionWithContext(conditions.AutoManagement.Condition, torrent, evalCtx, 0)
@@ -553,9 +509,7 @@ func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *
 			if stats != nil {
 				stats.AutoManageApplied++
 			}
-			// Always record the last matching rule's desired state so later
-			// rules can override earlier ones (last rule wins). The actual
-			// API call is skipped when the torrent already has the desired state.
+
 			state.autoManageValue = conditions.AutoManagement.Enabled
 			state.autoManageRule = ruleRef{id: rule.ID, name: rule.Name}
 			state.shouldAutoManage = torrent.AutoManaged != state.autoManageValue
@@ -564,13 +518,11 @@ func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *
 		}
 	}
 
-	// Tags
 	for _, tagAction := range conditions.TagActions() {
 		if !tagActionHasTags(tagAction) {
 			continue
 		}
 		if tagActionMissesTrackerHealth(tagAction, evalCtx) {
-			// Skip tag processing for this rule
 			if stats != nil {
 				stats.TagSkippedMissingTrackerHealth++
 			}
@@ -586,7 +538,6 @@ func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *
 		}
 	}
 
-	// Category (last rule wins - just set desired, service will filter no-ops)
 	if conditions.Category != nil && conditions.Category.Enabled {
 		if shouldApplyCategoryAction(&torrent, getCategoryAction(rule), evalCtx, crossSeeds) {
 			if stats != nil {
@@ -602,7 +553,6 @@ func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *
 		}
 	}
 
-	// External program (last rule wins)
 	if conditions.ExternalProgram != nil && conditions.ExternalProgram.Enabled && conditions.ExternalProgram.ProgramID > 0 {
 		shouldApply := conditions.ExternalProgram.Condition == nil ||
 			EvaluateConditionWithContext(conditions.ExternalProgram.Condition, torrent, evalCtx, 0)
@@ -619,7 +569,6 @@ func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *
 		}
 	}
 
-	// Export to instance (last rule wins)
 	if conditions.ExportToInstance != nil && conditions.ExportToInstance.Enabled && conditions.ExportToInstance.TargetInstanceID > 0 {
 		shouldApply := conditions.ExportToInstance.Condition == nil ||
 			EvaluateConditionWithContext(conditions.ExportToInstance.Condition, torrent, evalCtx, 0)
@@ -636,7 +585,6 @@ func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *
 		}
 	}
 
-	// Transfer to instance (last rule wins)
 	if transfer := conditions.TransferToInstance; transfer != nil && transfer.Enabled && transfer.TargetInstanceID > 0 {
 		if transfer.Condition == nil || EvaluateConditionWithContext(transfer.Condition, torrent, evalCtx, 0) {
 			if stats != nil {
@@ -664,20 +612,18 @@ func processRuleForTorrent(rule *models.Automation, torrent qbt.Torrent, state *
 		}
 	}
 
-	// Move (first rule to trigger wins - skip if already set)
 	if conditions.Move != nil && conditions.Move.Enabled && !state.shouldMove {
 		evaluateMoveAction(rule, conditions.Move, torrent, evalCtx, crossSeeds, stats, state)
 	}
 }
 
-// moveCheck is what a move finds before the cross-seed check.
 type moveCheck int
 
 const (
-	moveConditionNotMet moveCheck = iota // also when the path does not render
+	moveConditionNotMet moveCheck = iota
 	moveRelativePath
 	moveAtDestination
-	moveReady // the cross-seed check decides
+	moveReady
 )
 
 type moveCheckKey struct {
@@ -697,7 +643,7 @@ func checkMove(action *models.MoveAction, torrent qbt.Torrent, state *torrentDes
 		return "", moveConditionNotMet
 	case action.Condition != nil && !EvaluateConditionWithContext(action.Condition, torrent, evalCtx, 0):
 		return resolvedPath, moveConditionNotMet
-	// qBittorrent never reports a relative path back as the save path, so the move would repeat every run.
+
 	case !pathcmp.IsAbsolute(resolvedPath):
 		return resolvedPath, moveRelativePath
 	case inSavePath(torrent, resolvedPath):
@@ -721,7 +667,6 @@ func evaluateMoveAction(rule *models.Automation, action *models.MoveAction, torr
 	}
 	resolvedPath, check := checked.path, checked.check
 	if check == moveRelativePath {
-		// One warning per rule per run; stats is per rule per run.
 		if stats == nil || !stats.movePathWarned {
 			ruleName := ""
 			if rule != nil {
@@ -735,7 +680,6 @@ func evaluateMoveAction(rule *models.Automation, action *models.MoveAction, torr
 		}
 	}
 
-	// Only apply move if condition is met, not already in target path, and not blocked by cross-seed protection
 	if check == moveReady && !shouldBlockMoveForCrossSeeds(torrent, action, crossSeeds, evalCtx) {
 		if stats != nil {
 			stats.MoveApplied++
@@ -787,7 +731,7 @@ func crossSeedGroupKnown(torrent qbt.Torrent, crossSeeds *crossSeedGroups, evalC
 	if evalCtx == nil {
 		return true
 	}
-	// members reads the state of a torrent that no ask covered.
+
 	members := crossSeeds.members(torrent.Hash)
 	if !sameInstanceCrossSeedKnown(evalCtx, torrent.Hash) {
 		return false
@@ -817,14 +761,10 @@ func shouldBlockMoveForCrossSeeds(torrent qbt.Torrent, moveAction *models.MoveAc
 		return false
 	}
 
-	// If condition is nil, it means "always apply" - all cross-seeds are considered matching,
-	// so don't block. This aligns with processRuleForTorrent where nil condition means unconditional apply.
 	if moveAction.Condition == nil {
 		return false
 	}
 
-	// If we have any other torrent in the same cross-seed group, evaluate the condition for each torrent.
-	// Block if any cross-seed does NOT match the condition.
 	for _, other := range group {
 		if other.Hash == torrent.Hash {
 			continue
@@ -841,14 +781,10 @@ func inSavePath(torrent qbt.Torrent, savePath string) bool {
 	return normalizePath(torrent.SavePath) == normalizePath(savePath)
 }
 
-// renderPathTemplate returns the rendered Move path. The path is executed as a
-// Go template with data; paths with no template actions are unchanged. sanitize
-// is available in templates for safe path segments (e.g. {{ sanitize .Name }}).
 func renderPathTemplate(path string, torrent qbt.Torrent, state *torrentDesiredState, evalCtx *EvalContext) (resolved string, ok bool) {
 	return renderPathTemplateData(path, torrent.Hash, torrentPathData(torrent, state, evalCtx))
 }
 
-// renderExportSavePath adds .CurrentSavePath, which Move paths lack: a Move built on it moves again every run.
 func renderExportSavePath(path string, torrent qbt.Torrent, state *torrentDesiredState, evalCtx *EvalContext) (resolved string, ok bool) {
 	data := torrentPathData(torrent, state, evalCtx)
 	data["CurrentSavePath"] = torrent.SavePath
@@ -866,7 +802,6 @@ func torrentPathData(torrent qbt.Torrent, state *torrentDesiredState, evalCtx *E
 func renderPathTemplateData(path, hash string, data map[string]any) (resolved string, ok bool) {
 	resolvedPath, err := executePathTemplate(path, data)
 	if err != nil {
-		// A missing key, such as a deleted category's .CategorySavePath, repeats for every torrent on every run.
 		if _, ok := errors.AsType[template.ExecError](err); ok {
 			log.Trace().Err(err).Str("path", path).Str("hash", hash).Msg("failed to render path template")
 		} else {
@@ -881,7 +816,6 @@ func renderPathTemplateData(path, hash string, data map[string]any) (resolved st
 	return resolvedPath, true
 }
 
-// renderMovePathSample renders a move path for a placeholder torrent, to check it on save.
 func renderMovePathSample(path string) (string, error) {
 	sample := qbt.Torrent{Name: "sample", Hash: strings.Repeat("0", 40), Category: "sample"}
 	sampleCtx := &EvalContext{CategorySavePaths: map[string]string{"sample": "/data/sample", "": "/data"}}
@@ -896,8 +830,7 @@ func pathTemplateData(torrent qbt.Torrent, tracker string, evalCtx *EvalContext)
 		"IsolationFolderName": pathutil.HashedIsolationFolder(torrent.Hash, torrent.Name),
 		"Tracker":             tracker,
 	}
-	// An unknown category, or a map that failed to load, leaves the key unset,
-	// so missingkey=error skips the move.
+
 	if evalCtx != nil {
 		if categorySavePath, found := evalCtx.CategorySavePaths[torrent.Category]; found {
 			data[categorySavePathVariable] = categorySavePath
@@ -942,13 +875,10 @@ func tagActionHasTags(tagAction *models.TagAction) bool {
 	return tagAction != nil && tagAction.Enabled && (len(tagAction.Tags) > 0 || tagAction.UseTrackerAsTag)
 }
 
-// tagActionMissesTrackerHealth reports whether the tag action reads IS_UNREGISTERED without the
-// tracker health, so the rule loop skips it.
 func tagActionMissesTrackerHealth(tagAction *models.TagAction, evalCtx *EvalContext) bool {
 	return ConditionUsesField(tagAction.Condition, FieldIsUnregistered) && (evalCtx == nil || evalCtx.TrackerHealth == nil)
 }
 
-// processTagAction handles tag add/remove logic for a single tag action.
 func processTagAction(rule *models.Automation, tagAction *models.TagAction, torrent qbt.Torrent, state *torrentDesiredState, evalCtx *EvalContext, crossSeeds *crossSeedGroups) bool {
 	tagMode := tagAction.Mode
 	if tagMode == "" {
@@ -958,14 +888,11 @@ func processTagAction(rule *models.Automation, tagAction *models.TagAction, torr
 		state.tagRuleByTag = make(map[string]ruleRef)
 	}
 
-	// Evaluate condition
 	matchesCondition := tagAction.Condition == nil ||
 		EvaluateConditionWithContext(tagAction.Condition, torrent, evalCtx, 0)
 
-	// Determine tags to manage - either from static list or derived from tracker
 	tagsToManage := tagAction.Tags
 	if tagAction.UseTrackerAsTag && len(state.trackerDomains) > 0 {
-		// Derive tag from tracker domain, preferring domains with customizations
 		if tag := selectTrackerTag(state.trackerDomains, tagAction.UseDisplayName, evalCtx); tag != "" {
 			tagsToManage = []string{tag}
 		} else {
@@ -973,10 +900,9 @@ func processTagAction(rule *models.Automation, tagAction *models.TagAction, torr
 		}
 	}
 	resetFromClient := shouldResetTagActionInClient(tagAction)
-	// Tracker-derived tags never expand: cross-seed siblings sit on other trackers.
+
 	expandCrossSeeds := tagAction.IncludeCrossSeeds && !tagAction.UseTrackerAsTag
-	// As category: a group whose file check did not complete gets no decision,
-	// so the copies never diverge.
+
 	if expandCrossSeeds && !crossSeedGroupKnown(torrent, crossSeeds, evalCtx) {
 		if resetFromClient && rule != nil {
 			keepCurrentTags(rule, tagsToManage, state)
@@ -985,25 +911,15 @@ func processTagAction(rule *models.Automation, tagAction *models.TagAction, torr
 	}
 
 	for _, managedTag := range tagsToManage {
-		// Check current state AND pending changes from earlier rules
 		_, hasTag := state.currentTags[managedTag]
 		if resetFromClient {
-			// Managed reset mode starts from a clean slate: force re-add for current matches.
 			hasTag = false
 		}
-		// Apply pending action if exists
+
 		if pending, ok := state.tagActions[managedTag]; ok {
 			hasTag = (pending == "add")
 		}
 
-		// Tagging semantics:
-		// - FULL: add to matches, remove from non-matches
-		// - ADD: add to matches only
-		// - REMOVE: remove from matches only
-		// action is the local change; assert is the steady-state decision a
-		// matching copy that already looks right still pushes across its
-		// cross-seed siblings (any-match-wins, and siblings added after the
-		// first run). Full-mode removals happen on non-matches and stay local.
 		action, assert := "", ""
 		switch tagMode {
 		case models.TagModeAdd:
@@ -1020,7 +936,7 @@ func processTagAction(rule *models.Automation, tagAction *models.TagAction, torr
 			case !hasTag && matchesCondition:
 				assert = "remove"
 			}
-		default: // full (incl. unknown/empty)
+		default:
 			switch {
 			case !hasTag && matchesCondition:
 				action = "add"
@@ -1041,14 +957,11 @@ func processTagAction(rule *models.Automation, tagAction *models.TagAction, torr
 			}
 		} else if rule != nil && len(crossSeeds.tagOwnerMembers(torrent.Hash)) > 1 &&
 			(assert != "" || (tagMode != models.TagModeAdd && tagMode != models.TagModeRemove)) {
-			// A no-op decision (full mode always decides) still owns the tag:
-			// another rule's expansion must not override it, or the copy
-			// flips on every other run.
 			if _, decided := state.tagRuleByTag[managedTag]; !decided {
 				state.tagRuleByTag[managedTag] = ruleRef{id: rule.ID, name: rule.Name}
 			}
 		}
-		// A later rule's decision without expansion clears earlier intent (last rule wins).
+
 		if assert == "" || !expandCrossSeeds || rule == nil {
 			if action != "" {
 				delete(state.tagExpandByTag, managedTag)
@@ -1068,7 +981,6 @@ func processTagAction(rule *models.Automation, tagAction *models.TagAction, torr
 	return matchesCondition
 }
 
-// keepResetTagsOfRule keeps the tags of a torrent that dropped out of the rule. ADR 0039.
 func keepResetTagsOfRule(rule *models.Automation, state *torrentDesiredState) {
 	for _, action := range rule.Conditions.TagActions() {
 		if shouldResetTagActionInClient(action) {
@@ -1077,8 +989,6 @@ func keepResetTagsOfRule(rule *models.Automation, state *torrentDesiredState) {
 	}
 }
 
-// keepCurrentTags adds back each of the tags that the torrent has. A managed reset deletes the
-// tag from every torrent first, so a torrent that gets no decision keeps the tags it has.
 func keepCurrentTags(rule *models.Automation, tags []string, state *torrentDesiredState) {
 	for tag := range parseTorrentTags(strings.Join(tags, ",")) {
 		_, hasTag := state.currentTags[tag]
@@ -1090,8 +1000,6 @@ func keepCurrentTags(rule *models.Automation, tags []string, state *torrentDesir
 	}
 }
 
-// markTagReset records or clears a managed-reset re-add for tag, so the preview
-// counts it as the live path does (the tag is wholesale-deleted first).
 func markTagReset(state *torrentDesiredState, tag string, reset bool) {
 	if !reset {
 		delete(state.tagResetTags, tag)
@@ -1103,7 +1011,6 @@ func markTagReset(state *torrentDesiredState, tag string, reset bool) {
 	state.tagResetTags[tag] = struct{}{}
 }
 
-// hasActions returns true if the state has any actions to execute.
 func hasActions(state *torrentDesiredState) bool {
 	return state.uploadLimitKiB != nil ||
 		state.downloadLimitKiB != nil ||
@@ -1125,26 +1032,20 @@ func hasActions(state *torrentDesiredState) bool {
 		state.skipSmallFiles != nil
 }
 
-// selectTrackerTag picks the best tracker domain to use as a tag.
-// If useDisplayName is true, it prefers domains that have a customization (display name).
-// Falls back to the first domain if no customizations match.
 func selectTrackerTag(domains []string, useDisplayName bool, evalCtx *EvalContext) string {
 	if len(domains) == 0 {
 		return ""
 	}
 
-	// If using display names, prefer domains that have a customization
 	if useDisplayName {
 		if displayName, ok := getTrackerDisplayName(domains, evalCtx); ok {
 			return displayName
 		}
 	}
 
-	// Fall back to the first domain
 	return domains[0]
 }
 
-// getTrackerDisplayName picks the best tracker display name available.
 func getTrackerDisplayName(domains []string, evalCtx *EvalContext) (displayName string, ok bool) {
 	if evalCtx == nil {
 		return "", false
@@ -1159,7 +1060,6 @@ func getTrackerDisplayName(domains []string, evalCtx *EvalContext) (displayName 
 	return "", false
 }
 
-// parseTorrentTags parses the comma-separated tag string into a set.
 func parseTorrentTags(tags string) map[string]struct{} {
 	result := make(map[string]struct{})
 	for t := range strings.SplitSeq(tags, ",") {
@@ -1176,7 +1076,6 @@ func verifiedCrossSeedFileBytes(
 	filesByHash map[string]qbt.TorrentFiles,
 	hardlinks *HardlinkIndex,
 ) (int64, bool) {
-	// A singleton without a hardlink expansion needs no file list.
 	if len(hashes) == 1 {
 		for hash := range hashes {
 			if len(filesByHash[hash]) == 0 {
@@ -1232,8 +1131,6 @@ func verifiedCrossSeedFileBytes(
 	return totalBytes, true
 }
 
-// sortFieldsError reports the first field of config that cannot sort or score.
-// unknown starts the error text for a simple sort field; rule validation and the sort word it differently.
 func sortFieldsError(config *models.SortingConfig, unknown string) error {
 	if config.Type == models.SortingTypeSimple && !ConditionFields[config.Field].Sortable() {
 		return fmt.Errorf("%s: %s", unknown, config.Field)
@@ -1249,7 +1146,6 @@ func sortFieldsError(config *models.SortingConfig, unknown string) error {
 	return nil
 }
 
-// CalculateScore computes the weighted score for a torrent based on configuration.
 func CalculateScore(torrent qbt.Torrent, config *models.SortingConfig, evalCtx *EvalContext) float64 {
 	var totalScore float64
 
@@ -1278,9 +1174,6 @@ func CalculateScore(torrent qbt.Torrent, config *models.SortingConfig, evalCtx *
 	return totalScore
 }
 
-// SortTorrents sorts the slice in-place based on the configuration.
-// Always applies Hash (ASC) as a deterministic tiebreaker.
-// Returns an error if the sorting configuration is invalid (e.g. unsupported field).
 func SortTorrents(torrents []*qbt.Torrent, config *models.SortingConfig, evalCtx *EvalContext) error {
 	if config != nil {
 		if config.SchemaVersion != "1" {
@@ -1340,7 +1233,6 @@ func SortTorrents(torrents []*qbt.Torrent, config *models.SortingConfig, evalCtx
 		return nil
 	}
 
-	// Optimization: Pre-calculate scores if using score mode to avoid re-evaluating in sort loop
 	var scores map[string]float64
 	if config != nil && config.Type == models.SortingTypeScore {
 		scores = make(map[string]float64, len(torrents))
@@ -1393,9 +1285,7 @@ func boolValue(value bool) float64 {
 	return 0
 }
 
-// compareTorrents is a helper function that returns true if t1 should sort before t2.
 func compareTorrents(t1, t2 qbt.Torrent, config *models.SortingConfig, sortValue SortValue, scores map[string]float64, evalCtx *EvalContext) bool {
-	// 1. Primary Sort
 	if config != nil {
 		switch config.Type {
 		case models.SortingTypeSimple:
@@ -1428,21 +1318,18 @@ func compareTorrents(t1, t2 qbt.Torrent, config *models.SortingConfig, sortValue
 				return s1 > s2
 			}
 		default:
-			// Fallback for unknown config.Type. Should not happen.
+
 			if t1.AddedOn != t2.AddedOn {
 				return t1.AddedOn < t2.AddedOn
 			}
 		}
 	} else if t1.AddedOn != t2.AddedOn {
-		// Default sort: Oldest first (AddedOn ASC)
 		return t1.AddedOn < t2.AddedOn
 	}
 
-	// 2. Tiebreaker: Hash ASC
 	return t1.Hash < t2.Hash
 }
 
-// getNowUnix returns the current time from context or system time.
 func getNowUnix(evalCtx *EvalContext) int64 {
 	if evalCtx != nil && evalCtx.NowUnix != 0 {
 		return evalCtx.NowUnix
